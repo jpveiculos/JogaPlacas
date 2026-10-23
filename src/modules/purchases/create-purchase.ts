@@ -6,7 +6,6 @@ import {
   type PurchaseDraft,
 } from "../../domain/purchase-rules";
 
-
 export type PixPurchaseInput = {
   idempotencyKey: string;
   receiptCode: string;
@@ -55,6 +54,12 @@ export async function createPendingPixPurchase(
   }
   if (!input.receiptCode.trim()) {
     throw new PurchaseServiceError("A receipt code is required", "INVALID_PURCHASE");
+  }
+  if (input.participations.length !== input.repetitions) {
+    throw new PurchaseServiceError("There must be exactly one participation per repeated round", "INVALID_PURCHASE");
+  }
+  if (new Set(input.participations.map((item) => item.roundId)).size !== input.participations.length) {
+    throw new PurchaseServiceError("Each participation must reference a distinct round", "INVALID_PURCHASE");
   }
   if (Boolean(input.playerId) === Boolean(input.cashierId)) {
     throw new PurchaseServiceError("Exactly one player or cashier must own the purchase", "INVALID_ACTOR");
@@ -153,6 +158,10 @@ export async function createPendingPixPurchase(
         error instanceof Error ? error.message : "Invalid purchase",
         "INVALID_PURCHASE",
       );
+    }
+
+    if (totals.totalCents > 2_147_483_647) {
+      throw new PurchaseServiceError("Purchase total exceeds the database integer limit", "INVALID_PURCHASE");
     }
 
     const totalByRound = new Map<string, number>();
