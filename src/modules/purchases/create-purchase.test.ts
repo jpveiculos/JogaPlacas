@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { PrismaClient } from "@prisma/client";
+import { Prisma, type PrismaClient } from "@prisma/client";
 import {
   createPendingPixPurchase,
   type PixPurchaseInput,
@@ -94,3 +94,47 @@ describe("createPendingPixPurchase input validation", () => {
     expect(transaction).not.toHaveBeenCalled();
   });
 });
+
+describe("createPendingPixPurchase transaction conflict retries", () => {
+  beforeEach(() => {
+    transaction.mockReset();
+  });
+
+  const service = () => ({
+    $transaction: transaction,
+  } as unknown as PrismaClient);
+
+  const prismaError = (code: "P2034" | "P2002") =>
+    new Prisma.PrismaClientKnownRequestError("simulated transaction conflict", {
+      code,
+      clientVersion: "6.16.2",
+    });
+
+  it("retries serialization conflicts at most three times after the initial attempt", async () => {
+    transaction.mockRejectedValue(prismaError("P2034"));
+
+    await expect(createPendingPixPurchase(service(), validInput()))
+      .rejects.toMatchObject({ code: "P2034" });
+
+    expect(transaction).toHaveBeenCalledTimes(4);
+  });
+
+  it("retries a unique constraint conflict only once", async () => {
+    transaction.mockRejectedValue(prismaError("P2002"));
+
+    await expect(createPendingPixPurchase(service(), validInput()))
+      .rejects.toMatchObject({ code: "P2002" });
+
+    expect(transaction).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not retry unrelated errors", async () => {
+    transaction.mockRejectedValue(new Error("database unavailable"));
+
+    await expect(createPendingPixPurchase(service(), validInput()))
+      .rejects.toThrow("database unavailable");
+
+    expect(transaction).toHaveBeenCalledTimes(1);
+  });
+});
+
