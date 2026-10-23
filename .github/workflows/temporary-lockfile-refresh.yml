@@ -1,6 +1,7 @@
 name: Temporary lockfile refresh
 on:
-  workflow_dispatch:
+  push:
+    branches: [planning/foundation]
 permissions:
   contents: write
 jobs:
