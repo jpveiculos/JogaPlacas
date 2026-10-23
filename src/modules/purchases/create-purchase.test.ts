@@ -2,7 +2,6 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { PrismaClient } from "@prisma/client";
 import {
   createPendingPixPurchase,
-  PurchaseServiceError,
   type PixPurchaseInput,
 } from "./create-purchase";
 
@@ -78,7 +77,8 @@ describe("createPendingPixPurchase input validation", () => {
   it("rejects duplicate round ids before opening a transaction", async () => {
     const input = validInput();
     input.repetitions = 2;
-    input.participations.push({ ...input.participations[0] });
+    const firstParticipation = input.participations[0]!;
+    input.participations.push({ ...firstParticipation });
 
     await expect(createPendingPixPurchase(service(), input))
       .rejects.toMatchObject({ code: "INVALID_PURCHASE" });
