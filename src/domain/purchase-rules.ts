@@ -54,7 +54,11 @@ export function lineStakeCents(allocation: CategoryAllocation): number {
   ] as const;
 
   for (const [field, value] of values) assertIntegerCents(value, field);
-  return values.reduce((total, [, value]) => total + value, 0);
+  const stake = values.reduce((total, [, value]) => total + value, 0);
+  if (!Number.isSafeInteger(stake)) {
+    throw new PurchaseRuleError("Plate stake exceeds the safe integer range");
+  }
+  return stake;
 }
 
 export function validatePurchaseDraft(
