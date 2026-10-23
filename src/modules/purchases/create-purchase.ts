@@ -131,7 +131,7 @@ export async function createPendingPixPurchase(
       paymentMethod: "PIX",
       participations: input.participations.map((participation) => {
         const round = roundsById.get(participation.roundId);
-        if (!round || ![RoundStatus.SCHEDULED, RoundStatus.OPEN].includes(round.status)) {
+        if (!round || (round.status !== RoundStatus.SCHEDULED && round.status !== RoundStatus.OPEN)) {
           throw new PurchaseServiceError("A selected round is not available", "ROUND_UNAVAILABLE");
         }
         return {
