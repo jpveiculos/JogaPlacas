@@ -1,0 +1,49 @@
+name: Resolve compatible dependency advisories
+
+on:
+  push:
+    branches: [planning/foundation]
+
+permissions:
+  contents: write
+
+jobs:
+  audit-fix:
+    if: github.ref == 'refs/heads/planning/foundation'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout foundation branch
+        uses: actions/checkout@v4
+        with:
+          ref: planning/foundation
+          persist-credentials: true
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Apply non-breaking dependency fixes only
+        id: fix
+        shell: bash
+        run: |
+          npm ci
+          npm audit fix --package-lock-only --ignore-scripts
+          npm ci
+          npm audit --json > npm-audit.json || true
+          echo "changed=$(git diff --quiet -- package-lock.json && echo false || echo true)" >> "$GITHUB_OUTPUT"
+      - name: Upload dependency audit report
+        uses: actions/upload-artifact@v4
+        with:
+          name: npm-audit-after-compatible-fixes
+          path: npm-audit.json
+          if-no-files-found: error
+          retention-days: 14
+      - name: Commit updated lockfile if changed
+        if: steps.fix.outputs.changed == 'true'
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package-lock.json
+          git diff --cached --check
+          git commit -m "build: apply compatible dependency security fixes"
+          git push origin HEAD:planning/foundation
