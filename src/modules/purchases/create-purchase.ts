@@ -6,7 +6,6 @@ import {
   type PurchaseDraft,
 } from "../../domain/purchase-rules";
 
-type Db = PrismaClient | Prisma.TransactionClient;
 
 export type PixPurchaseInput = {
   idempotencyKey: string;
@@ -70,12 +69,45 @@ export async function createPendingPixPurchase(
       include: { participations: { include: { lines: true } }, payment: true },
     });
     if (existing) {
+      const incomingByRound = new Map(input.participations.map((participation) => [
+        participation.roundId,
+        participation.lines.map((line) => {
+          const normalized = normalizePlate(line.plateDisplay);
+          return [
+            normalized.normalized,
+            line.unitCents,
+            line.tensCents,
+            line.hundredsCents,
+            line.thousandsCents,
+            line.lettersCents,
+            line.fullPlateCents,
+            line.ruleVersion,
+            JSON.stringify(line.ruleSnapshot),
+          ].join("|");
+        }).sort().join("\\n"),
+      ]));
+      const existingByRound = new Map(existing.participations.map((participation) => [
+        participation.roundId,
+        participation.lines.map((line) => [
+          line.normalizedPlate,
+          line.unitCents,
+          line.tensCents,
+          line.hundredsCents,
+          line.thousandsCents,
+          line.lettersCents,
+          line.fullPlateCents,
+          line.ruleVersion,
+          JSON.stringify(line.ruleSnapshot),
+        ].join("|")).sort().join("\\n"),
+      ]));
       const sameRequest =
         existing.paymentMethod === PaymentMethod.PIX &&
         existing.playerId === (input.playerId ?? null) &&
         existing.cashierId === (input.cashierId ?? null) &&
         existing.customerId === (input.customerId ?? null) &&
-        existing.participations.length === input.repetitions;
+        existing.participations.length === input.repetitions &&
+        existingByRound.size === incomingByRound.size &&
+        [...incomingByRound].every(([roundId, lines]) => existingByRound.get(roundId) === lines);
       if (!sameRequest) {
         throw new PurchaseServiceError(
           "The idempotency key was already used for a different purchase",
