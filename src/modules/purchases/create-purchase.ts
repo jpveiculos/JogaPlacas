@@ -68,7 +68,9 @@ export async function createPendingPixPurchase(
     throw new PurchaseServiceError("Cashier purchases require a customer record", "INVALID_ACTOR");
   }
 
-  return prisma.$transaction(async (tx) => {
+  for (let attempt = 0; ; attempt += 1) {
+    try {
+      return await prisma.$transaction(async (tx) => {
     const existing = await tx.purchase.findUnique({
       where: { idempotencyKey: input.idempotencyKey },
       include: { participations: { include: { lines: true } }, payment: true },
@@ -220,5 +222,22 @@ export async function createPendingPixPurchase(
       },
       include: { participations: { include: { lines: true } }, payment: true },
     });
-  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+      }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+    } catch (error) {
+      const knownRequestError =
+        error instanceof Prisma.PrismaClientKnownRequestError;
+      const serializationConflict = knownRequestError && error.code === "P2034";
+      // A unique-key race can mean another request with the same idempotency
+      // key committed first. Re-enter the transaction once to read and compare
+      // that purchase; unrelated unique violations will still surface on retry.
+      const uniqueConstraintRace =
+        knownRequestError && error.code === "P2002" && attempt === 0;
+
+      if ((serializationConflict && attempt < 3) || uniqueConstraintRace) {
+        await new Promise((resolve) => setTimeout(resolve, 10 * (attempt + 1)));
+        continue;
+      }
+      throw error;
+    }
+  }
 }
