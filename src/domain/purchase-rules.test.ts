@@ -65,6 +65,21 @@ describe("validatePurchaseDraft", () => {
       .toThrow(/R\$1\.00/i);
   });
 
+  it("rejects a plate stake whose category sum exceeds safe integer cents", () => {
+    const purchase = makePurchase(1);
+    purchase.participations[0].lines[0] = {
+      plateDisplay: "ABC-1234",
+      unitCents: Number.MAX_SAFE_INTEGER,
+      tensCents: 1,
+      hundredsCents: 0,
+      thousandsCents: 0,
+      lettersCents: 0,
+      fullPlateCents: 0,
+    };
+    expect(() => validatePurchaseDraft(purchase, new Date("2026-10-23T20:00:00.000Z")))
+      .toThrow(/safe integer range/i);
+  });
+
   it("rejects negative or fractional category cents", () => {
     const purchase = makePurchase(1);
     purchase.participations[0].lines[0] = {
