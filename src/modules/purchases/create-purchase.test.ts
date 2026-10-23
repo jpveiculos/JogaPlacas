@@ -104,10 +104,11 @@ describe("createPendingPixPurchase transaction conflict retries", () => {
     $transaction: transaction,
   } as unknown as PrismaClient);
 
-  const prismaError = (code: "P2034" | "P2002") =>
+  const prismaError = (code: "P2034" | "P2002", target?: string[]) =>
     new Prisma.PrismaClientKnownRequestError("simulated transaction conflict", {
       code,
       clientVersion: "6.16.2",
+      meta: target ? { target } : undefined,
     });
 
   it("retries serialization conflicts at most three times after the initial attempt", async () => {
@@ -120,12 +121,21 @@ describe("createPendingPixPurchase transaction conflict retries", () => {
   });
 
   it("retries a unique constraint conflict only once", async () => {
-    transaction.mockRejectedValue(prismaError("P2002"));
+    transaction.mockRejectedValue(prismaError("P2002", ["idempotencyKey"]));
 
     await expect(createPendingPixPurchase(service(), validInput()))
       .rejects.toMatchObject({ code: "P2002" });
 
     expect(transaction).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not retry a unique constraint conflict unrelated to idempotency", async () => {
+    transaction.mockRejectedValue(prismaError("P2002", ["receiptCode"]));
+
+    await expect(createPendingPixPurchase(service(), validInput()))
+      .rejects.toMatchObject({ code: "P2002" });
+
+    expect(transaction).toHaveBeenCalledTimes(1);
   });
 
   it("does not retry unrelated errors", async () => {
