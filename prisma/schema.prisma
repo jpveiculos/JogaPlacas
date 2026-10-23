@@ -1,0 +1,250 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  PLAYER
+  CASHIER
+  ADMIN
+}
+
+enum AccountStatus {
+  ACTIVE
+  BLOCKED
+  PENDING
+}
+
+enum RoundStatus {
+  SCHEDULED
+  OPEN
+  CLOSED
+  COMPLETED
+  CANCELLED
+}
+
+enum BetStatus {
+  PENDING_PAYMENT
+  CONFIRMED
+  CANCELLED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  PIX
+  WALLET
+  CASH
+}
+
+enum PaymentStatus {
+  PENDING
+  CONFIRMED
+  FAILED
+  EXPIRED
+  REFUNDED
+  CANCELLED
+}
+
+enum LedgerEntryType {
+  DEPOSIT
+  BET_DEBIT
+  PRIZE_CREDIT
+  WITHDRAWAL_RESERVE
+  WITHDRAWAL_RELEASE
+  WITHDRAWAL_PAID
+  REFUND
+  ADJUSTMENT
+}
+
+enum WithdrawalStatus {
+  PENDING
+  APPROVED
+  PROCESSING
+  PAID
+  REJECTED
+}
+
+model User {
+  id                   String        @id @default(cuid())
+  username             String        @unique
+  passwordHash         String
+  role                 UserRole      @default(PLAYER)
+  status               AccountStatus @default(ACTIVE)
+  mustChangePassword   Boolean       @default(false)
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+  betsAsPlayer          Bet[]         @relation("PlayerBets")
+  betsAsCashier         Bet[]         @relation("CashierBets")
+  ledgerEntries         LedgerEntry[]
+  withdrawals           Withdrawal[]
+  auditEvents           AuditEvent[]  @relation("AuditActor")
+  settingsChanged       SettingChange[] @relation("SettingChanger")
+}
+
+model Round {
+  id          String      @id @default(cuid())
+  code        String      @unique
+  startsAt    DateTime
+  cutoffAt    DateTime
+  resultAt    DateTime
+  status      RoundStatus @default(SCHEDULED)
+  resultPlate String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  bets        Bet[]
+
+  @@index([status, startsAt])
+  @@index([resultAt])
+}
+
+model Bet {
+  id              String        @id @default(cuid())
+  playerId        String?
+  cashierId       String?
+  roundId         String
+  status          BetStatus     @default(PENDING_PAYMENT)
+  paymentMethod   PaymentMethod
+  totalCents      Int
+  currency        String        @default("BRL")
+  customerName    String?
+  customerPhone   String?
+  receiptCode     String        @unique
+  createdAt       DateTime      @default(now())
+  confirmedAt     DateTime?
+  round           Round         @relation(fields: [roundId], references: [id], onDelete: Restrict)
+  player          User?         @relation("PlayerBets", fields: [playerId], references: [id], onDelete: Restrict)
+  cashier         User?         @relation("CashierBets", fields: [cashierId], references: [id], onDelete: Restrict)
+  lines           BetLine[]
+  payment         Payment?
+  ledgerEntries   LedgerEntry[]
+
+  @@index([playerId, createdAt])
+  @@index([cashierId, createdAt])
+  @@index([roundId, status])
+}
+
+model BetLine {
+  id                String   @id @default(cuid())
+  betId             String
+  plateDisplay      String
+  normalizedPlate   String
+  unitCents         Int
+  tensCents         Int
+  hundredsCents     Int
+  thousandsCents    Int
+  lettersCents      Int
+  fullPlateCents    Int
+  prizeCents        Int?
+  prizeCreditedAt   DateTime?
+  createdAt         DateTime @default(now())
+  bet               Bet      @relation(fields: [betId], references: [id], onDelete: Restrict)
+
+  @@index([normalizedPlate])
+  @@index([betId])
+}
+
+model Payment {
+  id                    String        @id @default(cuid())
+  betId                 String        @unique
+  provider              String
+  providerPaymentId     String?
+  idempotencyKey        String        @unique
+  status                PaymentStatus @default(PENDING)
+  amountCents           Int
+  confirmedAt           DateTime?
+  expiresAt             DateTime?
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+  bet                   Bet           @relation(fields: [betId], references: [id], onDelete: Restrict)
+  webhookEvents         WebhookEvent[]
+
+  @@unique([provider, providerPaymentId])
+  @@index([status, createdAt])
+}
+
+model WebhookEvent {
+  id                String   @id @default(cuid())
+  provider          String
+  providerEventId   String
+  eventType         String
+  payloadDigest     String
+  receivedAt        DateTime @default(now())
+  processedAt       DateTime?
+  processingError   String?
+  paymentId         String?
+  payment           Payment? @relation(fields: [paymentId], references: [id], onDelete: Restrict)
+
+  @@unique([provider, providerEventId])
+  @@index([processedAt, receivedAt])
+}
+
+model LedgerEntry {
+  id             String          @id @default(cuid())
+  userId         String
+  betId          String?
+  type           LedgerEntryType
+  amountCents    Int
+  currency       String          @default("BRL")
+  idempotencyKey String          @unique
+  description    String
+  createdAt      DateTime        @default(now())
+  user           User            @relation(fields: [userId], references: [id], onDelete: Restrict)
+  bet            Bet?            @relation(fields: [betId], references: [id], onDelete: Restrict)
+
+  @@index([userId, createdAt])
+  @@index([betId])
+}
+
+model Withdrawal {
+  id              String           @id @default(cuid())
+  userId          String
+  amountCents     Int
+  pixKeyEncrypted String
+  status          WithdrawalStatus @default(PENDING)
+  idempotencyKey  String           @unique
+  reviewedById    String?
+  providerRef     String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  user            User             @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@index([userId, status, createdAt])
+}
+
+model Setting {
+  key        String   @id
+  value      String
+  updatedAt  DateTime @updatedAt
+  changes    SettingChange[]
+}
+
+model SettingChange {
+  id           String   @id @default(cuid())
+  settingKey   String
+  oldValue     String?
+  newValue     String
+  changedById  String
+  changedAt    DateTime @default(now())
+  setting      Setting  @relation(fields: [settingKey], references: [key], onDelete: Restrict)
+  changedBy    User     @relation("SettingChanger", fields: [changedById], references: [id], onDelete: Restrict)
+
+  @@index([settingKey, changedAt])
+}
+
+model AuditEvent {
+  id          String   @id @default(cuid())
+  actorId     String?
+  action      String
+  entityType  String
+  entityId    String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  actor       User?    @relation("AuditActor", fields: [actorId], references: [id], onDelete: Restrict)
+
+  @@index([entityType, entityId, createdAt])
+  @@index([actorId, createdAt])
+}
