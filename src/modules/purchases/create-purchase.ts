@@ -230,10 +230,17 @@ export async function createPendingPixPurchase(
       // A unique-key race can mean another request with the same idempotency
       // key committed first. Re-enter the transaction once to read and compare
       // that purchase; unrelated unique violations will still surface on retry.
-      const uniqueConstraintRace =
-        knownRequestError && error.code === "P2002" && attempt === 0;
+      const uniqueTarget = knownRequestError ? error.meta?.target : undefined;
+      const idempotencyUniqueRace =
+        knownRequestError &&
+        error.code === "P2002" &&
+        attempt === 0 &&
+        (
+          (Array.isArray(uniqueTarget) && uniqueTarget.includes("idempotencyKey")) ||
+          (typeof uniqueTarget === "string" && uniqueTarget.toLowerCase().includes("idempotencykey"))
+        );
 
-      if ((serializationConflict && attempt < 3) || uniqueConstraintRace) {
+      if ((serializationConflict && attempt < 3) || idempotencyUniqueRace) {
         await new Promise((resolve) => setTimeout(resolve, 10 * (attempt + 1)));
         continue;
       }
