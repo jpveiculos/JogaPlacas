@@ -92,6 +92,8 @@ model User {
   auditEvents           AuditEvent[]  @relation("AuditActor")
   settingsChanged       SettingChange[] @relation("SettingChanger")
   commissions           CashierCommission[]
+  customersCreated      Customer[]              @relation("CustomerCreator")
+  withdrawalHistoryActions WithdrawalStatusHistory[] @relation("WithdrawalHistoryActor")
 
   @@index([role, status])
 }
@@ -104,6 +106,7 @@ model Customer {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   purchases   Purchase[]
+  createdBy   User?    @relation("CustomerCreator", fields: [createdById], references: [id], onDelete: Restrict)
 
   @@index([phone])
   @@index([createdAt])
@@ -293,6 +296,7 @@ model WithdrawalStatusHistory {
   note          String?
   createdAt     DateTime         @default(now())
   withdrawal    Withdrawal      @relation(fields: [withdrawalId], references: [id], onDelete: Restrict)
+  actor         User?            @relation("WithdrawalHistoryActor", fields: [actorId], references: [id], onDelete: Restrict)
 
   @@index([withdrawalId, createdAt])
 }
