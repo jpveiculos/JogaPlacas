@@ -11,9 +11,9 @@ ALTER TABLE "ParticipationLine" ADD COLUMN "plateFormat" "PlateFormat";
 -- the old normalizer converted some Mercosur letters into digits.
 UPDATE "ParticipationLine"
 SET "plateFormat" = CASE
-  WHEN upper(regexp_replace(trim("plateDisplay"), '\\s+', '', 'g')) ~ '^[A-Z]{3}[0-9][A-Z][0-9]{2}$'
+  WHEN upper(regexp_replace(trim("plateDisplay"), '[[:space:]]+', '', 'g')) ~ '^[A-Z]{3}[0-9][A-Z][0-9]{2}$'
     THEN 'MERCOSUR'::"PlateFormat"
-  WHEN upper(regexp_replace(trim("plateDisplay"), '\\s+', '', 'g')) ~ '^[A-Z]{3}-?[0-9]{4}$'
+  WHEN upper(regexp_replace(trim("plateDisplay"), '[[:space:]]+', '', 'g')) ~ '^[A-Z]{3}-?[0-9]{4}$'
     THEN 'LEGACY'::"PlateFormat"
   ELSE NULL
 END;
