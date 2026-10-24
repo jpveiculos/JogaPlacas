@@ -26,7 +26,15 @@ describe("normalizePlate", () => {
     });
   });
 
-  it("accepts Mercosur letters K-Z without inventing a legacy equivalent", () => {\n    expect(normalizePlate("ABC1K23")).toEqual({\n      normalized: "ABC1K23",\n      display: "ABC1K23",\n      format: "mercosur",\n    });\n  });\n\n  it("accepts lowercase input and surrounding whitespace", () => {
+  it("accepts Mercosur letters K-Z without inventing a legacy equivalent", () => {
+    expect(normalizePlate("ABC1K23")).toEqual({
+      normalized: "ABC1K23",
+      display: "ABC1K23",
+      format: "mercosur",
+    });
+  });
+
+  it("accepts lowercase input and surrounding whitespace", () => {
     expect(normalizePlate("  abc1d23 ").normalized).toBe("ABC1323");
   });
 
@@ -39,7 +47,8 @@ describe("normalizePlate", () => {
 
   it("validates input through the shared schema", () => {
     expect(plateInputSchema.safeParse("ABC-1323").success).toBe(true);
-    expect(plateInputSchema.safeParse("ABC1D23").success).toBe(true);\n    expect(plateInputSchema.safeParse("ABC1Z23").success).toBe(true);
+    expect(plateInputSchema.safeParse("ABC1D23").success).toBe(true);
+    expect(plateInputSchema.safeParse("ABC1Z23").success).toBe(true);
     expect(plateInputSchema.safeParse("not a plate").success).toBe(false);
   });
 });
