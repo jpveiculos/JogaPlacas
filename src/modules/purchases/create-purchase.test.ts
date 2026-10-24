@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { Prisma, type PrismaClient } from "@prisma/client";
+import { Prisma, type PrismaClient } from "../../generated/prisma/client";
 import {
   createPendingPixPurchase,
   type PixPurchaseInput,
