@@ -27,6 +27,7 @@ export async function closeRound(
   prisma: PrismaClient,
   roundId: string,
   decisionTimeOverride?: Date,
+  actorId?: string,
 ) {
   for (let attempt = 0; ; attempt += 1) {
     try {
@@ -44,6 +45,17 @@ export async function closeRound(
         }
 
         if (round.status === RoundStatus.CLOSED) {
+          if (actorId) {
+            await tx.auditEvent.create({
+              data: {
+                actorId,
+                action: "ROUND_CLOSE_ALREADY_CLOSED",
+                entityType: "Round",
+                entityId: round.id,
+                metadata: { outcome: "idempotent_noop" },
+              },
+            });
+          }
           return round;
         }
         if (round.status !== RoundStatus.SCHEDULED && round.status !== RoundStatus.OPEN) {
@@ -60,10 +72,22 @@ export async function closeRound(
           throw new RoundClosureError("Round cutoff has not been reached", "CUTOFF_NOT_REACHED");
         }
 
-        return tx.round.update({
+        const updated = await tx.round.update({
           where: { id: roundId },
           data: { status: RoundStatus.CLOSED },
         });
+        if (actorId) {
+          await tx.auditEvent.create({
+            data: {
+              actorId,
+              action: "ROUND_CLOSED",
+              entityType: "Round",
+              entityId: updated.id,
+              metadata: { previousStatus: round.status, status: updated.status },
+            },
+          });
+        }
+        return updated;
       }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
     } catch (error) {
       if (isSerializationConflict(error) && attempt < 3) {
