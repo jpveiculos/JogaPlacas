@@ -86,6 +86,39 @@ suite("PostgreSQL purchase concurrency", () => {
     expect(await prisma.participationLine.count({ where: { participation: { purchase: { idempotencyKey: key } } } })).toBe(1);
   });
 
+  it("rolls back purchase and participation records when payment creation fails", async () => {
+    const key = `it-rollback-${suffix}`;
+    const triggerName = `it_fail_payment_${suffix.replaceAll("-", "")}`;
+    const functionName = `it_fail_payment_fn_${suffix.replaceAll("-", "")}`;
+
+    await prisma.$executeRawUnsafe(`
+      CREATE FUNCTION "${functionName}"() RETURNS trigger AS $
+      BEGIN
+        RAISE EXCEPTION 'injected payment insert failure for integration test';
+      END;
+      $ LANGUAGE plpgsql
+    `);
+    await prisma.$executeRawUnsafe(`
+      CREATE TRIGGER "${triggerName}"
+      BEFORE INSERT ON "Payment"
+      FOR EACH ROW EXECUTE FUNCTION "${functionName}"()
+    `);
+
+    try {
+      await expect(
+        createPendingPixPurchase(prisma, input(key, `IT-RECEIPT-ROLLBACK-${suffix}`), fixedNow),
+      ).rejects.toThrow();
+
+      expect(await prisma.purchase.count({ where: { idempotencyKey: key } })).toBe(0);
+      expect(await prisma.payment.count({ where: { idempotencyKey: `pix-payment:${key}` } })).toBe(0);
+      expect(await prisma.purchaseParticipation.count({ where: { purchase: { idempotencyKey: key } } })).toBe(0);
+      expect(await prisma.participationLine.count({ where: { participation: { purchase: { idempotencyKey: key } } } })).toBe(0);
+    } finally {
+      await prisma.$executeRawUnsafe(`DROP TRIGGER IF EXISTS "${triggerName}" ON "Payment"`);
+      await prisma.$executeRawUnsafe(`DROP FUNCTION IF EXISTS "${functionName}"()`);
+    }
+  });
+
   it("rejects concurrent requests with the same key but different receipt codes", async () => {
     const key = `it-conflict-${suffix}`;
     const outcomes = await Promise.allSettled([
