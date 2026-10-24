@@ -12,7 +12,7 @@ const ALLOCATION_FIELD: Record<PrizeCategory, "unitCents" | "tensCents" | "hundr
 };
 
 export class RoundSettlementError extends Error {
-  constructor(message: string, public readonly code: "ROUND_NOT_FOUND" | "ROUND_NOT_DRAWN" | "INVALID_PLATE_RESULT" | "INCONSISTENT_SETTLEMENT") {
+  constructor(message: string, public readonly code: "ROUND_NOT_FOUND" | "ROUND_NOT_DRAWN" | "INVALID_PLATE_RESULT" | "INVALID_PLATE_BET" | "INCONSISTENT_SETTLEMENT") {
     super(message);
     this.name = "RoundSettlementError";
   }
@@ -33,10 +33,16 @@ function compactPlate(value: string): string {
   return value.toUpperCase().replaceAll("-", "").replaceAll(/\s+/g, "");
 }
 
-function isValidResult(format: PlateFormat, value: string): boolean {
+function isValidPlate(format: PlateFormat, value: string): boolean {
   return format === "LEGACY"
     ? /^[A-Z]{3}-?\d{4}$/.test(value)
     : /^[A-Z]{3}\d[A-Z]\d{2}$/.test(value);
+}
+
+function isSerializationConflict(error: unknown): boolean {
+  if (!(error instanceof Prisma.PrismaClientKnownRequestError)) return false;
+  return error.code === "P2034" ||
+    (error.code === "P2010" && (error.meta?.code === "40001" || error.message.toLowerCase().includes("could not serialize access")));
 }
 
 /**
@@ -45,8 +51,11 @@ function isValidResult(format: PlateFormat, value: string): boolean {
  */
 export function calculateLinePrizeCents(line: SettlementLine, legacyResult: string, mercosurResult: string): number {
   const result = line.plateFormat === "LEGACY" ? legacyResult : mercosurResult;
-  if (!isValidResult(line.plateFormat, result)) {
+  if (!isValidPlate(line.plateFormat, result)) {
     throw new RoundSettlementError("Result does not match its plate format", "INVALID_PLATE_RESULT");
+  }
+  if (!isValidPlate(line.plateFormat, line.normalizedPlate)) {
+    throw new RoundSettlementError("Stored bet does not match its declared plate format", "INVALID_PLATE_BET");
   }
   const bet = compactPlate(line.normalizedPlate);
   const drawn = compactPlate(result);
@@ -77,12 +86,6 @@ export function calculateLinePrizeCents(line: SettlementLine, legacyResult: stri
   return total;
 }
 
-function isSerializationConflict(error: unknown): boolean {
-  if (!(error instanceof Prisma.PrismaClientKnownRequestError)) return false;
-  return error.code === "P2034" ||
-    (error.code === "P2010" && (error.meta?.code === "40001" || error.message.toLowerCase().includes("could not serialize access")));
-}
-
 /**
  * Idempotently settles confirmed lines in a completed round. Direct player prizes
  * are credited in the same transaction. Cashier/customer awards remain pending
@@ -102,7 +105,7 @@ export async function settleRoundPrizes(prisma: PrismaClient, roundId: string) {
         if (round.status !== RoundStatus.COMPLETED || !round.resultLegacyPlate || !round.resultMercosurPlate) {
           throw new RoundSettlementError("Both draws must exist and the round must be completed", "ROUND_NOT_DRAWN");
         }
-        if (!isValidResult("LEGACY", round.resultLegacyPlate) || !isValidResult("MERCOSUR", round.resultMercosurPlate)) {
+        if (!isValidPlate("LEGACY", round.resultLegacyPlate) || !isValidPlate("MERCOSUR", round.resultMercosurPlate)) {
           throw new RoundSettlementError("Stored results do not match their formats", "INVALID_PLATE_RESULT");
         }
 
