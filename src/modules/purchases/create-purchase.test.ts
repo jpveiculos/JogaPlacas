@@ -107,7 +107,7 @@ describe("createPendingPixPurchase transaction conflict retries", () => {
   const prismaError = (code: "P2034" | "P2002", target?: string[]) =>
     new Prisma.PrismaClientKnownRequestError("simulated transaction conflict", {
       code,
-      clientVersion: "6.16.2",
+      clientVersion: "7.10.1",
       meta: target ? { target } : undefined,
     });
 
