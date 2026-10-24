@@ -1,11 +1,12 @@
 # Plano de autenticação e autorização
 
-Status: implementação inicial em andamento na branch `planning/foundation`; não aprovada para produção.
+Status: autenticação inicial implementada na branch `planning/foundation`; ainda não aprovada para produção.
+A CI do commit `c0fbd833a4fc5b05ef2fe396ac12dbf079dc0ea8` passou nos três jobs (verificação, migrações e testes PostgreSQL). Commits posteriores de preparação/deferimento de provisionamento ainda precisam de CI própria.
 Este documento não habilita acesso administrativo nem substitui código/testes.
 
 ## Decisão de segurança
 
-A aplicação ainda não tem autenticação nem sessões. Não expor rotas privilegiadas até concluir esta camada e os testes negativos.
+Já existem hash de senha, login/logout e sessões opacas persistidas. Ainda não existe fluxo completo de autorização administrativa. Não expor rotas privilegiadas até concluir as pendências abaixo.
 
 ### Identidade e credenciais
 - Usar o modelo `User` existente; nunca aceitar `role`, `userId` ou `isAdmin` fornecidos pelo cliente como prova de identidade.
@@ -33,8 +34,8 @@ A aplicação ainda não tem autenticação nem sessões. Não expor rotas privi
 
 1. Implementado nesta etapa: hash de senha com `scrypt` nativo do Node.js (N=16384, r=8, p=1, salt aleatório de 16 bytes e chave de 64 bytes), tabela `Session` e migração Prisma. A escolha evita dependência nativa adicional; reavaliar Argon2id antes de produção.
 2. Implementação inicial: acesso Prisma server-only, validação de credenciais, sessão opaca aleatória (token de 256 bits), persistência somente de SHA-256 do token, expiração em 12 horas, revogação e cookie HttpOnly/SameSite=Lax.
-3. Ainda pendente: provisionamento administrativo por comando de servidor, sem endpoint público de criação de administrador.
-4. Testes adicionados para hash/verificação, sal aleatório, senha fraca, entrada inválida, origem cruzada, credenciais genéricas, conta bloqueada e cookie de sessão/logout. Ainda faltam testes de integração de sessão real no PostgreSQL, expiração/revogação e auditoria de segurança.
+3. Ainda pendente: provisionamento administrativo por comando operacional executável e testado. Não foi adicionado endpoint público de criação de administrador. Não executar provisionamento em produção nesta etapa.
+4. Testes adicionados para hash/verificação, sal aleatório, senha fraca, entrada inválida, origem cruzada, credenciais genéricas, conta bloqueada e cookie de sessão/logout. Ainda faltam limitação de tentativas resistente a múltiplas instâncias, testes de integração de sessão real no PostgreSQL (incluindo expiração/revogação), auditoria e fluxo para troca de senha inicial. `mustChangePassword` existe no modelo, mas ainda não há fluxo de troca que permita considerar essa proteção concluída.
 5. Implementar a rota de fechamento e testes de autorização: anônimo = 401; jogador = 403; cambista = 403; administrador ativo = pode chamar o serviço; administrador bloqueado = negado; corpo inválido = 400.
 6. Executar lint, typecheck, testes, build, migração em banco descartável e os testes PostgreSQL de concorrência.
 7. Só considerar a integração pronta quando todos os critérios forem comprovados pela CI. Não implantar em produção como parte desta etapa.
