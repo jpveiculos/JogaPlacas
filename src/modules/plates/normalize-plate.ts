@@ -12,21 +12,8 @@ export const plateInputSchema = z
     "Informe uma placa válida no padrão ABC-1234 ou ABC1D23.",
   );
 
-const mercosurLetterToDigit: Readonly<Record<string, string>> = {
-  A: "0",
-  B: "1",
-  C: "2",
-  D: "3",
-  E: "4",
-  F: "5",
-  G: "6",
-  H: "7",
-  I: "8",
-  J: "9",
-};
-
 export type NormalizedPlate = {
-  /** Comparison key: A-J Mercosur maps to legacy digits; K-Z remains Mercosur-specific. */
+  /** Comparison key is format-specific; legacy and Mercosur keys never collide by conversion. */
   normalized: string;
   /** User-facing plate form, canonicalized for display. */
   display: string;
@@ -46,13 +33,10 @@ export function normalizePlate(input: string): NormalizedPlate {
     };
   }
 
-  const convertedDigit = mercosurLetterToDigit[parsed[4]];
-  // A-J maps to a legacy digit. K-Z is valid Mercosur but has no legacy equivalent.
-  const normalized = convertedDigit === undefined
-    ? parsed
-    : `${parsed.slice(0, 4)}${convertedDigit}${parsed.slice(5)}`;
+  // Keep the full Mercosur string intact, including A-Z in position five.
+  // Cross-format equivalence must be an explicit business rule, never implicit normalization.
   return {
-    normalized,
+    normalized: parsed,
     display: parsed,
     format: "mercosur",
   };
