@@ -27,6 +27,8 @@ jobs:
         run: npx prisma generate
         env:
           DATABASE_URL: postgresql://test:test@localhost:5432/testdb?schema=public
+      - name: Check administrator provisioning command
+        run: npm run admin:provision -- --help
       - name: Lint
         run: npm run lint
       - name: Typecheck
