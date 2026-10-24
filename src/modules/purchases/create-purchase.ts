@@ -26,6 +26,16 @@ export type PixPurchaseInput = {
   }>;
 };
 
+function stableJsonStringify(value: unknown): string {
+  if (value === null || typeof value !== "object") return JSON.stringify(value);
+  if (Array.isArray(value)) {
+    return `[${value.map((item) => stableJsonStringify(item)).join(",")}]`;
+  }
+  const record = value as Record<string, unknown>;
+  const keys = Object.keys(record).sort();
+  return `{${keys.map((key) => `${JSON.stringify(key)}:${stableJsonStringify(record[key])}`).join(",")}}`;
+}
+
 export class PurchaseServiceError extends Error {
   constructor(
     message: string,
@@ -93,6 +103,24 @@ export async function createPendingPixPurchase(
       }
     }
   } catch (error) {
+    // Reusing a previously committed idempotency key with a malformed or
+    // changed payload is a conflict, not a new invalid purchase. This lookup
+    // is advisory; the transaction below remains authoritative for races.
+    const purchaseDelegate = (prisma as PrismaClient & {
+      purchase?: { findUnique: (args: { where: { idempotencyKey: string }; select: { id: true } }) => Promise<{ id: string } | null> };
+    }).purchase;
+    if (purchaseDelegate) {
+      const existing = await purchaseDelegate.findUnique({
+        where: { idempotencyKey: input.idempotencyKey },
+        select: { id: true },
+      });
+      if (existing) {
+        throw new PurchaseServiceError(
+          "The idempotency key was already used for a different purchase",
+          "IDEMPOTENCY_CONFLICT",
+        );
+      }
+    }
     if (error instanceof PurchaseServiceError) throw error;
     throw new PurchaseServiceError(
       error instanceof Error ? error.message : "Invalid plate format",
@@ -122,7 +150,7 @@ export async function createPendingPixPurchase(
             line.lettersCents,
             line.fullPlateCents,
             line.ruleVersion,
-            JSON.stringify(line.ruleSnapshot),
+            stableJsonStringify(line.ruleSnapshot),
           ].join("|");
         }).sort().join("\\n"),
       ]));
@@ -138,7 +166,7 @@ export async function createPendingPixPurchase(
           line.lettersCents,
           line.fullPlateCents,
           line.ruleVersion,
-          JSON.stringify(line.ruleSnapshot),
+          stableJsonStringify(line.ruleSnapshot),
         ].join("|")).sort().join("\\n"),
       ]));
       const sameRequest =
