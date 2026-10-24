@@ -1,18 +1,14 @@
 import { Prisma, RoundStatus, type PrismaClient } from "../../generated/prisma/client";
+import { readPrizeMultipliers, type PrizeCategory } from "../../domain/prize-rule-snapshot";
 
-type PrizeCategory = "unit" | "tens" | "hundreds" | "thousands" | "letters" | "fullPlate";
 type PlateFormat = "LEGACY" | "MERCOSUR";
-
-const MULTIPLIERS: Record<PrizeCategory, number> = {
-  unit: 2, tens: 20, hundreds: 200, thousands: 2_000, letters: 2_000, fullPlate: 200_000,
-};
 const ALLOCATION_FIELD: Record<PrizeCategory, "unitCents" | "tensCents" | "hundredsCents" | "thousandsCents" | "lettersCents" | "fullPlateCents"> = {
   unit: "unitCents", tens: "tensCents", hundreds: "hundredsCents",
   thousands: "thousandsCents", letters: "lettersCents", fullPlate: "fullPlateCents",
 };
 
 export class RoundSettlementError extends Error {
-  constructor(message: string, public readonly code: "ROUND_NOT_FOUND" | "ROUND_NOT_DRAWN" | "INVALID_PLATE_RESULT" | "INVALID_PLATE_BET" | "INCONSISTENT_SETTLEMENT") {
+  constructor(message: string, public readonly code: "ROUND_NOT_FOUND" | "ROUND_NOT_DRAWN" | "INVALID_PLATE_RESULT" | "INVALID_PLATE_BET" | "INVALID_RULE_SNAPSHOT" | "INCONSISTENT_SETTLEMENT") {
     super(message);
     this.name = "RoundSettlementError";
   }
@@ -27,6 +23,8 @@ export type SettlementLine = {
   thousandsCents: number;
   lettersCents: number;
   fullPlateCents: number;
+  ruleVersion: string;
+  ruleSnapshot: unknown;
 };
 
 function compactPlate(value: string): string {
@@ -57,6 +55,10 @@ export function calculateLinePrizeCents(line: SettlementLine, legacyResult: stri
   if (!isValidPlate(line.plateFormat, line.normalizedPlate)) {
     throw new RoundSettlementError("Stored bet does not match its declared plate format", "INVALID_PLATE_BET");
   }
+  const multipliers = readPrizeMultipliers(line.ruleVersion, line.ruleSnapshot);
+  if (!multipliers) {
+    throw new RoundSettlementError("Stored rule snapshot is missing valid historical multipliers", "INVALID_RULE_SNAPSHOT");
+  }
   const bet = compactPlate(line.normalizedPlate);
   const drawn = compactPlate(result);
   const categories: Array<{ category: PrizeCategory; matches: boolean }> = [
@@ -74,7 +76,7 @@ export function calculateLinePrizeCents(line: SettlementLine, legacyResult: stri
     if (!Number.isSafeInteger(stake) || stake < 0) {
       throw new RoundSettlementError("Invalid stake allocation", "INCONSISTENT_SETTLEMENT");
     }
-    const amount = stake * MULTIPLIERS[item.category];
+    const amount = stake * multipliers[item.category];
     if (!Number.isSafeInteger(amount) || amount > 2_147_483_647) {
       throw new RoundSettlementError("Prize exceeds the database integer range", "INCONSISTENT_SETTLEMENT");
     }
@@ -133,6 +135,8 @@ export async function settleRoundPrizes(prisma: PrismaClient, roundId: string) {
             thousandsCents: line.thousandsCents,
             lettersCents: line.lettersCents,
             fullPlateCents: line.fullPlateCents,
+            ruleVersion: line.ruleVersion,
+            ruleSnapshot: line.ruleSnapshot,
           }, round.resultLegacyPlate, round.resultMercosurPlate);
 
           if (line.prizeCents !== null && line.prizeCents !== prize) {
