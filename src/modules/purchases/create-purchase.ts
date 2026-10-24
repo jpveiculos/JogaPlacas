@@ -104,6 +104,7 @@ export async function createPendingPixPurchase(
         participation.lines.map((line) => {
           const normalized = normalizePlate(line.plateDisplay);
           return [
+            normalized.format,
             normalized.normalized,
             line.unitCents,
             line.tensCents,
@@ -119,6 +120,7 @@ export async function createPendingPixPurchase(
       const existingByRound = new Map(existing.participations.map((participation) => [
         participation.roundId,
         participation.lines.map((line) => [
+          String(line.plateFormat).toLowerCase(),
           line.normalizedPlate,
           line.unitCents,
           line.tensCents,
@@ -239,6 +241,7 @@ export async function createPendingPixPurchase(
               create: participation.lines.map((line) => {
                 const normalized = normalizePlate(line.plateDisplay);
                 return {
+                  plateFormat: normalized.format === "legacy" ? "LEGACY" : "MERCOSUR",
                   plateDisplay: normalized.display,
                   normalizedPlate: normalized.normalized,
                   unitCents: line.unitCents,
