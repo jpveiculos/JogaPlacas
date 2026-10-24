@@ -2,9 +2,9 @@ name: Verify
 
 on:
   pull_request:
-    branches: [main]
-  push:
     branches: [main, planning/foundation]
+  push:
+    branches: [main, planning/foundation, feature/dual-plate-draw]
   workflow_dispatch:
 
 jobs:
