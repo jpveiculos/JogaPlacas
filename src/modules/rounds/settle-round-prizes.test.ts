@@ -26,11 +26,11 @@ describe("calculateLinePrizeCents", () => {
 
   it("rejects malformed stored results", () => {
     expect(() => calculateLinePrizeCents(base(), "ABC1K23", "ABC1K23"))
-      .toThrowError(expect.objectContaining({ code: "INVALID_PLATE_RESULT" }));
+      .toThrowError("Result does not match its plate format");
   });
 
   it("rejects prizes outside the database integer range", () => {
     expect(() => calculateLinePrizeCents(base({ fullPlateCents: 2_147_483_647 }), "ABC-1234", "ABC1K23"))
-      .toThrowError(expect.objectContaining({ code: "INCONSISTENT_SETTLEMENT" }));
+      .toThrowError("Prize exceeds the database integer range");
   });
 });
