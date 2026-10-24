@@ -246,7 +246,16 @@ export async function createPendingPixPurchase(
     } catch (error) {
       const knownRequestError =
         error instanceof Prisma.PrismaClientKnownRequestError;
-      const serializationConflict = knownRequestError && error.code === "P2034";
+      const serializationConflict =
+        knownRequestError &&
+        (
+          error.code === "P2034" ||
+          // PostgreSQL errors raised by raw SELECT ... FOR UPDATE can be
+          // wrapped as P2010; SQLSTATE 40001 is serialization_failure.
+          (error.code === "P2010" &&
+            (error.meta?.code === "40001" ||
+              String(error.message).toLowerCase().includes("could not serialize access")))
+        );
       // A unique-key race can mean another request with the same idempotency
       // key committed first. Re-enter the transaction once to read and compare
       // that purchase; unrelated unique violations will still surface on retry.
