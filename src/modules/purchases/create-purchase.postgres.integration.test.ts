@@ -165,7 +165,7 @@ suite("PostgreSQL purchase concurrency", () => {
     })],
   ])("rejects a same-key replay when %s changes", async (_field, mutate) => {
     const key = `it-field-conflict-${suffix}-${String(_field).replaceAll(" ", "-")}`;
-    const original = input(key, `IT-RECEIPT-FIELD-${suffix}`);
+    const original = input(key, `IT-RECEIPT-FIELD-${suffix}-${String(_field).replaceAll(" ", "-")}`);
     await createPendingPixPurchase(prisma, original, fixedNow);
 
     await expect(
