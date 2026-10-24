@@ -11,10 +11,17 @@ vi.mock("@/lib/auth/session", () => ({
   authPrisma: { auditEvent: { create: mocks.auditCreate } },
   SESSION_COOKIE: "jogaplacas_session",
 }));
-vi.mock("@/modules/rounds/close-round", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@/modules/rounds/close-round")>();
-  return { ...actual, closeRound: mocks.closeRound };
-});
+vi.mock("@/modules/rounds/close-round", () => ({
+  closeRound: mocks.closeRound,
+  RoundClosureError: class RoundClosureError extends Error {
+    code: string;
+    constructor(message: string, code: string) {
+      super(message);
+      this.name = "RoundClosureError";
+      this.code = code;
+    }
+  },
+}));
 
 import { POST } from "./route";
 
@@ -86,8 +93,10 @@ describe("POST /api/admin/rounds/[roundId]/close", () => {
   });
 
   it("maps a round that is not yet closable to conflict", async () => {
-    const { RoundClosureError } = await import("@/modules/rounds/close-round");
-    mocks.closeRound.mockRejectedValue(new RoundClosureError("not yet", "CUTOFF_NOT_REACHED"));
+    mocks.closeRound.mockRejectedValue(Object.assign(new Error("not yet"), {
+      name: "RoundClosureError",
+      code: "CUTOFF_NOT_REACHED",
+    }));
     const result = await POST(request(), context);
     expect(result.status).toBe(409);
     expect(mocks.closeRound).toHaveBeenCalledOnce();
