@@ -39,12 +39,18 @@
 ## 5. Jogador
 - Cadastro/login com usuário e senha, sem exigir nome real ou documento como regra geral.
 - Modal de jogo para adicionar/revisar/remover placas, valor, repetição, método de pagamento e confirmação.
+- **Gerador aleatório de placas:** oferecer, na área do jogador, uma opção para gerar uma placa válida aleatória quando a pessoa estiver indecisa. A placa gerada é apenas uma sugestão visual; não é palpite preditivo nem oferece vantagem ou garantia de prêmio.
+- A pessoa pode gerar outra placa quantas vezes desejar antes de escolher. Cada nova geração substitui somente a sugestão exibida; não cria aposta, não reserva placa e não movimenta saldo.
+- Exibir uma ação explícita **“Adicionar ao jogo”** para incluir a placa escolhida no modal de aposta. Até essa confirmação, a placa permanece apenas como sugestão e pode ser descartada sem efeitos.
+- O gerador deve respeitar os formatos de placa aceitos pela especificação e produzir uma representação válida e normalizável pelo servidor. A geração pode ocorrer no cliente, mas toda validação necessária à aposta continua sendo feita no servidor.
 - WhatsApp solicitado para recibo, pré-preenchido quando disponível e editável.
 - Resultados recentes exibidos por até 24 horas; histórico próprio de apostas dos últimos 7 dias na interface. Registros financeiros completos permanecem disponíveis para auditoria administrativa.
 - Recuperação de acesso orientada ao contato do administrador via WhatsApp; não usar link de redefinição por e-mail como fluxo definido.
 
 ## 6. Cambista
 - Recursos de aposta e consulta equivalentes aos necessários para vender a clientes, sem carteira própria nem saques.
+- Disponibilizar também o gerador aleatório de placas na área do cambista, para ajudar quando o cliente não tiver um palpite. O cambista pode gerar novas sugestões até o cliente escolher uma e, então, usar **“Adicionar ao jogo”** para incluí-la na venda em andamento.
+- Gerar ou trocar sugestões não pode criar nem duplicar uma venda, confirmar pagamento, alterar valores ou registrar participação. A venda só segue o fluxo normal após a escolha explícita e a confirmação da operação.
 - Registrar cliente, placas, valor por rodada, repetição, forma de pagamento e WhatsApp; emitir/recuperar recibo sem duplicar venda.
 - Dinheiro em espécie: cambista confirma recebimento e assume responsabilidade pelo registro. Pix: confirmar via provedor.
 - Histórico limitado às próprias operações, com situação do pagamento, resultado/prêmio e dados da rodada.
@@ -64,6 +70,7 @@
 - Interface limpa, responsiva e simples.
 - Funções secundárias em menus recolhidos, com indicadores de expansão.
 - Modal Pix com QR Code, opção copiar/colar e botão para sair da tela do QR; sair da tela não cancela a cobrança.
+- No modal de jogo do jogador e no fluxo de venda do cambista, apresentar o gerador com ações simples **“Gerar placa”**, **“Gerar outra”** e **“Adicionar ao jogo”**. Mostrar claramente a placa sugerida e manter a escolha sob controle do usuário.
 - Mensagens e estados de pagamento devem ser claros, sem afirmar sucesso antes da confirmação do servidor/provedor.
 
 ## 9. Critérios transversais
