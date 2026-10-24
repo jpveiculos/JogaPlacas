@@ -16,11 +16,7 @@ export function LoginForm() {
     setError("");
     setIsSubmitting(true);
     try {
-      const login = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
-      });
+      const login = await fetch("/api/auth/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username, password }) });
       if (!login.ok) {
         setError(login.status === 401 ? "Usuário ou senha inválidos." : "Não foi possível entrar agora. Tente novamente.");
         return;
@@ -31,12 +27,7 @@ export function LoginForm() {
         return;
       }
       const session = await response.json() as SessionResponse;
-      if (session.user.mustChangePassword) {
-        await fetch("/api/auth/logout", { method: "POST" });
-        setError("Esta conta exige a troca da senha inicial. O acesso ficará bloqueado até que o fluxo seguro de troca seja disponibilizado.");
-        return;
-      }
-      window.location.assign(destinationByRole[session.user.role]);
+      window.location.assign(session.user.mustChangePassword ? "/change-password" : destinationByRole[session.user.role]);
     } catch {
       setError("Falha de conexão. Verifique sua internet e tente novamente.");
     } finally {
