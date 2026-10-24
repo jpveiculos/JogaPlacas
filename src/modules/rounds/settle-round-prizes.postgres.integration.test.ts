@@ -63,11 +63,15 @@ suite("PostgreSQL prize settlement idempotency", () => {
     await prisma.$disconnect();
   });
 
-  it("credits the same winning line only once across repeated settlement calls", async () => {
-    const first = await settleRoundPrizes(prisma, roundId);
+  it("credits the same winning line only once across concurrent and repeated settlement calls", async () => {
+    const [first, concurrent] = await Promise.all([
+      settleRoundPrizes(prisma, roundId),
+      settleRoundPrizes(prisma, roundId),
+    ]);
     const second = await settleRoundPrizes(prisma, roundId);
 
     expect(first.creditedLines).toBe(1);
+    expect(concurrent.creditedLines).toBe(1);
     expect(second.creditedLines).toBe(1);
     expect(await prisma.ledgerEntry.count({ where: { idempotencyKey: "prize-credit:" + lineId } })).toBe(1);
     expect(await prisma.ledgerEntry.findUnique({ where: { idempotencyKey: "prize-credit:" + lineId } }))
