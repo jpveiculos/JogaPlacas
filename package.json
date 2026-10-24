@@ -16,7 +16,8 @@
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
     "db:studio": "prisma studio",
-    "test:postgres": "vitest run src/modules/purchases/create-purchase.postgres.integration.test.ts"
+    "test:postgres": "vitest run src/modules/purchases/create-purchase.postgres.integration.test.ts",
+    "admin:provision": "node --experimental-strip-types scripts/provision-admin.mjs"
   },
   "dependencies": {
     "@prisma/adapter-pg": "7.10.1",
