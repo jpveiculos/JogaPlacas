@@ -1,0 +1,45 @@
+name: Temporary Initial Migration Generator
+
+on:
+  push:
+    branches: [planning/foundation]
+    paths:
+      - ".github/workflows/temporary-initial-migration.yml"
+      - "prisma/schema.prisma"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout foundation branch
+        uses: actions/checkout@v4
+        with:
+          ref: planning/foundation
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Generate initial migration from empty database schema
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/testdb?schema=public
+        run: |
+          mkdir -p prisma/migrations/20261023000000_init
+          npx prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script > prisma/migrations/20261023000000_init/migration.sql
+          test -s prisma/migrations/20261023000000_init/migration.sql
+          head -n 30 prisma/migrations/20261023000000_init/migration.sql
+      - name: Commit generated migration
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add prisma/migrations/20261023000000_init/migration.sql
+          git commit -m "Add initial PostgreSQL migration"
+          git push origin HEAD:planning/foundation
