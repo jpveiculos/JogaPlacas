@@ -1,14 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 
+const mocks = vi.hoisted(() => ({ loginRateLimit: { getLoginBlock: vi.fn(), recordLoginFailure: vi.fn(), clearLoginFailures: vi.fn() } }));
+
 vi.mock("@/lib/auth/session", () => ({
   authPrisma: { user: { findUnique: vi.fn() } },
   createSession: vi.fn(),
-  loginRateLimit: {
-    getLoginBlock: vi.fn(),
-    recordLoginFailure: vi.fn(),
-    clearLoginFailures: vi.fn(),
-  },
   SESSION_COOKIE: "jogaplacas_session",
 }));
 vi.mock("@/lib/auth/password", () => ({ verifyPassword: vi.fn() }));
