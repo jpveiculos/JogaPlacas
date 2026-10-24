@@ -30,25 +30,25 @@ export async function recordLoginFailure(prisma: PrismaClient, username: string,
   const keyHash = keyFor(username);
   const result = await prisma.$queryRaw<Array<{ attempts: number; blockedUntil: Date | null }>>`
     INSERT INTO "LoginAttemptBucket" ("keyHash", "attempts", "windowStartedAt", "blockedUntil", "updatedAt")
-    VALUES (${keyHash}, 1, ${now}, NULL, ${now})
+    VALUES (${keyHash}, 1, CAST(${now} AS TIMESTAMP), NULL, CAST(${now} AS TIMESTAMP))
     ON CONFLICT ("keyHash") DO UPDATE SET
       "attempts" = CASE
-        WHEN "LoginAttemptBucket"."windowStartedAt" <= ${now} - INTERVAL '15 minutes' THEN 1
+        WHEN "LoginAttemptBucket"."windowStartedAt" <= CAST(${now} AS TIMESTAMP) - INTERVAL '15 minutes' THEN 1
         ELSE "LoginAttemptBucket"."attempts" + 1
       END,
       "windowStartedAt" = CASE
-        WHEN "LoginAttemptBucket"."windowStartedAt" <= ${now} - INTERVAL '15 minutes' THEN ${now}
+        WHEN "LoginAttemptBucket"."windowStartedAt" <= CAST(${now} AS TIMESTAMP) - INTERVAL '15 minutes' THEN CAST(${now} AS TIMESTAMP)
         ELSE "LoginAttemptBucket"."windowStartedAt"
       END,
       "blockedUntil" = CASE
         WHEN (CASE
-          WHEN "LoginAttemptBucket"."windowStartedAt" <= ${now} - INTERVAL '15 minutes' THEN 1
+          WHEN "LoginAttemptBucket"."windowStartedAt" <= CAST(${now} AS TIMESTAMP) - INTERVAL '15 minutes' THEN 1
           ELSE "LoginAttemptBucket"."attempts" + 1
         END) >= ${LOGIN_MAX_ATTEMPTS}
-        THEN ${now} + INTERVAL '15 minutes'
+        THEN CAST(${now} AS TIMESTAMP) + INTERVAL '15 minutes'
         ELSE NULL
       END,
-      "updatedAt" = ${now}
+      "updatedAt" = CAST(${now} AS TIMESTAMP)
     RETURNING "attempts", "blockedUntil"
   `;
   const bucket = result[0]!;
