@@ -348,3 +348,15 @@ model AuditEvent {
   @@index([entityType, entityId, createdAt])
   @@index([actorId, createdAt])
 }
+
+
+model LoginAttemptBucket {
+  keyHash         String   @id
+  attempts        Int      @default(0)
+  windowStartedAt DateTime @default(now())
+  blockedUntil    DateTime?
+  updatedAt       DateTime @updatedAt
+
+  @@index([blockedUntil])
+  @@index([windowStartedAt])
+}
