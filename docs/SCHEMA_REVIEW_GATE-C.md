@@ -1,5 +1,8 @@
 # Gate C — revisão do schema atual contra o manual
 
+> **Nota de atualização (2026-10-23):** este documento registra uma inspeção/etapa anterior e contém afirmações que podem não refletir a branch atual. Para o estado vigente, consulte `docs/TECHNICAL_ROADMAP.md`, `docs/PRODUCT_SPEC.md`, `docs/POSTGRES_CONCURRENCY_TEST_PLAN.md` e o código atual. A branch já possui `package-lock.json`, usa `npm ci` na CI e contém `prisma/migrations/20261023000000_init/migration.sql`; o schema foi refatorado para `Purchase`/`PurchaseParticipation`, e o serviço possui retry limitado para conflitos Prisma. Não use as descrições antigas abaixo como retrato do HEAD atual nem como autorização para migração em produção.
+
+
 Status: **bloqueado para migração**. Esta revisão é deliberadamente não destrutiva: não altera nem migra banco algum.
 
 ## Divergências confirmadas em `prisma/schema.prisma`
