@@ -4,7 +4,10 @@ import { calculateLinePrizeCents, type SettlementLine } from "./settle-round-pri
 const base = (overrides: Partial<SettlementLine> = {}): SettlementLine => ({
   plateFormat: "LEGACY", normalizedPlate: "ABC1234",
   unitCents: 100, tensCents: 100, hundredsCents: 100, thousandsCents: 100,
-  lettersCents: 100, fullPlateCents: 100, ...overrides,
+  lettersCents: 100, fullPlateCents: 100,
+  ruleVersion: "test-v1",
+  ruleSnapshot: { version: "test-v1", multipliers: { unit: 2, tens: 20, hundreds: 200, thousands: 2_000, letters: 2_000, fullPlate: 200_000 } },
+  ...overrides,
 });
 
 describe("calculateLinePrizeCents", () => {
@@ -27,6 +30,19 @@ describe("calculateLinePrizeCents", () => {
       lettersCents: 0, fullPlateCents: 0,
     });
     expect(calculateLinePrizeCents(line, "AAA-0000", "ABC1K23")).toBe(2_000);
+  });
+
+  it("uses the multiplier snapshot stored with the bet, not the current default", () => {
+    const line = base({
+      unitCents: 100, tensCents: 0, hundredsCents: 0, thousandsCents: 0, lettersCents: 0, fullPlateCents: 0,
+      ruleSnapshot: { version: "test-v1", multipliers: { unit: 7, tens: 20, hundreds: 200, thousands: 2_000, letters: 2_000, fullPlate: 200_000 } },
+    });
+    expect(calculateLinePrizeCents(line, "ABC-1234", "XYZ9K99")).toBe(700);
+  });
+
+  it("rejects a missing or mismatched historical multiplier snapshot", () => {
+    expect(() => calculateLinePrizeCents(base({ ruleSnapshot: { version: "old-v1" } }), "ABC-1234", "XYZ9K99"))
+      .toThrowError("Stored rule snapshot is missing valid historical multipliers");
   });
 
   it("rejects malformed stored results", () => {
