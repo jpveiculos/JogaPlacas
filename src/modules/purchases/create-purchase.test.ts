@@ -93,6 +93,34 @@ describe("createPendingPixPurchase input validation", () => {
       .rejects.toMatchObject({ code: "INVALID_PURCHASE" });
     expect(transaction).not.toHaveBeenCalled();
   });
+
+  it.each([0, 11, 1.5])("rejects invalid repetition count %s before opening a transaction", async (repetitions) => {
+    const input = validInput();
+    input.repetitions = repetitions;
+    input.participations = repetitions === 1 ? input.participations : [];
+
+    await expect(createPendingPixPurchase(service(), input))
+      .rejects.toMatchObject({ code: "INVALID_PURCHASE" });
+    expect(transaction).not.toHaveBeenCalled();
+  });
+
+  it("rejects an invalid plate format before opening a transaction", async () => {
+    const input = validInput();
+    input.participations[0]!.lines[0]!.plateDisplay = "NOT-A-PLATE";
+
+    await expect(createPendingPixPurchase(service(), input))
+      .rejects.toMatchObject({ code: "INVALID_PURCHASE" });
+    expect(transaction).not.toHaveBeenCalled();
+  });
+
+  it("rejects an empty plate list before opening a transaction", async () => {
+    const input = validInput();
+    input.participations[0]!.lines = [];
+
+    await expect(createPendingPixPurchase(service(), input))
+      .rejects.toMatchObject({ code: "INVALID_PURCHASE" });
+    expect(transaction).not.toHaveBeenCalled();
+  });
 });
 
 describe("createPendingPixPurchase transaction conflict retries", () => {
