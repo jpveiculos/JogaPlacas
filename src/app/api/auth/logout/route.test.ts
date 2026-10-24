@@ -32,6 +32,6 @@ describe("POST /api/auth/logout", () => {
     const response = await POST(request);
     expect(response.status).toBe(200);
     expect(revoke).toHaveBeenCalledWith("opaque-token");
-    expect(response.headers.get("set-cookie")).toContain("Max-Age=0");
+    expect(response.headers.get("set-cookie")).toContain("Expires=Thu, 01 Jan 1970 00:00:00 GMT");
   });
 });
