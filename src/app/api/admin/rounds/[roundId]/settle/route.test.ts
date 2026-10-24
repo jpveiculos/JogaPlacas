@@ -82,4 +82,11 @@ describe("POST /api/admin/rounds/[roundId]/settle", () => {
     mocks.settleRoundPrizes.mockRejectedValue(new RoundSettlementError("not drawn", "ROUND_NOT_DRAWN"));
     expect((await POST(request(), context)).status).toBe(409);
   });
+
+  it("blocks settlement when a stored bet has an invalid format", async () => {
+    mocks.settleRoundPrizes.mockRejectedValue(new RoundSettlementError("invalid bet", "INVALID_PLATE_BET"));
+    const result = await POST(request(), context);
+    expect(result.status).toBe(409);
+    await expect(result.json()).resolves.toMatchObject({ error: "Aposta armazenada com formato inválido; apuração bloqueada para reconciliação." });
+  });
 });
