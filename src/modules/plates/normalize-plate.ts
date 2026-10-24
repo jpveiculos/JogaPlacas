@@ -26,7 +26,7 @@ const mercosurLetterToDigit: Readonly<Record<string, string>> = {
 };
 
 export type NormalizedPlate = {
-  /** Canonical comparison/result key, always three letters plus four digits. */
+  /** Comparison key: A-J Mercosur maps to legacy digits; K-Z remains Mercosur-specific. */
   normalized: string;
   /** User-facing plate form, canonicalized for display. */
   display: string;
@@ -46,9 +46,13 @@ export function normalizePlate(input: string): NormalizedPlate {
     };
   }
 
-  const converted = `${parsed.slice(0, 4)}${mercosurLetterToDigit[parsed[4]]}${parsed.slice(5)}`;
+  const convertedDigit = mercosurLetterToDigit[parsed[4]];
+  // A-J maps to a legacy digit. K-Z is valid Mercosur but has no legacy equivalent.
+  const normalized = convertedDigit === undefined
+    ? parsed
+    : `${parsed.slice(0, 4)}${convertedDigit}${parsed.slice(5)}`;
   return {
-    normalized: converted,
+    normalized,
     display: parsed,
     format: "mercosur",
   };
