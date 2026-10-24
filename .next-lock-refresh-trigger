@@ -1,1 +1,1 @@
-Temporary trigger for the isolated dependency lockfile refresh. This file will be removed after the lockfile is regenerated.
+Trigger verification against the regenerated Next.js 16 lockfile. This temporary file will be removed after validation.
