@@ -195,6 +195,24 @@ suite("PostgreSQL purchase concurrency", () => {
     expect(await prisma.purchaseParticipation.count({ where: { purchase: { idempotencyKey: key } } })).toBe(0);
   });
 
+
+
+  it("rejects concurrent requests with the same key but different receipt codes", async () => {
+    const key = `it-conflict-${suffix}`;
+    const outcomes = await Promise.allSettled([
+      createPendingPixPurchase(prisma, input(key, `IT-RECEIPT-A-${suffix}`), fixedNow),
+      createPendingPixPurchase(prisma, input(key, `IT-RECEIPT-B-${suffix}`), fixedNow),
+    ]);
+
+    expect(outcomes.filter((outcome) => outcome.status === "fulfilled")).toHaveLength(1);
+    const rejected = outcomes.find((outcome) => outcome.status === "rejected");
+    expect(rejected?.status).toBe("rejected");
+    if (rejected?.status === "rejected") {
+      expect(rejected.reason).toMatchObject({ code: "IDEMPOTENCY_CONFLICT" });
+    }
+    expect(await prisma.purchase.count({ where: { idempotencyKey: key } })).toBe(1);
+    expect(await prisma.payment.count({ where: { purchase: { idempotencyKey: key } } })).toBe(1);
+  });
   it("serializes a purchase decision against concurrent round closure", async () => {
     const key = `it-close-race-${suffix}`;
     const request = input(key, `IT-RECEIPT-CLOSE-RACE-${suffix}`);
@@ -223,20 +241,4 @@ suite("PostgreSQL purchase concurrency", () => {
     }
   });
 
-  it("rejects concurrent requests with the same key but different receipt codes", async () => {
-    const key = `it-conflict-${suffix}`;
-    const outcomes = await Promise.allSettled([
-      createPendingPixPurchase(prisma, input(key, `IT-RECEIPT-A-${suffix}`), fixedNow),
-      createPendingPixPurchase(prisma, input(key, `IT-RECEIPT-B-${suffix}`), fixedNow),
-    ]);
-
-    expect(outcomes.filter((outcome) => outcome.status === "fulfilled")).toHaveLength(1);
-    const rejected = outcomes.find((outcome) => outcome.status === "rejected");
-    expect(rejected?.status).toBe("rejected");
-    if (rejected?.status === "rejected") {
-      expect(rejected.reason).toMatchObject({ code: "IDEMPOTENCY_CONFLICT" });
-    }
-    expect(await prisma.purchase.count({ where: { idempotencyKey: key } })).toBe(1);
-    expect(await prisma.payment.count({ where: { purchase: { idempotencyKey: key } } })).toBe(1);
-  });
 });
