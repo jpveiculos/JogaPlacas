@@ -260,7 +260,24 @@ suite("PostgreSQL purchase concurrency", () => {
         },
       );
 
-      await new Promise((resolve) => setTimeout(resolve, 200));
+      let purchaseObservedWaitingForLock = false;
+      const lockObservationDeadline = Date.now() + 800;
+      while (Date.now() < lockObservationDeadline && Date.now() < cutoffAt.getTime()) {
+        const waiting = await prisma.$queryRaw<Array<{ count: bigint }>>`
+          SELECT count(*) AS count
+          FROM pg_stat_activity
+          WHERE wait_event_type = 'Lock'
+            AND query ILIKE '%FOR UPDATE%'
+            AND query ILIKE '%Round%'
+        `;
+        if (Number(waiting[0]?.count ?? 0) > 0) {
+          purchaseObservedWaitingForLock = true;
+          break;
+        }
+        await new Promise((resolve) => setTimeout(resolve, 25));
+      }
+      expect(purchaseObservedWaitingForLock).toBe(true);
+
       const remainingUntilCutoff = cutoffAt.getTime() - Date.now();
       if (remainingUntilCutoff > 0) {
         await new Promise((resolve) => setTimeout(resolve, remainingUntilCutoff + 150));
