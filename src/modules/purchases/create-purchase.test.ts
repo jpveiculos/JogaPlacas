@@ -207,6 +207,7 @@ describe("createPendingPixPurchase idempotency replay", () => {
     participations: [{
       roundId: "round-1",
       lines: [{
+        plateFormat: "LEGACY",
         normalizedPlate: "ABC1234",
         unitCents: 100,
         tensCents: 0,
