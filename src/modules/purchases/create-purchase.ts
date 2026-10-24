@@ -1,4 +1,4 @@
-import { Prisma, PrismaClient, PaymentMethod, RoundStatus } from "@prisma/client";
+import { Prisma, PaymentMethod, RoundStatus, type PrismaClient } from "../../generated/prisma/client";
 import { normalizePlate } from "../plates/normalize-plate";
 import {
   validatePurchaseDraft,
