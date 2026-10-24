@@ -1,55 +1,66 @@
-# Joga Placas — Arquitetura técnica e plano de execução
+# Joga Placas — Manual técnico de implementação
 
-Status: proposta técnica inicial para orientar a implementação. A especificação funcional em `docs/PRODUCT_SPEC.md` prevalece sobre este documento.
+Status: manual operacional da branch `planning/foundation`. A especificação funcional em `docs/PRODUCT_SPEC.md` é a fonte de verdade para comportamento; decisões arquiteturais em `docs/ADR-001-FOUNDATION.md` e `docs/TARGET_DOMAIN_MODEL.md` complementam o manual.
 
-## Decisões técnicas iniciais
-- **Aplicação:** Next.js com App Router e TypeScript, em uma única aplicação web modular para reduzir complexidade operacional inicial.
-- **UI:** React com componentes acessíveis e responsivos; formulários validados tanto no cliente quanto no servidor.
-- **Banco:** PostgreSQL.
-- **Persistência/migrações:** Prisma ORM com migrações versionadas; restrições SQL e transações para invariantes financeiras.
-- **Validação:** Zod nos limites de entrada e configuração.
-- **Testes:** Vitest para unitários e integração; Playwright para fluxos críticos de interface quando a base estiver pronta.
-- **Qualidade:** ESLint, TypeScript strict, formatação consistente e CI executando lint, typecheck, testes e build.
-- **Dinheiro:** valores persistidos como inteiros em centavos (ou tipo SQL exato onde apropriado); nunca usar float para valores financeiros.
-- **Tempo:** armazenar instantes em UTC no banco e calcular/mostrar agenda no fuso `America/Sao_Paulo`.
-- **Pagamentos:** camada de integração por adaptador para não acoplar regras de negócio a um provedor específico. Webhooks autenticados, persistidos e idempotentes.
-- **Segredos:** variáveis de ambiente/secret manager; apenas nomes e exemplos fictícios em `.env.example`.
+## Produto e navegação obrigatórios
 
-## Organização modular pretendida
-- `src/app`: páginas e rotas da aplicação.
-- `src/modules/auth`: login, sessão, papéis e autorização.
-- `src/modules/plates`: validação e normalização de placas.
-- `src/modules/rounds`: calendário, fechamento e resultados de rodadas.
-- `src/modules/bets`: apostas, distribuição de valores e cálculo de prêmios.
-- `src/modules/payments`: pagamentos, adaptadores Pix e webhooks.
-- `src/modules/wallet`: livro-razão, créditos, débitos e saques.
-- `src/modules/cashiers`: vendas e comissões de cambistas.
-- `src/modules/admin`: administração, configurações e auditoria.
-- `src/lib`: infraestrutura compartilhada sem regras de domínio.
-- `prisma`: schema e migrações.
-- `tests`: testes unitários, integração e cenários críticos.
+A plataforma não deve ser concebida como um site cuja página inicial seja o produto principal. O produto consiste em três ambientes autenticados e separados:
+- **Área do jogador**: apostas, pagamentos, recibos, resultados, histórico e carteira conforme a especificação.
+- **Área do cambista**: vendas para clientes, recebimentos, recibos, histórico e comissões; sem carteira própria nem saques.
+- **Área do administrador**: gestão de usuários, rodadas, regras, resultados, financeiro, comissões, saques e auditoria.
 
-Os nomes podem ser ajustados durante a implementação se isso melhorar a separação sem contrariar a especificação.
+Pode existir uma área pública auxiliar para login, termos de uso, privacidade e outras páginas institucionais necessárias. Ela não substitui nem deve competir com os três ambientes principais. Após login compartilhado, o servidor identifica o papel e encaminha para a área permitida; toda autorização é verificada no servidor, não apenas escondida na interface.
 
-## Ordem de execução
-1. Registrar arquitetura e guardrails de segurança.
-2. Criar base da aplicação, configurações de qualidade e CI.
-3. Modelar banco e migrações iniciais; testar restrições e invariantes.
-4. Implementar domínio puro e testes: placa, categorias, rateio e rodadas.
-5. Implementar autenticação, sessões e autorização por papel.
-6. Implementar fluxo de apostas e regras de fechamento.
-7. Implementar pagamentos via adaptador, confirmação e webhooks idempotentes.
-8. Implementar carteira, livro-razão, prêmios e saques.
-9. Implementar área de cambista e comissões.
-10. Implementar painel administrativo, rodadas e auditoria.
-11. Integrar UI, notificações, recibos e histórico.
-12. Executar testes de segurança, concorrência, reconciliação e ponta a ponta.
-13. Configurar ambientes, migrações, observabilidade, backups e rollback.
-14. Revisar PR e somente então planejar implantação controlada.
+## Decisões técnicas aprovadas
 
-## Critérios para avançar
-- Cada etapa deve incluir mudanças pequenas, testes e documentação do que mudou.
-- Não incluir chaves ou credenciais reais em commits, mensagens, logs ou artefatos.
-- Não conectar ou alterar ambiente de produção nem disparar cobrança real durante o desenvolvimento inicial.
-- Provedor Pix, origem dos resultados e detalhes da fórmula de prêmio serão integrados por interfaces isoladas. Os requisitos funcionais já decididos serão respeitados; qualquer ambiguidade de regra de negócio será apresentada ao responsável antes de codificar comportamento irreversível.
-- Antes de operar comercialmente, verificar requisitos legais/regulatórios aplicáveis ao modelo de jogo e pagamento.
+- Aplicação modular única com Next.js App Router, React e TypeScript estrito.
+- PostgreSQL e Prisma ORM com migrações versionadas.
+- Zod para validar entradas e configuração nos limites da aplicação.
+- Vitest para testes unitários e de integração; Playwright para fluxos críticos de interface.
+- ESLint, typecheck, testes, validação/geração Prisma, build e teste de migrações na CI.
+- Valores monetários em centavos inteiros; nunca usar ponto flutuante para dinheiro.
+- Instantes persistidos em UTC e regras/agenda apresentadas no fuso `America/Sao_Paulo`.
+- Regras financeiras centralizadas no domínio; pagamentos por adaptadores para manter o domínio independente do provedor.
+- Webhooks autenticados, persistidos e idempotentes; segredo apenas em variáveis de ambiente/gerenciador de segredos.
+- Um checkout/compra pode conter de 1 a 10 participações de rodadas, com pagamento único antecipado; cada participação é registrada separadamente.
+- Cliente atendido pelo cambista é distinto de conta de jogador, salvo criação explícita de conta.
+- Livro-razão append-only, auditoria e snapshots históricos; não alterar saldos por atalhos nem reescrever condições antigas.
+
+## Estrutura modular de destino
+
+`src/app` contém rotas e layouts das três áreas e páginas públicas auxiliares. `src/modules` concentra casos de uso por domínio: auth, plates, rounds, bets, purchases, payments, wallet, cashiers e admin. `src/domain` contém regras puras; `src/lib` contém infraestrutura compartilhada sem regras de negócio; `prisma` contém schema e migrações. Não criar módulos vazios ou abstrações antecipadas sem necessidade demonstrada.
+
+## Política de limpeza e substituição
+
+- Antes de substituir ferramenta, serviço, modelo ou fluxo, localizar todas as referências e consumidores no repositório e comparar com o manual.
+- Ao concluir a substituição, remover código antigo, dependências, scripts, configurações, rotas e documentação obsoletos somente depois de provar que não têm consumidores ativos.
+- Não manter duas implementações concorrentes da mesma responsabilidade nem adicionar correções improvisadas sobre arquitetura incompatível.
+- Não apagar histórico/auditoria financeira nem migrações já aplicadas. Migrações versionadas são histórico operacional, não lixo.
+- Atualizar documentação no mesmo conjunto de mudanças; documentos de inspeções antigas devem ser corrigidos ou explicitamente identificados como registros históricos.
+- Remover dependências somente após busca de uso e validação de build/testes. Não atualizar versões principais cegamente.
+
+## Ordem obrigatória de execução
+
+1. Auditar repositório, dependências, CI, documentação e divergências em relação ao manual.
+2. Validar modelo de domínio e schema; revisar SQL de migração e testar exclusivamente em banco descartável.
+3. Completar domínio puro e testes de placa, categorias, rateio, valores e janelas de rodada.
+4. Implementar autenticação, sessões seguras, papéis, propriedade dos registros, limites de tentativa e auditoria.
+5. Implementar compra e participações com cutoff no servidor, idempotência e concorrência real no PostgreSQL.
+6. Implementar carteira/livro-razão, prêmios, saques, vendas em espécie e comissões com invariantes transacionais.
+7. Implementar os três ambientes de interface e as páginas públicas auxiliares conforme a especificação.
+8. **Somente na fase final**, integrar o provedor Pix/Mercado Pago, credenciais, webhooks e reconciliação. Até essa fase, não criar cobranças nem usar credenciais reais.
+9. Testar ponta a ponta, segurança, concorrência, reconciliação, backup/restauração e recuperação.
+10. Revisar configuração do novo servidor e variáveis de ambiente; preparar implantação e rollback sem tocar no site atual.
+11. Exigir CI verde, revisão final e autorização explícita antes de qualquer mudança de produção.
+
+## Situação atual da branch
+
+- Existe schema Prisma refatorado para Purchase/Participation, além de módulos de domínio e serviço de criação de compra pendente.
+- Existe migração inicial versionada em `prisma/migrations/20261023000000_init/migration.sql`; a CI a aplicou a um PostgreSQL descartável e verificou o status. Isso **não** significa que foi aplicada à produção ou que o domínio esteja completo.
+- A CI inclui instalação reproduzível com `npm ci`, validação/geração Prisma, lint, typecheck, testes, build e teste de migração.
+- A interface ainda é apenas um placeholder em `src/app/page.tsx`; as três áreas e autenticação ainda precisam ser implementadas. Não apresentar a plataforma como funcional enquanto os fluxos não existirem e passarem nos testes.
+- Mercado Pago permanece deliberadamente adiado para a fase final.
+
+## Critérios de avanço e segurança
+
+Cada etapa precisa produzir código, testes e documentação coerentes. Não alterar `main`, site ativo, domínio/DNS ou banco de produção durante o trabalho de fundação. Não fazer cobranças reais. Não considerar build ou deploy isolado como prova de funcionamento ponta a ponta. Antes da operação comercial, validar os requisitos legais e regulatórios aplicáveis.
