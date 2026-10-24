@@ -27,6 +27,11 @@ enum RoundStatus {
   CANCELLED
 }
 
+enum PlateFormat {
+  LEGACY
+  MERCOSUR
+}
+
 enum PurchaseStatus {
   PENDING_PAYMENT
   CONFIRMED
@@ -192,8 +197,9 @@ model PurchaseParticipation {
 }
 
 model ParticipationLine {
-  id                    String   @id @default(cuid())
+  id                    String      @id @default(cuid())
   participationId       String
+  plateFormat           PlateFormat
   plateDisplay          String
   normalizedPlate       String
   unitCents             Int
