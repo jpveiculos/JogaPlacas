@@ -213,6 +213,79 @@ suite("PostgreSQL purchase concurrency", () => {
     expect(await prisma.purchase.count({ where: { idempotencyKey: key } })).toBe(1);
     expect(await prisma.payment.count({ where: { purchase: { idempotencyKey: key } } })).toBe(1);
   });
+  it("rejects a purchase when its round lock is released after the real PostgreSQL cutoff", async () => {
+    const timedRoundId = `it-cutoff-lock-${suffix}`;
+    const key = `it-cutoff-lock-purchase-${suffix}`;
+    const cutoffAt = new Date(Date.now() + 1_500);
+
+    await prisma.round.create({
+      data: {
+        id: timedRoundId,
+        code: `IT-LOCK-${suffix}`,
+        startsAt: new Date(cutoffAt.getTime() + 60_000),
+        cutoffAt,
+        resultAt: new Date(cutoffAt.getTime() + 120_000),
+        status: "OPEN",
+      },
+    });
+
+    let releaseLock: (() => void) | undefined;
+    let signalLockAcquired: (() => void) | undefined;
+    const lockAcquired = new Promise<void>((resolve) => {
+      signalLockAcquired = resolve;
+    });
+    const lockReleased = new Promise<void>((resolve) => {
+      releaseLock = resolve;
+    });
+
+    const holdingTransaction = prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT "id" FROM "Round" WHERE "id" = ${timedRoundId} FOR UPDATE`;
+      signalLockAcquired!();
+      await lockReleased;
+    });
+
+    try {
+      await lockAcquired;
+
+      // Start while the cutoff is still in the future. The holder keeps the
+      // row lock, forcing the purchase transaction to decide only after release.
+      const purchasePromise = createPendingPixPurchase(
+        prisma,
+        {
+          ...input(key, `IT-RECEIPT-LOCK-${suffix}`),
+          participations: [{
+            ...input(key, `IT-RECEIPT-LOCK-${suffix}`).participations[0]!,
+            roundId: timedRoundId,
+          }],
+        },
+      );
+
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      const remainingUntilCutoff = cutoffAt.getTime() - Date.now();
+      if (remainingUntilCutoff > 0) {
+        await new Promise((resolve) => setTimeout(resolve, remainingUntilCutoff + 150));
+      } else {
+        await new Promise((resolve) => setTimeout(resolve, 150));
+      }
+
+      releaseLock!();
+      await holdingTransaction;
+
+      await expect(purchasePromise).rejects.toMatchObject({ code: "INVALID_PURCHASE" });
+      expect(await prisma.purchase.count({ where: { idempotencyKey: key } })).toBe(0);
+      expect(await prisma.payment.count({ where: { purchase: { idempotencyKey: key } } })).toBe(0);
+      expect(await prisma.purchaseParticipation.count({ where: { purchase: { idempotencyKey: key } } })).toBe(0);
+    } finally {
+      releaseLock?.();
+      await holdingTransaction.catch(() => undefined);
+      await prisma.participationLine.deleteMany({ where: { participation: { roundId: timedRoundId } } });
+      await prisma.payment.deleteMany({ where: { purchase: { participations: { some: { roundId: timedRoundId } } } } });
+      await prisma.purchaseParticipation.deleteMany({ where: { roundId: timedRoundId } });
+      await prisma.purchase.deleteMany({ where: { idempotencyKey: key } });
+      await prisma.round.deleteMany({ where: { id: timedRoundId } });
+    }
+  });
+
   it("serializes a purchase decision against concurrent round closure", async () => {
     const key = `it-close-race-${suffix}`;
     const request = input(key, `IT-RECEIPT-CLOSE-RACE-${suffix}`);
