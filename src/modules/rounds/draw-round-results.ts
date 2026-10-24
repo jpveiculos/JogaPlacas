@@ -4,7 +4,7 @@ import { drawPlate } from "../plates/draw-plate";
 export class RoundDrawError extends Error {
   constructor(
     message: string,
-    public readonly code: "ROUND_NOT_FOUND" | "ROUND_NOT_CLOSED" | "INCONSISTENT_DRAW",
+    public readonly code: "ROUND_NOT_FOUND" | "ROUND_NOT_CLOSED" | "DRAW_NOT_DUE" | "INCONSISTENT_DRAW",
   ) {
     super(message);
     this.name = "RoundDrawError";
@@ -46,6 +46,10 @@ export async function drawRoundResults(
     }
     if (round.status !== RoundStatus.CLOSED) {
       throw new RoundDrawError("Round must be closed before drawing results", "ROUND_NOT_CLOSED");
+    }
+    const [{ databaseNow }] = await tx.$queryRaw<Array<{ databaseNow: Date }>>`\n      SELECT clock_timestamp() AS "databaseNow"\n    `;
+    if (databaseNow.getTime() < round.resultAt.getTime()) {
+      throw new RoundDrawError("Scheduled result time has not been reached", "DRAW_NOT_DUE");
     }
 
     const resultLegacyPlate = drawPlate("legacy");
