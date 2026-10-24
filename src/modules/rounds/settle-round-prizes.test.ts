@@ -34,6 +34,11 @@ describe("calculateLinePrizeCents", () => {
       .toThrowError("Result does not match its plate format");
   });
 
+  it("rejects a bet whose stored plate does not match its declared format", () => {
+    expect(() => calculateLinePrizeCents(base({ plateFormat: "MERCOSUR", normalizedPlate: "ABC1234" }), "ABC-1234", "ABC1K23"))
+      .toThrowError("Stored bet does not match its declared plate format");
+  });
+
   it("rejects prizes outside the database integer range", () => {
     expect(() => calculateLinePrizeCents(base({ fullPlateCents: 2_147_483_647 }), "ABC-1234", "ABC1K23"))
       .toThrowError("Prize exceeds the database integer range");
