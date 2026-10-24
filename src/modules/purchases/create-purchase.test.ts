@@ -148,3 +148,82 @@ describe("createPendingPixPurchase transaction conflict retries", () => {
   });
 });
 
+
+describe("createPendingPixPurchase idempotency replay", () => {
+  beforeEach(() => {
+    transaction.mockReset();
+  });
+
+  const serviceWithExistingPurchase = (existing: unknown) => {
+    const tx = {
+      purchase: {
+        findUnique: vi.fn().mockResolvedValue(existing),
+      },
+    };
+    transaction.mockImplementation(async (callback: (client: unknown) => unknown) =>
+      callback(tx),
+    );
+    return {
+      prisma: { $transaction: transaction } as unknown as PrismaClient,
+      findUnique: tx.purchase.findUnique,
+    };
+  };
+
+  const existingPurchase = () => ({
+    id: "purchase-existing",
+    paymentMethod: "PIX",
+    receiptCode: "TEST-RECEIPT-001",
+    playerId: "player-1",
+    cashierId: null,
+    customerId: null,
+    participations: [{
+      roundId: "round-1",
+      lines: [{
+        normalizedPlate: "ABC1234",
+        unitCents: 100,
+        tensCents: 0,
+        hundredsCents: 0,
+        thousandsCents: 0,
+        lettersCents: 0,
+        fullPlateCents: 0,
+        ruleVersion: "test-v1",
+        ruleSnapshot: { version: "test-v1" },
+      }],
+    }],
+    payment: { id: "payment-existing", status: "PENDING" },
+  });
+
+  it("returns the original purchase when the idempotency key is replayed with the same request", async () => {
+    const existing = existingPurchase();
+    const { prisma, findUnique } = serviceWithExistingPurchase(existing);
+
+    await expect(createPendingPixPurchase(prisma, validInput()))
+      .resolves.toBe(existing);
+
+    expect(findUnique).toHaveBeenCalledWith({
+      where: { idempotencyKey: "test-idempotency-key" },
+      include: { participations: { include: { lines: true } }, payment: true },
+    });
+    expect(transaction).toHaveBeenCalledTimes(1);
+  });
+
+  it("rejects reuse of an idempotency key with a different receipt code", async () => {
+    const { prisma } = serviceWithExistingPurchase(existingPurchase());
+    const input = validInput();
+    input.receiptCode = "DIFFERENT-RECEIPT";
+
+    await expect(createPendingPixPurchase(prisma, input))
+      .rejects.toMatchObject({ code: "IDEMPOTENCY_CONFLICT" });
+    expect(transaction).toHaveBeenCalledTimes(1);
+  });
+
+  it("rejects reuse of an idempotency key with different purchase lines", async () => {
+    const { prisma } = serviceWithExistingPurchase(existingPurchase());
+    const input = validInput();
+    input.participations[0]!.lines[0]!.unitCents = 200;
+
+    await expect(createPendingPixPurchase(prisma, input))
+      .rejects.toMatchObject({ code: "IDEMPOTENCY_CONFLICT" });
+    expect(transaction).toHaveBeenCalledTimes(1);
+  });
+});
