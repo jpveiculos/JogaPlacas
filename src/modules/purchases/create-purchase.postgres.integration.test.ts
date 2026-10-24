@@ -92,11 +92,11 @@ suite("PostgreSQL purchase concurrency", () => {
     const functionName = `it_fail_payment_fn_${suffix.replaceAll("-", "")}`;
 
     await prisma.$executeRawUnsafe(`
-      CREATE FUNCTION "${functionName}"() RETURNS trigger AS $
+      CREATE FUNCTION "${functionName}"() RETURNS trigger AS $function$
       BEGIN
         RAISE EXCEPTION 'injected payment insert failure for integration test';
       END;
-      $ LANGUAGE plpgsql
+      $function$ LANGUAGE plpgsql
     `);
     await prisma.$executeRawUnsafe(`
       CREATE TRIGGER "${triggerName}"
