@@ -1,6 +1,6 @@
 # Auditoria da fundação — estado verificado
 
-> Atualizado em 2026-10-24 após a CI verde do commit `2693c033af190a2a5a6b9b9793d81d8a225fcbe9`. Este documento registra achados observáveis na branch `planning/foundation`; não certifica prontidão para produção. Revalidar cada item após mudanças de código.
+> Atualizado em 2026-10-24; o plano de autenticação foi documentado no commit `25fe292b7f6cec6b95633409cfa6340629d9b38e`. Este documento registra achados observáveis na branch `planning/foundation`; não certifica prontidão para produção. Revalidar cada item após mudanças de código.
 
 ## Escopo e limites
 
@@ -17,8 +17,9 @@ A inspeção cobre a árvore versionada, os módulos atuais, o schema Prisma, a 
 - Os testes de integração PostgreSQL cobrem idempotência concorrente, conflito de conteúdo, rollback, retry simulado e limites do cutoff.
 - Existe agora o serviço `src/modules/rounds/close-round.ts`, com bloqueio de linha, validação de estado/cutoff e transação Serializable. Compra e fechamento usam o mesmo protocolo de bloqueio; ambos repetem conflitos de serialização reconhecidos de forma limitada.
 - O teste de corrida compra/fechamento passou na CI. Ele usa horários determinísticos injetados e valida os resultados permitidos e a ausência de registros parciais quando a compra perde a disputa.
-- **Limite de cobertura temporal:** ainda falta um teste que force uma transação a aguardar um bloqueio até o relógio real do PostgreSQL ultrapassar o cutoff e comprove que a decisão usa `clock_timestamp()` depois de adquirir o bloqueio.
+- O teste temporal foi ampliado para comprovar, por `pg_stat_activity`, que a compra está efetivamente esperando por um bloqueio; depois o cutoff real passa, o lock é liberado e o teste verifica rejeição sem registros parciais. A CI verde correspondente precisa ser conferida para o commit mais recente após cada mudança.
 - **Limite de integração com a aplicação:** o serviço de fechamento ainda não está exposto por rota autenticada/autorizada. A existência do serviço não significa que um administrador já possa fechar rodadas pela aplicação.
+- Foi adicionado `docs/AUTHENTICATION_DESIGN.md` com os requisitos de segurança e critérios de aceite para autenticação, sessões revogáveis, provisionamento administrativo e rota de fechamento. É um plano documentado, não uma implementação de autenticação.
 - `package.json` fixa `next@16.4.3` e `eslint-config-next@16.4.2`. É uma divergência de patch a verificar; não foi alterada sem resolver a versão e atualizar o lockfile de forma reproduzível.
 - `.env.example` usa valores ilustrativos e deixa as configurações do provedor Pix comentadas. `.gitignore` ignora arquivos `.env*` e mantém a exceção para `.env.example`.
 
@@ -30,7 +31,7 @@ A inspeção cobre a árvore versionada, os módulos atuais, o schema Prisma, a 
 2. Implementar os fluxos de compra e pagamento com estados explícitos, reconciliação idempotente e tratamento de falhas. A integração Mercado Pago continua deliberadamente adiada para a fase final.
 3. Implementar o livro-razão e garantir atomicidade entre operações financeiras, saldo disponível, reservas de saque e auditoria.
 4. Expor o fechamento de rodada somente por uma operação autenticada e autorizada no servidor; preservar o serviço transacional e não permitir que usuários não autorizados fechem rodadas.
-5. Concluir o teste temporal com bloqueio real atravessando o cutoff e repetir os cenários concorrentes para reduzir risco de flakiness.
+5. Manter estável o teste temporal com bloqueio real atravessando o cutoff e repetir os cenários concorrentes para reduzir risco de flakiness.
 6. Realizar revisão de segurança e de regras do produto antes de qualquer ativação em produção.
 
 ### P1 — validação técnica da fundação
