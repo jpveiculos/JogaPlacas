@@ -104,6 +104,15 @@ describe("createPendingPixPurchase input validation", () => {
     expect(transaction).not.toHaveBeenCalled();
   });
 
+  it("rejects a rule snapshot without historical multipliers before opening a transaction", async () => {
+    const input = validInput();
+    input.participations[0]!.lines[0]!.ruleSnapshot = { version: "test-v1" };
+
+    await expect(createPendingPixPurchase(service(), input))
+      .rejects.toMatchObject({ code: "INVALID_PURCHASE" });
+    expect(transaction).not.toHaveBeenCalled();
+  });
+
   it("rejects an invalid plate format before opening a transaction", async () => {
     const input = validInput();
     input.participations[0]!.lines[0]!.plateDisplay = "NOT-A-PLATE";
