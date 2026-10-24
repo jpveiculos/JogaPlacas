@@ -47,7 +47,9 @@ export async function drawRoundResults(
     if (round.status !== RoundStatus.CLOSED) {
       throw new RoundDrawError("Round must be closed before drawing results", "ROUND_NOT_CLOSED");
     }
-    const [{ databaseNow }] = await tx.$queryRaw<Array<{ databaseNow: Date }>>`\n      SELECT clock_timestamp() AS "databaseNow"\n    `;
+    const [{ databaseNow }] = await tx.$queryRaw<Array<{ databaseNow: Date }>>`
+      SELECT clock_timestamp() AS "databaseNow"
+    `;
     if (databaseNow.getTime() < round.resultAt.getTime()) {
       throw new RoundDrawError("Scheduled result time has not been reached", "DRAW_NOT_DUE");
     }
