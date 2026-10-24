@@ -16,11 +16,16 @@ describe("calculateLinePrizeCents", () => {
   it("preserves the Mercosur letter literally in the four-character suffix", () => {
     const line = base({ plateFormat: "MERCOSUR", normalizedPlate: "ABC1K23" });
     expect(calculateLinePrizeCents(line, "ABC-1234", "ABC1K23")).toBe(100 * (2 + 20 + 200 + 2_000 + 2_000 + 200_000));
-    expect(calculateLinePrizeCents(line, "ABC-1234", "ABC1J23")).toBe(0);
+    // K and J are not interchangeable. Only the shared unit, tens and first-three-letter categories win.
+    expect(calculateLinePrizeCents(line, "ABC-1234", "ABC1J23")).toBe(202_200);
   });
 
-  it("adds category wins using integer cents", () => {
-    const line = base({ normalizedPlate: "ZZZ1K23", unitCents: 0, tensCents: 100, hundredsCents: 0, thousandsCents: 0, lettersCents: 0, fullPlateCents: 0 });
+  it("adds category wins using integer cents for a Mercosur bet", () => {
+    const line = base({
+      plateFormat: "MERCOSUR", normalizedPlate: "ZZZ1K23",
+      unitCents: 0, tensCents: 100, hundredsCents: 0, thousandsCents: 0,
+      lettersCents: 0, fullPlateCents: 0,
+    });
     expect(calculateLinePrizeCents(line, "AAA-0000", "ABC1K23")).toBe(2_000);
   });
 
