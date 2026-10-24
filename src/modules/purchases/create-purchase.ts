@@ -1,5 +1,6 @@
 import { Prisma, PaymentMethod, RoundStatus, type PrismaClient } from "../../generated/prisma/client";
 import { normalizePlate } from "../plates/normalize-plate";
+import { readPrizeMultipliers } from "../../domain/prize-rule-snapshot";
 import {
   MAX_REPETITIONS,
   MIN_REPETITIONS,
@@ -81,7 +82,15 @@ export async function createPendingPixPurchase(
       if (!participation.lines.length) {
         throw new PurchaseServiceError("Each round participation must contain at least one plate", "INVALID_PURCHASE");
       }
-      for (const line of participation.lines) normalizePlate(line.plateDisplay);
+      for (const line of participation.lines) {
+        normalizePlate(line.plateDisplay);
+        if (!readPrizeMultipliers(line.ruleVersion, line.ruleSnapshot)) {
+          throw new PurchaseServiceError(
+            "Each line must include a valid multiplier snapshot matching its rule version",
+            "INVALID_PURCHASE",
+          );
+        }
+      }
     }
   } catch (error) {
     if (error instanceof PurchaseServiceError) throw error;
