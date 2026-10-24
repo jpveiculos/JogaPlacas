@@ -37,7 +37,7 @@ suite("PostgreSQL purchase concurrency", () => {
         lettersCents: 0,
         fullPlateCents: 0,
         ruleVersion: "integration-v1",
-        ruleSnapshot: { version: "integration-v1" },
+        ruleSnapshot: { version: "integration-v1", multipliers: { unit: 2, tens: 20, hundreds: 200, thousands: 2_000, letters: 2_000, fullPlate: 200_000 } },
       }],
     }],
   });
@@ -160,7 +160,7 @@ suite("PostgreSQL purchase concurrency", () => {
         ...participation,
         lines: participation.lines.map((line) => ({
           ...line,
-          ruleSnapshot: { version: "integration-v2" },
+          ruleSnapshot: { version: "integration-v2", multipliers: { unit: 2, tens: 20, hundreds: 200, thousands: 2_000, letters: 2_000, fullPlate: 200_000 } },
         })),
       })),
     })],
