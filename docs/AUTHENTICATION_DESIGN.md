@@ -1,6 +1,6 @@
 # Plano de autenticação e autorização
 
-Status: decisão técnica para implementação na branch `planning/foundation`.
+Status: implementação inicial em andamento na branch `planning/foundation`; não aprovada para produção.
 Este documento não habilita acesso administrativo nem substitui código/testes.
 
 ## Decisão de segurança
@@ -31,10 +31,10 @@ A aplicação ainda não tem autenticação nem sessões. Não expor rotas privi
 
 ## Plano de implementação e critérios de aceite
 
-1. Escolher e adicionar uma solução de hash de senha e uma tabela de sessão revogável; atualizar `package.json`, lockfile e migração Prisma em conjunto.
-2. Criar acesso Prisma server-only, validação de credenciais, criação/validação/revogação de sessão e cookie seguro.
-3. Implementar provisionamento administrativo por comando de servidor, sem endpoint público de criação de administrador.
-4. Testar hash/verificação, credenciais inválidas, conta bloqueada, expiração, revogação, rotação e ausência de segredos nas respostas/logs.
+1. Implementado nesta etapa: hash de senha com `scrypt` nativo do Node.js (N=16384, r=8, p=1, salt aleatório de 16 bytes e chave de 64 bytes), tabela `Session` e migração Prisma. A escolha evita dependência nativa adicional; reavaliar Argon2id antes de produção.
+2. Implementação inicial: acesso Prisma server-only, validação de credenciais, sessão opaca aleatória (token de 256 bits), persistência somente de SHA-256 do token, expiração em 12 horas, revogação e cookie HttpOnly/SameSite=Lax.
+3. Ainda pendente: provisionamento administrativo por comando de servidor, sem endpoint público de criação de administrador.
+4. Testes adicionados para hash/verificação, sal aleatório, senha fraca, entrada inválida, origem cruzada, credenciais genéricas, conta bloqueada e cookie de sessão/logout. Ainda faltam testes de integração de sessão real no PostgreSQL, expiração/revogação e auditoria de segurança.
 5. Implementar a rota de fechamento e testes de autorização: anônimo = 401; jogador = 403; cambista = 403; administrador ativo = pode chamar o serviço; administrador bloqueado = negado; corpo inválido = 400.
 6. Executar lint, typecheck, testes, build, migração em banco descartável e os testes PostgreSQL de concorrência.
 7. Só considerar a integração pronta quando todos os critérios forem comprovados pela CI. Não implantar em produção como parte desta etapa.
