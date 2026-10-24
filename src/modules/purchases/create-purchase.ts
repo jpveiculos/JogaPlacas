@@ -109,6 +109,7 @@ export async function createPendingPixPurchase(
       ]));
       const sameRequest =
         existing.paymentMethod === PaymentMethod.PIX &&
+        existing.receiptCode === input.receiptCode &&
         existing.playerId === (input.playerId ?? null) &&
         existing.cashierId === (input.cashierId ?? null) &&
         existing.customerId === (input.customerId ?? null) &&
