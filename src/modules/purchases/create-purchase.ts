@@ -1,6 +1,8 @@
 import { Prisma, PaymentMethod, RoundStatus, type PrismaClient } from "../../generated/prisma/client";
 import { normalizePlate } from "../plates/normalize-plate";
 import {
+  MAX_REPETITIONS,
+  MIN_REPETITIONS,
   validatePurchaseDraft,
   type CategoryAllocation,
   type PurchaseDraft,
@@ -55,6 +57,11 @@ export async function createPendingPixPurchase(
   if (!input.receiptCode.trim()) {
     throw new PurchaseServiceError("A receipt code is required", "INVALID_PURCHASE");
   }
+  if (!Number.isInteger(input.repetitions)
+    || input.repetitions < MIN_REPETITIONS
+    || input.repetitions > MAX_REPETITIONS) {
+    throw new PurchaseServiceError("Repetitions must be an integer between 1 and 10", "INVALID_PURCHASE");
+  }
   if (input.participations.length !== input.repetitions) {
     throw new PurchaseServiceError("There must be exactly one participation per repeated round", "INVALID_PURCHASE");
   }
@@ -66,6 +73,22 @@ export async function createPendingPixPurchase(
   }
   if (input.cashierId && !input.customerId) {
     throw new PurchaseServiceError("Cashier purchases require a customer record", "INVALID_ACTOR");
+  }
+  // Validate plate syntax before opening a database transaction. Invalid user input
+  // should not reach persistence or surface as an unclassified Zod exception.
+  try {
+    for (const participation of input.participations) {
+      if (!participation.lines.length) {
+        throw new PurchaseServiceError("Each round participation must contain at least one plate", "INVALID_PURCHASE");
+      }
+      for (const line of participation.lines) normalizePlate(line.plateDisplay);
+    }
+  } catch (error) {
+    if (error instanceof PurchaseServiceError) throw error;
+    throw new PurchaseServiceError(
+      error instanceof Error ? error.message : "Invalid plate format",
+      "INVALID_PURCHASE",
+    );
   }
 
   for (let attempt = 0; ; attempt += 1) {
