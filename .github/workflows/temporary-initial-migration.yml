@@ -33,7 +33,7 @@ jobs:
           DATABASE_URL: postgresql://test:test@localhost:5432/testdb?schema=public
         run: |
           mkdir -p prisma/migrations/20261023000000_init
-          npx prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script > prisma/migrations/20261023000000_init/migration.sql
+          npx prisma migrate diff --from-empty --to-schema prisma/schema.prisma --script > prisma/migrations/20261023000000_init/migration.sql
           test -s prisma/migrations/20261023000000_init/migration.sql
           head -n 30 prisma/migrations/20261023000000_init/migration.sql
       - name: Commit generated migration
