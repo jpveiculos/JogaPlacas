@@ -3,6 +3,7 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../../generated/prisma/client";
 import { createPendingPixPurchase, type PixPurchaseInput } from "./create-purchase";
+import { closeRound } from "../rounds/close-round";
 
 const enabled = process.env.RUN_POSTGRES_INTEGRATION === "1";
 const suite = enabled ? describe : describe.skip;
@@ -192,6 +193,34 @@ suite("PostgreSQL purchase concurrency", () => {
     expect(await prisma.purchase.count({ where: { idempotencyKey: key } })).toBe(0);
     expect(await prisma.payment.count({ where: { purchase: { idempotencyKey: key } } })).toBe(0);
     expect(await prisma.purchaseParticipation.count({ where: { purchase: { idempotencyKey: key } } })).toBe(0);
+  });
+
+  it("serializes a purchase decision against concurrent round closure", async () => {
+    const key = `it-close-race-${suffix}`;
+    const request = input(key, `IT-RECEIPT-CLOSE-RACE-${suffix}`);
+    const beforeCutoff = new Date("2035-01-01T12:29:59.999Z");
+    const atCutoff = new Date("2035-01-01T12:30:00.000Z");
+
+    const [purchaseResult, closeResult] = await Promise.allSettled([
+      createPendingPixPurchase(prisma, request, beforeCutoff),
+      closeRound(prisma, roundId, atCutoff),
+    ]);
+
+    expect(closeResult.status).toBe("fulfilled");
+    expect((await prisma.round.findUniqueOrThrow({ where: { id: roundId } })).status).toBe("CLOSED");
+
+    if (purchaseResult.status === "fulfilled") {
+      // Purchase won the row-lock race before cutoff; closure then followed it.
+      expect(await prisma.purchase.count({ where: { idempotencyKey: key } })).toBe(1);
+      expect(await prisma.payment.count({ where: { purchase: { idempotencyKey: key } } })).toBe(1);
+      expect(await prisma.purchaseParticipation.count({ where: { purchase: { idempotencyKey: key } } })).toBe(1);
+    } else {
+      // Closure won the row-lock race; the purchase must observe CLOSED.
+      expect(purchaseResult.reason).toMatchObject({ code: "ROUND_UNAVAILABLE" });
+      expect(await prisma.purchase.count({ where: { idempotencyKey: key } })).toBe(0);
+      expect(await prisma.payment.count({ where: { purchase: { idempotencyKey: key } } })).toBe(0);
+      expect(await prisma.purchaseParticipation.count({ where: { purchase: { idempotencyKey: key } } })).toBe(0);
+    }
   });
 
   it("rejects concurrent requests with the same key but different receipt codes", async () => {
