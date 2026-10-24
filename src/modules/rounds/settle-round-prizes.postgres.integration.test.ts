@@ -48,7 +48,7 @@ suite("PostgreSQL prize settlement idempotency", () => {
         plateDisplay: "ABC-1234", normalizedPlate: "ABC1234",
         unitCents: 100, tensCents: 0, hundredsCents: 0, thousandsCents: 0,
         lettersCents: 0, fullPlateCents: 0, ruleVersion: "integration-v1",
-        ruleSnapshot: { version: "integration-v1" },
+        ruleSnapshot: { version: "integration-v1", multipliers: { unit: 2, tens: 20, hundreds: 200, thousands: 2_000, letters: 2_000, fullPlate: 200_000 } },
       },
     });
   });
