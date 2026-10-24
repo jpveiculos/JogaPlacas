@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 const legacyPlatePattern = /^[A-Z]{3}-?\d{4}$/;
-const mercosurPlatePattern = /^[A-Z]{3}\d[A-J]\d{2}$/;
+const mercosurPlatePattern = /^[A-Z]{3}\d[A-Z]\d{2}$/;
 
 export const plateInputSchema = z
   .string()
