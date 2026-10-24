@@ -119,6 +119,62 @@ suite("PostgreSQL purchase concurrency", () => {
     }
   });
 
+
+  it("returns the existing purchase on retry after a simulated client timeout", async () => {
+    const key = `it-timeout-retry-${suffix}`;
+    const request = input(key, `IT-RECEIPT-TIMEOUT-${suffix}`);
+
+    // The first request commits in PostgreSQL, but the client behaves as if it
+    // did not receive the response. Retrying the same payload/key must replay it.
+    const first = await createPendingPixPurchase(prisma, request, fixedNow);
+    const retry = await createPendingPixPurchase(prisma, request, fixedNow);
+
+    expect(retry.id).toBe(first.id);
+    expect(await prisma.purchase.count({ where: { idempotencyKey: key } })).toBe(1);
+    expect(await prisma.payment.count({ where: { purchase: { idempotencyKey: key } } })).toBe(1);
+    expect(await prisma.purchaseParticipation.count({ where: { purchase: { idempotencyKey: key } } })).toBe(1);
+    expect(await prisma.participationLine.count({ where: { participation: { purchase: { idempotencyKey: key } } } })).toBe(1);
+  });
+
+  it.each([
+    ["receipt code", (request: PixPurchaseInput) => ({ ...request, receiptCode: "DIFFERENT-RECEIPT" })],
+    ["actor", (request: PixPurchaseInput) => ({ ...request, playerId: "different-player" })],
+    ["plate", (request: PixPurchaseInput) => ({
+      ...request,
+      participations: request.participations.map((participation) => ({
+        ...participation,
+        lines: participation.lines.map((line) => ({ ...line, plateDisplay: "XYZ-9876" })),
+      })),
+    })],
+    ["allocation", (request: PixPurchaseInput) => ({
+      ...request,
+      participations: request.participations.map((participation) => ({
+        ...participation,
+        lines: participation.lines.map((line) => ({ ...line, unitCents: line.unitCents + 1 })),
+      })),
+    })],
+    ["rule snapshot", (request: PixPurchaseInput) => ({
+      ...request,
+      participations: request.participations.map((participation) => ({
+        ...participation,
+        lines: participation.lines.map((line) => ({
+          ...line,
+          ruleSnapshot: { version: "integration-v2" },
+        })),
+      })),
+    })],
+  ])("rejects a same-key replay when %s changes", async (_field, mutate) => {
+    const key = `it-field-conflict-${suffix}-${String(_field).replaceAll(" ", "-")}`;
+    const original = input(key, `IT-RECEIPT-FIELD-${suffix}`);
+    await createPendingPixPurchase(prisma, original, fixedNow);
+
+    await expect(
+      createPendingPixPurchase(prisma, mutate(original), fixedNow),
+    ).rejects.toMatchObject({ code: "IDEMPOTENCY_CONFLICT" });
+    expect(await prisma.purchase.count({ where: { idempotencyKey: key } })).toBe(1);
+    expect(await prisma.payment.count({ where: { purchase: { idempotencyKey: key } } })).toBe(1);
+  });
+
   it("rejects concurrent requests with the same key but different receipt codes", async () => {
     const key = `it-conflict-${suffix}`;
     const outcomes = await Promise.allSettled([
