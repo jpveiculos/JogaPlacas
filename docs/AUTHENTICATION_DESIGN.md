@@ -6,7 +6,7 @@ Este documento não habilita acesso administrativo nem substitui código/testes.
 
 ## Decisão de segurança
 
-Já existem hash de senha, login/logout e sessões opacas persistidas. Ainda não existe fluxo completo de autorização administrativa. Não expor rotas privilegiadas até concluir as pendências abaixo.
+Já existem hash de senha, login/logout, sessões opacas persistidas e endpoint de introspecção `GET /api/auth/me` com resposta privada sem cache. Ainda não existe fluxo completo de autorização administrativa. Não expor rotas privilegiadas até concluir as pendências abaixo.
 
 ### Identidade e credenciais
 - Usar o modelo `User` existente; nunca aceitar `role`, `userId` ou `isAdmin` fornecidos pelo cliente como prova de identidade.
@@ -33,7 +33,7 @@ Já existem hash de senha, login/logout e sessões opacas persistidas. Ainda nã
 ## Plano de implementação e critérios de aceite
 
 1. Implementado nesta etapa: hash de senha com `scrypt` nativo do Node.js (N=16384, r=8, p=1, salt aleatório de 16 bytes e chave de 64 bytes), tabela `Session` e migração Prisma. A escolha evita dependência nativa adicional; reavaliar Argon2id antes de produção.
-2. Implementação inicial: acesso Prisma server-only, validação de credenciais, sessão opaca aleatória (token de 256 bits), persistência somente de SHA-256 do token, expiração em 12 horas, revogação e cookie HttpOnly/SameSite=Lax.
+2. Implementação inicial: acesso Prisma server-only, validação de credenciais, sessão opaca aleatória (token de 256 bits), persistência somente de SHA-256 do token, expiração em 12 horas, revogação e cookie HttpOnly/SameSite=Lax. O endpoint `GET /api/auth/me` devolve apenas identidade segura e papel da sessão atual, retorna 401 sem sessão válida e define `Cache-Control: no-store`.
 3. Ainda pendente: provisionamento administrativo por comando operacional executável e testado. Não foi adicionado endpoint público de criação de administrador. Não executar provisionamento em produção nesta etapa.
 4. Testes adicionados para hash/verificação, sal aleatório, senha fraca, entrada inválida, origem cruzada, credenciais genéricas, conta bloqueada e cookie de sessão/logout. Ainda faltam limitação de tentativas resistente a múltiplas instâncias, testes de integração de sessão real no PostgreSQL (incluindo expiração/revogação), auditoria e fluxo para troca de senha inicial. `mustChangePassword` existe no modelo, mas ainda não há fluxo de troca que permita considerar essa proteção concluída.
 5. Implementar a rota de fechamento e testes de autorização: anônimo = 401; jogador = 403; cambista = 403; administrador ativo = pode chamar o serviço; administrador bloqueado = negado; corpo inválido = 400.
