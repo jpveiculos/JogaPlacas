@@ -22,10 +22,10 @@ Os resultados não são conversões um do outro. Aposta cinza concorre somente a
 
 - Executar e validar migração em PostgreSQL descartável e confirmar compatibilidade com o banco/ambiente real.
 - Auditar todos os consumidores de `normalizedPlate` e garantir filtro explícito por formato na apuração. O formato precisa estar persistido em cada linha de aposta ou ser derivado de modo inequívoco e validado.
-- Apurar as quatro modalidades e creditar prêmios idempotentemente para cada resultado, com testes de concorrência.
+- Serviço inicial de apuração implementado em settle-round-prizes.ts: filtra compras/participações confirmadas, compara cada aposta com o resultado do formato correspondente e registra crédito de jogador com chave única por linha. Existe endpoint administrativo protegido para execução.
 - Revisar a rota administrativa, sua autorização e o fluxo de publicação.
 - Exibir as duas plaquinhas na interface.
-- Rodar a suíte completa e verificar CI verde.
+- Rodar a suíte completa e verificar CI verde. Foram adicionados testes unitários, teste de rota e teste de integração PostgreSQL para crédito idempotente; a execução ainda não foi confirmada.
 
 ## Segurança e operação
 
