@@ -1,30 +1,38 @@
 # Plano de testes PostgreSQL: concorrência e idempotência
 
-## Bloqueio identificado no serviço atual
+Status: plano ativo para `planning/foundation`. Consulte o código atual antes de usar descrições de comportamento antigas deste documento.
 
-src/modules/purchases/create-purchase.ts executa a criação dentro de uma transação Serializable e consulta a chave de idempotência antes de inserir. Ainda não há tratamento explícito comprovado para conflitos concorrentes de serialização (Prisma P2034) ou corrida na restrição única da chave (P2002). Sob concorrência, a garantia correta é: uma única compra persistida para uma chave; a mesma requisição deve recuperar a compra já criada; uma requisição diferente com a mesma chave deve retornar conflito de idempotência.
+## Estado verificado
 
-Não adicionar retry indiscriminado. Um retry deve ser limitado, reconhecer apenas erros transitórios específicos, preservar o mesmo conteúdo de requisição e reconsultar a compra após conflitos de unicidade/serialização. Erros de validação e outros erros de banco não devem ser repetidos.
+- `src/modules/purchases/create-purchase.ts` cria compra, participações, linhas e pagamento pendente na mesma transação Prisma com isolamento Serializable.
+- O serviço possui retry limitado para conflitos de serialização Prisma `P2034` (até três retries após a tentativa inicial) e uma nova tentativa para corrida na chave única de idempotência (`P2002`).
+- Os testes unitários atuais simulam códigos de erro; eles não substituem concorrência real contra PostgreSQL.
+- `package-lock.json` existe e a CI usa `npm ci`.
+- `prisma/migrations/20261023000000_init/migration.sql` existe e o workflow aplica migrações a um PostgreSQL descartável.
+- A migração de CI não toca a base de produção. Não há autorização para migração produtiva.
+- A comparação de idempotência precisa cobrir todos os dados relevantes da solicitação, inclusive o código de recibo, ator/cliente, rodadas, linhas, alocações e snapshots de regra.
 
 ## Casos de integração obrigatórios
 
-Executar somente contra um PostgreSQL efêmero de CI, nunca contra DATABASE_URL de produção.
+Executar somente contra um PostgreSQL efêmero criado pelo workflow; nunca usar a variável de ambiente de produção.
 
-1. Duas requisições simultâneas idênticas, mesma chave: deve existir exatamente uma Purchase, uma Payment e o conjunto esperado de participações/linhas; ambas as chamadas devem terminar com resultado coerente ou uma resposta idempotente recuperada.
-2. Mesma chave com conteúdo diferente: exatamente uma compra persistida; a outra chamada deve terminar com IDEMPOTENCY_CONFLICT, sem segunda cobrança/Payment.
-3. Duas chaves diferentes para a mesma rodada, disparadas perto do cutoff: nenhuma compra pode ser criada se o cutoff já tiver ocorrido no ponto de decisão transacional.
-4. Fechamento concorrente da rodada: validar serialização e ordem de bloqueio/atualização entre compra e fechamento; se a compra vencer, deve respeitar a regra oficial de cutoff, e se o fechamento vencer, a compra deve ser rejeitada.
-5. Falha injetada após criar a compra e antes de completar Payment/participações: a transação deve reverter tudo, sem registros parciais.
-6. Repetição após timeout do cliente: a nova chamada com a mesma chave deve recuperar a compra existente sem duplicar linhas ou pagamentos.
+1. Duas requisições simultâneas idênticas, mesma chave: deve existir exatamente uma Purchase, uma Payment, o número esperado de participações e as linhas esperadas; ambas as chamadas devem produzir resultado coerente/idempotente.
+2. Mesma chave com conteúdo diferente, inclusive código de recibo diferente: uma única compra persistida; a chamada divergente deve retornar conflito de idempotência.
+3. Duas chaves diferentes para a mesma rodada perto do cutoff: não aceitar compra se o cutoff tiver ocorrido no ponto de decisão transacional.
+4. Fechamento concorrente da rodada: validar serialização e ordem de decisão entre compra e fechamento, respeitando a regra oficial de cutoff.
+5. Falha após iniciar a criação da compra e antes de completar pagamento/participações: a transação deve reverter tudo, sem registros parciais.
+6. Repetição após timeout do cliente: mesma chave recupera compra existente sem duplicar linhas ou pagamento.
+7. Alteração de cada campo relevante sob a mesma chave: a solicitação deve ser rejeitada como conflito e não reutilizar silenciosamente a compra.
+8. Executar os cenários concorrentes repetidamente e verificar contagens no banco ao final.
 
-## Pré-requisitos de execução
+## Configuração de CI
 
-- Provisionar PostgreSQL descartável como serviço do workflow.
-- Usar uma URL de teste criada pelo próprio workflow e validar que aponta ao host de serviço efêmero antes de executar comandos de escrita.
-- Como a branch revisada não tem prisma/migrations, preparar o schema apenas no banco efêmero com a estratégia de CI aprovada; isso não substitui a criação de migrações versionadas para a implantação.
-- Sem lockfile, não declarar a instalação reproduzível nem trocar CI para npm ci. Gerar package-lock.json com a versão de Node/npm adotada, revisar a resolução e vulnerabilidades e só então versioná-lo.
-- Executar os testes concorrentes repetidamente para reduzir o risco de passar por sorte; registrar logs, códigos de erro e contagens finais.
+- Usar o serviço PostgreSQL descartável definido em `.github/workflows/verify.yml`.
+- Aplicar `prisma migrate deploy` e verificar `prisma migrate status` antes dos testes de integração.
+- Usar URL de teste criada pelo workflow e validar que aponta para o serviço efêmero.
+- Nunca imprimir segredos ou copiar credenciais de produção para testes.
+- Manter testes de unidade e integração separados para que mocks não sejam confundidos com garantias reais do banco.
 
 ## Critério de aprovação
 
-Todos os casos acima devem passar no mesmo commit que passa prisma validate, prisma generate, lint, typecheck, testes unitários e build. Até lá, não iniciar migração de produção nem integração com Mercado Pago.
+Os cenários de concorrência e idempotência devem passar no mesmo commit que passa validação/geração Prisma, lint, typecheck, testes unitários, build e migração em banco vazio. Até a conclusão dos testes e da revisão de segurança, não iniciar migração de produção nem integrar Mercado Pago. A integração do provedor continua reservada à fase final definida no manual.
