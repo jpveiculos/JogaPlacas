@@ -11,9 +11,9 @@
 - Jogador vê apenas os próprios registros; cambista vê somente suas próprias vendas/clientes; administrador tem visão global conforme permissões.
 
 ## 2. Placas e categorias
-- Formatos aceitos: padrão antigo `ABC-1234` e Mercosul `ABC1D23`.
-- Normalizar para uma representação canônica de sete caracteres alfanuméricos, sem hífen. Na placa Mercosul, a letra na quinta posição representa o dígito equivalente: A=0, B=1, C=2, D=3, E=4, F=5, G=6, H=7, I=8, J=9.
-- Exemplo: `ABC-1323` e `ABC1D23` representam o mesmo resultado normalizado `ABC1323`. Preservar também a forma exibida/original quando necessária para apresentação e auditoria.
+- Formatos aceitos: padrão antigo `ABC-1234` e Mercosul `ABC1D23`, com A-Z na quinta posição Mercosul.
+- A equivalência Mercosul para placa cinza existe apenas para A-J: A=0, B=1, C=2, D=3, E=4, F=5, G=6, H=7, I=8, J=9. Letras K-Z são válidas no formato Mercosul, mas não têm equivalente no padrão antigo.
+- Exemplo: `ABC-1323` e `ABC1D23` representam a mesma combinação equivalente normalizada `ABC1323`. Para K-Z, manter uma chave Mercosul distinta, sem conversão artificial. Preservar formato e exibição para auditoria.
 - Rejeitar formatos inválidos no servidor.
 - Multiplicadores aprovados: unidade (último dígito) 2x; dezena (últimos dois) 20x; centena (últimos três) 200x; milhar (últimos quatro) 2.000x; três letras iniciais em ordem exata 2.000x; placa completa 200.000x.
 - Multiplicador aplica-se ao valor alocado à respectiva categoria. A regra de cálculo e arredondamento dos prêmios deve ser implementada com testes e explicitada antes de produção.
