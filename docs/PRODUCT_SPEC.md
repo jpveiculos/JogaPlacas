@@ -19,6 +19,9 @@
 - Multiplicador aplica-se ao valor alocado à respectiva categoria. A regra de cálculo e arredondamento dos prêmios deve ser implementada com testes e explicitada antes de produção.
 
 ## 3. Rodadas e apostas
+- Cada rodada terá dois sorteios independentes: um resultado de placa cinza (`resultLegacyPlate`) e um resultado Mercosul (`resultMercosurPlate`). Cada resultado é sorteado, persistido e apurado separadamente; não afirmar que são conversões um do outro. A interface deve exibir duas plaquinhas identificadas.
+- A aposta em placa cinza só concorre ao resultado cinza; a aposta Mercosul só concorre ao resultado Mercosul. As regras de categoria e multiplicadores precisam ser aplicadas ao formato correspondente.
+- Ambos os resultados devem ser imutáveis depois de publicados, com geração e publicação idempotentes por rodada e por formato.
 - Rodadas a cada 30 minutos; encerramento das apostas 1 minuto antes do horário do resultado.
 - Corte validado no servidor. Não aceitar nem incluir retroativamente aposta após o fechamento.
 - Repetição de 1 a 10 rodadas com pagamento antecipado e registro individual de cada participação.
