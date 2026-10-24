@@ -8,8 +8,8 @@ const enabled = process.env.RUN_POSTGRES_INTEGRATION === "1";
 const suite = enabled ? describe : describe.skip;
 
 suite("PostgreSQL purchase concurrency", () => {
-  const databaseUrl = process.env.DATABASE_URL;
-  if (!databaseUrl) {
+  const databaseUrl = process.env.DATABASE_URL ?? "";
+  if (enabled && !databaseUrl) {
     throw new Error("DATABASE_URL is required when RUN_POSTGRES_INTEGRATION=1");
   }
 
