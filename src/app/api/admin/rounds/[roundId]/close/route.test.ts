@@ -24,6 +24,7 @@ vi.mock("@/modules/rounds/close-round", () => ({
 }));
 
 import { POST } from "./route";
+import { RoundClosureError } from "@/modules/rounds/close-round";
 
 function request(origin = "https://example.test", token = "session-token") {
   return new NextRequest("https://example.test/api/admin/rounds/round-123456/close", {
@@ -93,10 +94,7 @@ describe("POST /api/admin/rounds/[roundId]/close", () => {
   });
 
   it("maps a round that is not yet closable to conflict", async () => {
-    mocks.closeRound.mockRejectedValue(Object.assign(new Error("not yet"), {
-      name: "RoundClosureError",
-      code: "CUTOFF_NOT_REACHED",
-    }));
+    mocks.closeRound.mockRejectedValue(new RoundClosureError("not yet", "CUTOFF_NOT_REACHED"));
     const result = await POST(request(), context);
     expect(result.status).toBe(409);
     expect(mocks.closeRound).toHaveBeenCalledOnce();
