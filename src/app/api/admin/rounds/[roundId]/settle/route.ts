@@ -58,6 +58,7 @@ export async function POST(
       if (error.code === "ROUND_NOT_FOUND") return response({ error: "Rodada não encontrada." }, 404);
       if (error.code === "ROUND_NOT_DRAWN") return response({ error: "Os dois resultados precisam estar publicados antes da apuração." }, 409);
       if (error.code === "INVALID_PLATE_RESULT") return response({ error: "Resultado armazenado com formato inválido; apuração bloqueada." }, 409);
+      if (error.code === "INVALID_PLATE_BET") return response({ error: "Aposta armazenada com formato inválido; apuração bloqueada para reconciliação." }, 409);
       if (error.code === "INCONSISTENT_SETTLEMENT") return response({ error: "A apuração encontrou dados financeiros inconsistentes; é necessária reconciliação." }, 409);
     }
     return response({ error: "Não foi possível concluir a apuração." }, 500);
