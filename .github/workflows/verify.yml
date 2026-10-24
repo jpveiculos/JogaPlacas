@@ -73,3 +73,42 @@ jobs:
         run: npx prisma migrate status
         env:
           DATABASE_URL: postgresql://test:test@localhost:5432/testdb?schema=public
+
+  postgres-concurrency-test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: testdb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U test -d testdb"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies reproducibly
+        run: npm ci
+      - name: Generate Prisma client
+        run: npx prisma generate
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/testdb?schema=public
+      - name: Apply migrations to isolated PostgreSQL database
+        run: npx prisma migrate deploy
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/testdb?schema=public
+      - name: Run real PostgreSQL concurrency tests
+        run: npm run test:postgres
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/testdb?schema=public
+          RUN_POSTGRES_INTEGRATION: "1"
