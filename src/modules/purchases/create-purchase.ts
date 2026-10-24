@@ -47,7 +47,7 @@ export class PurchaseServiceError extends Error {
 export async function createPendingPixPurchase(
   prisma: PrismaClient,
   input: PixPurchaseInput,
-  now = new Date(),
+  decisionTimeOverride?: Date,
 ) {
   if (!input.idempotencyKey.trim() || input.idempotencyKey.length > 200) {
     throw new PurchaseServiceError("A valid idempotency key is required", "INVALID_IDEMPOTENCY_KEY");
@@ -125,7 +125,26 @@ export async function createPendingPixPurchase(
       return existing;
     }
 
-    const roundIds = input.participations.map((p) => p.roundId);
+    const roundIds = input.participations.map((p) => p.roundId).sort();
+
+    // Purchases and round closure must acquire this same row lock before
+    // deciding whether the round accepts entries. Sorted IDs avoid lock-order
+    // inversions for purchases that span more than one round.
+    await tx.$queryRaw`
+      SELECT "id" FROM "Round"
+      WHERE "id" IN (${Prisma.join(roundIds)})
+      ORDER BY "id"
+      FOR UPDATE
+    `;
+
+    // Use PostgreSQL wall-clock time after acquiring the lock. Transaction
+    // start time or a timestamp captured before waiting could be stale at cutoff.
+    const decisionTime = decisionTimeOverride ?? (
+      await tx.$queryRaw<Array<{ decisionTime: Date }>>`
+        SELECT clock_timestamp() AS "decisionTime"
+      `
+    )[0]!.decisionTime;
+
     const rounds = await tx.round.findMany({ where: { id: { in: roundIds } } });
     const roundsById = new Map(rounds.map((round) => [round.id, round]));
 
@@ -155,7 +174,7 @@ export async function createPendingPixPurchase(
 
     let totals: ReturnType<typeof validatePurchaseDraft>;
     try {
-      totals = validatePurchaseDraft(draft, now);
+      totals = validatePurchaseDraft(draft, decisionTime);
     } catch (error) {
       throw new PurchaseServiceError(
         error instanceof Error ? error.message : "Invalid purchase",
