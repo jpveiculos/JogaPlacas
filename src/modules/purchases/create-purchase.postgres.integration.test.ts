@@ -175,6 +175,25 @@ suite("PostgreSQL purchase concurrency", () => {
     expect(await prisma.payment.count({ where: { purchase: { idempotencyKey: key } } })).toBe(1);
   });
 
+  it.each([
+    ["exactly at cutoff", new Date("2035-01-01T12:30:00.000Z")],
+    ["after cutoff", new Date("2035-01-01T12:30:00.001Z")],
+  ])("rejects a new purchase %s", async (_label, decisionTime) => {
+    const key = `it-cutoff-${suffix}-${String(_label).replaceAll(" ", "-")}`;
+
+    await expect(
+      createPendingPixPurchase(
+        prisma,
+        input(key, `IT-RECEIPT-CUTOFF-${suffix}-${String(_label).replaceAll(" ", "-")}`),
+        decisionTime,
+      ),
+    ).rejects.toMatchObject({ code: "INVALID_PURCHASE" });
+
+    expect(await prisma.purchase.count({ where: { idempotencyKey: key } })).toBe(0);
+    expect(await prisma.payment.count({ where: { purchase: { idempotencyKey: key } } })).toBe(0);
+    expect(await prisma.purchaseParticipation.count({ where: { purchase: { idempotencyKey: key } } })).toBe(0);
+  });
+
   it("rejects concurrent requests with the same key but different receipt codes", async () => {
     const key = `it-conflict-${suffix}`;
     const outcomes = await Promise.allSettled([
