@@ -11,7 +11,7 @@ export type ThermalReceiptPlate = {
 
 export type ThermalReceiptProps = {
   receiptCode: string;
-  paymentStatus: "CONFIRMED";
+  paymentStatus: "CONFIRMED" | "PENDING_PAYMENT" | "CANCELLED" | "REFUNDED";
   issuedAt: string;
   totalCents: number;
   plates: ThermalReceiptPlate[];
