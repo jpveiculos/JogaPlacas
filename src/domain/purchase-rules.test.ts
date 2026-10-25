@@ -41,6 +41,20 @@ describe("validatePurchaseDraft", () => {
       .toThrow(PurchaseRuleError);
   });
 
+  it("rejects purchases before the scheduled opening time", () => {
+    const now = new Date("2026-10-23T20:00:00.000Z");
+    const purchase = makePurchase(1, now);
+    purchase.participations[0].startsAt = new Date(now.getTime() + 1);
+    expect(() => validatePurchaseDraft(purchase, now)).toThrow(/before its round opens/i);
+  });
+
+  it("accepts purchases at opening and before cutoff", () => {
+    const now = new Date("2026-10-23T20:00:00.000Z");
+    const purchase = makePurchase(1, now);
+    purchase.participations[0].startsAt = now;
+    expect(validatePurchaseDraft(purchase, now).totalCents).toBe(100);
+  });
+
   it("rejects a participation at the exact cutoff", () => {
     const now = new Date("2026-10-23T20:00:00.000Z");
     const purchase = makePurchase(1, now);
