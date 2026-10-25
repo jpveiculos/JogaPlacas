@@ -72,6 +72,8 @@
 
 ## 8. Interface
 - Interface limpa, responsiva e simples.
+- Na área do jogador, usar um único fluxo de entrada com escolha explícita entre placa cinza e Mercosul; mostrar uma plaquinha visual em branco/atualizada enquanto a pessoa digita e validar o formato selecionado. A placa cinza segue `ABC-1234`; Mercosul segue `ABC1D23`, com A–Z na quinta posição.
+- Nos resultados recentes, mostrar os dois resultados independentes da rodada como plaquinhas distintas, identificadas como placa cinza e placa Mercosul; nunca converter uma na outra. Exibir resultados recentes por até 24 horas.
 - Funções secundárias em menus recolhidos, com indicadores de expansão.
 - Modal Pix com QR Code, opção copiar/colar e botão para sair da tela do QR; sair da tela não cancela a cobrança.
 - No modal de jogo do jogador e no fluxo de venda do cambista, apresentar o gerador com ações simples **“Gerar placa”**, **“Gerar outra”** e **“Adicionar ao jogo”**. Mostrar claramente a placa sugerida e manter a escolha sob controle do usuário.
