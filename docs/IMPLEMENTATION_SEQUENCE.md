@@ -338,3 +338,10 @@ A alteração permanece pendente de implementação e validação. Não houve me
 - [ ] Validar ponta a ponta e preparar checklist de segurança, backup/restauração, observabilidade e requisitos legais antes de qualquer lançamento.
 
 **Limites:** inspeção de arquivos e GitHub Actions apenas; não houve execução local, acesso a banco real, merge, deploy, alteração de produção nem ativação de pagamentos. A diferença Next/ESLint está alinhada nos manifestos, mas isso não substitui CI verde.
+
+
+## Auditoria de alocações da apuração — 2026-10-25
+- [x] Validar as seis alocações de cada linha antes de verificar quais categorias venceram; acrescentado teste unitário para alocação negativa em categoria não premiada.
+- [ ] Confirmar CI completa após os commits `d1c5c695751b8746942d996d4d3337920a5b2352` e `7f62eac41dcbf29f4bbe862c627ded6430b32142`.
+- [ ] Auditar invariantes entre alocação total por placa, total da participação e total da compra; só alterar regras após confirmar a estrutura dos dados e acrescentar testes.
+- [ ] Manter deploy de desenvolvimento/produção e ativação de pagamentos fora do escopo até CI aprovada e integração financeira implementada/testada.
