@@ -111,3 +111,11 @@ O usuário executou manualmente no Codespaces, na branch `feature/dual-plate-dra
 - Este CI não executa nem autoriza deploy. Nenhuma implantação ou alteração de banco de produção foi realizada.
 - Próxima etapa: revisar regras de negócio e restrições de integridade do banco; conferir a especificação funcional antes de implementar novos fluxos. A interface principal ainda é descrita neste documento como placeholder e os fluxos de compra/pagamento continuam sem integração real com provedor Pix.
 
+### Auditoria aprofundada de integridade do banco — 2026-10-25
+
+- Confirmado no schema e na migração inicial: campos monetários em centavos são inteiros, mas ainda não têm restrições SQL explícitas para impedir valores negativos. Isso inclui totais de compras/participações, alocações das seis categorias, pagamentos, lançamentos contábeis, comissões e saques.
+- A soma das seis alocações de uma ParticipationLine deve ser exatamente o valor total daquela placa. Como o total da linha não está armazenado separadamente, essa igualdade precisa ser validada pelo domínio/serviço transacional ou por um desenho SQL adicional; um CHECK simples não pode comparar outras tabelas.
+- A especificação exige dois resultados independentes por rodada, mas a fixture do teste de backfill histórico cria uma rodada COMPLETED contendo apenas o antigo resultado Mercosul. Portanto, não é seguro adicionar imediatamente uma constraint que exija ambos os resultados em toda rodada concluída sem primeiro definir a política para rodadas históricas e ajustar o teste de migração.
+- A migração de formato de placa já falha de modo seguro quando não consegue classificar uma linha histórica; preservar esse comportamento.
+- Próxima ação técnica: adicionar constraints SQL locais e não ambíguas para valores não negativos e formato/estado de resultados, depois ampliar os testes de migração com casos válidos e inválidos. Antes de exigir dois resultados em rodadas COMPLETED, decidir e documentar como tratar rodadas históricas que só têm um resultado; não inventar nem converter um resultado para preencher o outro.
+- Nenhuma alteração de banco ou deploy de produção foi realizada. A auditoria foi somente estática, lendo schema, migrações e testes no branch de trabalho.
