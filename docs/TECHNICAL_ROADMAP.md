@@ -71,7 +71,7 @@ Cada etapa precisa produzir código, testes e documentação coerentes. Não alt
 - CI `Verify` do commit `1d37b8fc59e0c10717272b96dec1d9bd206a6819`: sucesso.
 - A revisão estática da migração `20261024020000_dual_plate_draw` confirmou que ela interrompe a migração se qualquer `ParticipationLine.plateDisplay` não corresponder a um formato conhecido. Preservar esse fail-closed.
 - O teste de migração atual usa PostgreSQL vazio; ele não exercita a classificação de dados históricos. Antes de qualquer uso num banco com dados, criar um teste isolado de backfill LEGACY/MERCOSUR e falha segura para registro inválido/ambíguo.
-- `next@16.4.3` e `eslint-config-next@16.4.2` seguem desalinhados por um patch. Não alterar cegamente; confirmar compatibilidade, regenerar lockfile e validar o pipeline ao resolver.
+- **Nota histórica superada:** naquela revisão, `next@16.4.3` e `eslint-config-next@16.4.2` estavam desalinhados. A auditoria posterior desta mesma branch confirmou que `package.json` e `package-lock.json` já declaram `next@16.4.3` e `eslint-config-next@16.4.3`; não há ação de alinhamento pendente enquanto essas versões permanecerem iguais.
 - Nenhum teste local/instalação limpa, migração produtiva ou deploy foi executado nesta etapa.
 
 
@@ -100,7 +100,7 @@ O usuário executou manualmente no Codespaces, na branch `feature/dual-plate-dra
 - Não há evidência nesta conversa de que `npm run db:validate`, `npm run db:generate` ou `npm ci` tenham sido executados no Codespaces; não afirmar que foram concluídos.
 - O `.env` é arquivo local e não deve ser commitado. Os valores configurados são exemplos de teste apontando para localhost; não criam nem iniciam PostgreSQL.
 - A verificação da execução GitHub Actions `40147783753` (commit `2bf9d5099fcba793108ef44c0290ce07aa282a8d`) confirma `success` em `verify`, `migration-test` e `postgres-concurrency-test`. A instalação reproduzível com `npm ci`, build, teste histórico de migração e testes PostgreSQL passaram no CI desse commit.
-- A diferença `next@16.4.3` / `eslint-config-next@16.4.2` permanece sem alteração; ainda requer alinhamento com lockfile regenerado e CI completa. Nenhum merge para `main`, migração produtiva, deploy ou pagamento real foi realizado.
+- **Nota histórica superada:** a divergência `next@16.4.3` / `eslint-config-next@16.4.2` foi resolvida antes desta atualização; a inspeção atual desta branch encontrou ambas em `16.4.3`. Nenhum merge para `main`, migração produtiva, deploy ou pagamento real foi realizado.
 
 ### Auditoria de CI e dependências — 2026-10-25 (atualização)
 
@@ -149,3 +149,13 @@ O usuário executou manualmente no Codespaces, na branch `feature/dual-plate-dra
 - A consulta pública por recibo exige código completo com formato `JP-`, retorna somente compras confirmadas e expõe campos limitados de resultado; não retorna nome, usuário ou dados de pagamento do jogador.
 - Limite desta etapa: revisão estática não substitui testes automatizados de cada papel, tentativa de acesso cruzado entre contas, origem ausente/maliciosa, enumeração de recibos, limites de requisição e comportamento quando a escrita de auditoria falha. Não afirmar que a auditoria de segurança está concluída.
 - Próxima etapa: revisar os testes de rota existentes e acrescentar casos negativos de autorização/isolamento onde estiverem ausentes; depois examinar os fluxos de login, alteração de senha, sessão e limitação de tentativas. Nenhum deploy, cobrança ou alteração de banco de produção foi realizado.
+
+
+### Testes de autorização e revisão de autenticação — 2026-10-25 (complemento)
+
+- A execução #341 está aprovada e cobre o teste de consistência financeira com várias linhas e rodadas.
+- A leitura dos testes de rota existentes confirmou casos negativos para sessão ausente, papel incorreto, troca obrigatória de senha, requisições de outra origem, payloads inválidos e consulta pública sem recibo confirmado.
+- O histórico do jogador verifica que a consulta usa o `playerId` da sessão autenticada; a criação da compra recebe o identificador do jogador do servidor, e não do payload do cliente.
+- O login usa cookie `HttpOnly`, `SameSite=Lax`, expiração, verificação de senha e limitação de tentativas; a troca de senha exige senha atual, comprimento mínimo de 12 caracteres e revoga as sessões anteriores dentro da transação antes de emitir nova sessão.
+- Ainda falta verificar os casos em que o armazenamento de auditoria falha, os limites de tentativas e isolamento de conta com integração real PostgreSQL, além da cobertura de todas as rotas. A análise não é um pentest e não certifica a aplicação como pronta para produção.
+- A nota antiga sobre divergência Next/ESLint foi marcada como histórica para evitar instruções contraditórias; a branch atualmente auditada tem ambas as dependências na versão 16.4.3.
