@@ -43,14 +43,17 @@ function wallTimeToUtc(year: number, month: number, day: number, hour: number, m
 function resultSlots(from: Date, through: Date): Date[] {
   const slots: Date[] = [];
   const local = saoPauloParts(from);
-  let cursor = wallTimeToUtc(Number(local.year), Number(local.month), Number(local.day), Number(local.hour), 0);
-  if (cursor.getTime() < from.getTime()) cursor = new Date(cursor.getTime() + HALF_HOUR_MS);
-  // Align to the next local :00 or :30 boundary, then iterate by 30 minutes.
-  const currentParts = saoPauloParts(cursor);
-  if (Number(currentParts.minute) === 0 && cursor.getTime() < from.getTime()) {
-    cursor = new Date(cursor.getTime() + HALF_HOUR_MS);
-  } else if (Number(currentParts.minute) !== 0) {
-    cursor = new Date(cursor.getTime() + HALF_HOUR_MS);
+  const localMinute = Number(local.minute);
+  const firstMinute = localMinute < 30 ? 0 : 30;
+  let cursor = wallTimeToUtc(Number(local.year), Number(local.month), Number(local.day), Number(local.hour), firstMinute);
+  // Include the current half-hour result only while its betting cutoff is still ahead.
+  if (cursor.getTime() <= from.getTime() || cursor.getTime() - MINUTE_MS <= from.getTime()) {
+    if (firstMinute === 0) {
+      cursor = wallTimeToUtc(Number(local.year), Number(local.month), Number(local.day), Number(local.hour), 30);
+    } else {
+      const nextHour = new Date(Date.UTC(Number(local.year), Number(local.month) - 1, Number(local.day), Number(local.hour) + 1));
+      cursor = wallTimeToUtc(nextHour.getUTCFullYear(), nextHour.getUTCMonth() + 1, nextHour.getUTCDate(), nextHour.getUTCHours(), 0);
+    }
   }
   while (cursor.getTime() <= through.getTime()) {
     slots.push(new Date(cursor));
@@ -58,7 +61,6 @@ function resultSlots(from: Date, through: Date): Date[] {
   }
   return slots;
 }
-
 function roundCode(date: Date): string {
   const parts = saoPauloParts(date);
   return `JP-${parts.year}${parts.month}${parts.day}-${parts.hour}${parts.minute}`;
