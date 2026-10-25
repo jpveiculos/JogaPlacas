@@ -76,17 +76,15 @@ export async function closeRound(
           where: { id: roundId },
           data: { status: RoundStatus.CLOSED },
         });
-        if (actorId) {
-          await tx.auditEvent.create({
-            data: {
-              actorId,
-              action: "ROUND_CLOSED",
-              entityType: "Round",
-              entityId: updated.id,
-              metadata: { previousStatus: round.status, status: updated.status },
-            },
-          });
-        }
+        await tx.auditEvent.create({
+          data: {
+            ...(actorId ? { actorId } : {}),
+            action: actorId ? "ROUND_CLOSED" : "ROUND_CLOSED_AUTOMATICALLY",
+            entityType: "Round",
+            entityId: updated.id,
+            metadata: { previousStatus: round.status, status: updated.status, source: actorId ? "admin" : "scheduler" },
+          },
+        });
         return updated;
       }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
     } catch (error) {
