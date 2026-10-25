@@ -144,3 +144,13 @@ Não houve merge, deploy, migração em produção nem cobrança real.
 - [x] Reforçados tamanhos de fonte, espaçamento e alvo de toque na página pública para facilitar leitura em celular.
 - [ ] Fazer revisão de acessibilidade visual em telas reais e validar a CI antes de considerar concluído.
 - Limite funcional explicitado: a página informa resultados gerais e prêmios confirmados; não identifica o resultado individual de um bilhete sem uma funcionalidade própria de consulta.
+
+
+### Consulta rápida por placa ou recibo — 2026-10-25
+
+- [x] Criada rota pública que aceita placa ou recibo JP-, valida a entrada e retorna apenas dados necessários.
+- [x] Criado componente reutilizável com campo único, mensagens claras, plaquinhas e estados de prêmio/resultado/apuração.
+- [x] Incluída consulta prioritária na página pública de resultados.
+- [x] Registradas regras de privacidade e confirmação de prêmio no manual mestre.
+- [ ] Integrar nas telas autenticadas do cambista e do jogador após confirmar os caminhos exatos dessas páginas.
+- [ ] Adicionar testes automatizados e validar a CI no HEAD final.
