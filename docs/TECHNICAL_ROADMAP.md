@@ -317,3 +317,6 @@ Testes pendentes antes de considerar o fluxo pronto:
 - reimpressão com o mesmo código, sem efeitos financeiros;
 - QR Code levando à consulta da compra completa e somente dados autorizados;
 - integração real com a tela do cambista e com o provedor de pagamento após confirmação assinada e idempotente.
+
+
+Implementação parcial do recibo — 2026-10-25: o componente térmico agora identifica visualmente cada linha pela repetição sequencial e mantém o código da rodada explícito. Foi adicionada cobertura unitária para várias linhas na mesma rodada e para dez rodadas em sequência. Isso cobre a apresentação do índice, não substitui a futura integração de pagamento, QR Code, consulta completa da compra ou impressão real no cambista.
