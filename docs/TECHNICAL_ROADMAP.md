@@ -90,3 +90,15 @@ O workflow completo no commit `576ec2afb43a5a6fcb9deeb38027a0fdf53efef8` conclui
 
 ### Revisão de banco e regras de negócio — 2026-10-25
 A primeira revisão das migrações/schema encontrou ausência de `CHECK` constraints para valores/alocações não negativos, mínimo por linha e consistência de totais; também não há constraint que garanta dois resultados juntos quando a rodada é `COMPLETED`. Os serviços protegem partes dessas regras, mas escritas diretas/novos caminhos poderiam contorná-las. Avaliar constraints compatíveis com reconciliação histórica e adicionar testes de migração. O serviço atual cria compra e pagamento Pix pendentes; não há integração real com provedor/webhook nem confirmação financeira. Essas pendências devem ser resolvidas antes de ativar fluxos reais.
+
+### Verificação local via GitHub Codespaces — 2026-10-25
+
+O usuário executou manualmente no Codespaces, na branch `feature/dual-plate-draw`, os seguintes comandos e compartilhou telas do terminal:
+- `npm test`: 15 arquivos aprovados, 3 ignorados; 104 testes aprovados, 17 ignorados.
+- `npm run lint`: 0 erros e 2 avisos para uso de `window.location.assign()` em `src/components/auth/change-password-form.tsx:31` e `src/components/auth/logout-button.tsx:10`.
+- `npm run build`: a tentativa inicial falhou porque `DATABASE_URL` não estava definido. Após criar `.env` a partir de `.env.example` e configurar valores apenas de teste, uma execução posterior exibiu a tabela de rotas de build do Next.js e retornou ao prompt sem erro visível; isso é evidência visual de conclusão bem-sucedida, não validação reproduzida por automação desta auditoria.
+- Não há evidência nesta conversa de que `npm run db:validate`, `npm run db:generate` ou `npm ci` tenham sido executados no Codespaces; não afirmar que foram concluídos.
+- O `.env` é arquivo local e não deve ser commitado. Os valores configurados são exemplos de teste apontando para localhost; não criam nem iniciam PostgreSQL.
+- A verificação da execução GitHub Actions `40147783753` (commit `2bf9d5099fcba793108ef44c0290ce07aa282a8d`) confirma `success` em `verify`, `migration-test` e `postgres-concurrency-test`. A instalação reproduzível com `npm ci`, build, teste histórico de migração e testes PostgreSQL passaram no CI desse commit.
+- A diferença `next@16.4.3` / `eslint-config-next@16.4.2` permanece sem alteração; ainda requer alinhamento com lockfile regenerado e CI completa. Nenhum merge para `main`, migração produtiva, deploy ou pagamento real foi realizado.
+
