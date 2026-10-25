@@ -79,7 +79,7 @@ export function validatePurchaseDraft(
   const roundIds = new Set<string>();
   let totalCents = 0;
 
-  for (const participation of purchase.participations) {
+  for (const [index, participation] of purchase.participations.entries()) {
     if (!participation.roundId || roundIds.has(participation.roundId)) {
       throw new PurchaseRuleError("Each participation must reference a distinct round");
     }
@@ -93,8 +93,8 @@ export function validatePurchaseDraft(
       || Number.isNaN(participation.startsAt.getTime()))) {
       throw new PurchaseRuleError("A valid round start is required when provided");
     }
-    if (participation.startsAt && now.getTime() < participation.startsAt.getTime()) {
-      throw new PurchaseRuleError("A participation cannot be purchased before its round opens");
+    if (index === 0 && participation.startsAt && now.getTime() < participation.startsAt.getTime()) {
+      throw new PurchaseRuleError("The first participation cannot be purchased before its round opens");
     }
     if (now.getTime() >= participation.cutoffAt.getTime()) {
       throw new PurchaseRuleError("A participation cannot be purchased at or after its round cutoff");
