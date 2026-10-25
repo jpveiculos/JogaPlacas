@@ -176,3 +176,11 @@ O usuário executou manualmente no Codespaces, na branch `feature/dual-plate-dra
 - **Ponto de consistência a resolver:** se a apuração financeira concluir e a gravação posterior do evento de auditoria falhar, a rota pode responder erro 500 embora a apuração já tenha sido persistida. Antes de alterar o fluxo, revisar o serviço de apuração e sua estratégia idempotente; a solução deve garantir rastreabilidade sem repetir créditos ou criar um falso estado de falha. Não basta ocultar a exceção nem declarar a operação concluída sem auditoria.
 - A gravação de eventos de negação por papel insuficiente também é aguardada antes de responder 403; uma indisponibilidade do banco de auditoria pode alterar a resposta esperada. Criar testes específicos de falha de auditoria e decidir/documentar uma política uniforme para ações financeiras e tentativas negadas.
 - Próxima etapa: inspecionar o serviço transacional `settleRoundPrizes`, o desenho de idempotência e seus testes antes de modificar a rota. Manter as alterações em `feature/dual-plate-draw`; sem deploy ou mudanças em produção.
+
+### Apuração e auditoria na mesma transação — 2026-10-25
+
+- A apuração agora recebe o identificador do administrador e grava o evento `ROUND_PRIZES_SETTLED` dentro da mesma transação PostgreSQL que persiste os prêmios e os créditos no ledger.
+- A rota administrativa deixou de gravar o evento de sucesso depois que a transação financeira termina. Isso elimina o estado ambíguo em que a apuração poderia estar concluída no banco, mas a rota retornaria erro porque uma gravação de auditoria separada falhou.
+- Se a gravação de auditoria falhar dentro da transação, a transação inteira deve falhar e reverter junto os créditos e atualizações da apuração. A idempotência existente por `prize-credit:<lineId>` permanece como proteção adicional, não como substituto da atomicidade.
+- Os testes da rota foram ajustados para verificar que o identificador do administrador é entregue ao serviço e que a rota não tenta criar um segundo evento de sucesso fora da transação. A confirmação final depende da CI do commit atual.
+- A alteração está restrita à branch `feature/dual-plate-draw`. Nenhum deploy, merge para `main`, pagamento real ou banco de produção foi tocado.
