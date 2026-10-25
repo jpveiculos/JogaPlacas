@@ -9,6 +9,21 @@ export type ThermalReceiptPlate = {
   stakeCents: number;
 };
 
+/**
+ * Assigns a stable sequence number to each distinct round in the supplied
+ * participation order. Multiple plate lines in the same round share a number.
+ */
+export function getReceiptRepetitionNumbers(plates: ThermalReceiptPlate[]): number[] {
+  const numbersByRound = new Map<string, number>();
+  return plates.map((plate) => {
+    const existing = numbersByRound.get(plate.roundCode);
+    if (existing !== undefined) return existing;
+    const next = numbersByRound.size + 1;
+    numbersByRound.set(plate.roundCode, next);
+    return next;
+  });
+}
+
 export type ThermalReceiptProps = {
   receiptCode: string;
   paymentStatus: "CONFIRMED" | "PENDING_PAYMENT" | "CANCELLED" | "REFUNDED";
@@ -55,6 +70,7 @@ export function ThermalReceipt({
   const date = `${dateLabel} ${timeLabel}`;
 
   const qrStyle: CSSProperties = { width: 76, height: 76, objectFit: "contain" };
+  const repetitionNumbers = getReceiptRepetitionNumbers(plates);
 
   return (
     <div className="thermal-receipt-print-root">
@@ -91,7 +107,8 @@ export function ThermalReceipt({
                 <strong>{plate.plateDisplay}</strong>
                 <strong>{money(plate.stakeCents)}</strong>
               </div>
-              <span>{plate.plateFormat === "LEGACY" ? "Placa cinza" : "Placa Mercosul"} · Rodada {plate.roundCode}</span>
+              <span>Repetição {repetitionNumbers[index]} · {plate.plateFormat === "LEGACY" ? "Placa cinza" : "Placa Mercosul"}</span>
+              <span>Rodada {plate.roundCode}</span>
             </div>
           ))}
         </section>
