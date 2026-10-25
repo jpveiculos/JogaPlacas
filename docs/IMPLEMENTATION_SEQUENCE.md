@@ -84,3 +84,13 @@ Adicionado o helper puro `src/domain/allocate-plate-stake.ts` e testes `src/doma
 - [ ] Verificar os consumidores/API do serviço para confirmar que enviam `stakeCents`; ajustar todos os chamadores identificados pela CI/revisão antes de finalizar.
 
 Esta alteração continua somente na branch de desenvolvimento. Nenhuma cobrança real, migração em produção, merge ou deploy foi executado.
+### Fechamento da integração do rateio e proteção de regras — 2026-10-25
+
+- [x] O teste de integração PostgreSQL foi atualizado para enviar apenas o valor total da placa em centavos; a alteração de valor no teste de idempotência também usa `stakeCents`.
+- [x] O serviço bloqueia novos pedidos com multiplicadores diferentes dos valores aprovados atualmente (unidade 6x, dezena 20x, centena 200x, milhar 2.000x, letras 2.000x, placa completa 200.000x).
+- [x] A verificação de idempotência acontece antes dessa restrição para que a repetição de uma compra já existente possa ser reconhecida com o snapshot original.
+- [x] A apuração continua lendo os valores por categoria persistidos e o snapshot de cada linha; foi acrescentado um teste para o prêmio de unidade de R$ 1,20 quando a alocação é de R$ 0,20 a 6x.
+- [ ] A CI do commit final ainda precisa ser confirmada. A consulta disponível de workflows não retornou os runs de push mais recentes, portanto não registrar a CI como aprovada sem verificação no GitHub Actions.
+- [ ] A aplicação completa continua pendente: o serviço de compra e a apuração estão implementados, mas a interface/fluxo de jogador e cambista ainda precisam ser conectados e testados de ponta a ponta.
+
+Não houve merge, deploy, migração em produção nem criação de cobrança real.
