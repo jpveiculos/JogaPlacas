@@ -224,3 +224,14 @@ A alteração permanece pendente de implementação e validação. Não houve me
 - [ ] Garantir que leitura do QR forneça o código completo para consulta e que a consulta continue validando recibo emitido/compra confirmada.
 - [ ] Testar QR/código em recibos confirmados e ausência de ambos em compras pendentes; validar acessibilidade/tamanho em impressão e celular.
 - [ ] Concluir primeiro o fluxo transacional de confirmação e emissão do recibo; o QR depende desse ponto de emissão.
+
+
+### Estrutura inicial de impressão térmica 58 mm — 2026-10-25
+
+- [x] Criado componente reutilizável `src/components/receipts/thermal-receipt.tsx` para o comprovante em bobina de 58 mm.
+- [x] Adicionado CSS de impressão com página de 58 mm, área útil de 48 mm, monocromático, botão de imprimir oculto na impressão e QR de 20 mm ao lado do código.
+- [x] Bloqueada a renderização do recibo se o pagamento não estiver confirmado ou se o código não corresponder ao padrão de recibo.
+- [ ] Conectar à operação transacional que confirma pagamento e emite o código; não usar dados do cliente como prova de pagamento.
+- [ ] Integrar geração local do QR Code (conteúdo somente o código completo do recibo), sem serviço público de terceiros.
+- [ ] Integrar o componente ao recibo efetivo do jogador/cambista e executar testes/CI.
+- [ ] Fazer teste físico na impressora específica; o modelo não foi recuperado das informações disponíveis. Confirmar escala sem ajuste, margens e leitura do QR antes de considerar o layout final.
