@@ -317,3 +317,24 @@ A alteração permanece pendente de implementação e validação. Não houve me
 - [ ] Validar a CI e ensaiar atualização e rollback em staging antes de disponibilizar o botão em produção.
 
 **Estado real:** decisão documentada nesta branch; nenhum painel ou mecanismo de atualização/restauração foi implementado por este registro. Nenhuma publicação, reversão, merge ou alteração de produção foi executada.
+
+
+### Auditoria de continuidade e bloqueios atuais — 2026-10-25
+
+**Primeiro gate: CI do HEAD atual.** A execução `Verify` do commit `65c89d599cfdaabf880ae7ce763499798ad75bf9` falhou em `verify`, `migration-test` e `postgres-concurrency-test`. A reexecução também falhou rapidamente e o conector não disponibilizou logs/etapas. Abrir o run no GitHub Actions, obter a mensagem real de falha, corrigir a causa e reexecutar todos os jobs. Não presumir causa nem avançar para release enquanto isso estiver vermelho.
+
+**Verificações da auditoria:**
+- [x] Manifestos consultados: `next@16.4.3` e `eslint-config-next@16.4.3` estão alinhados em `package.json` e `package-lock.json`.
+- [x] Confirmado que a rota de compra cria apenas compra pendente e informa que não cria/confirmar cobrança Pix.
+- [x] Confirmado que a tela administrativa atual é placeholder, sem painel funcional de atualizações/rollback.
+- [x] Confirmado que o recibo térmico exige status confirmado, mas o QR depende de dado externo e ainda há placeholder se não for fornecido.
+- [x] Confirmado que o histórico do jogador filtra pelo proprietário e não mostra recibo para compra pendente.
+- [ ] Obter logs e corrigir a CI no HEAD atual; executar novamente lint, typecheck, testes, build, migrações e concorrência.
+- [ ] Concluir confirmação transacional de pagamento, emissão única de recibo e proteção de idempotência; Pix real fica bloqueado até implementação/revisão.
+- [ ] Implementar fluxos completos de jogador e cambista (compra/venda, confirmação de dinheiro, consulta, recibo e impressão), preservando regras de autorização.
+- [ ] Gerar QR localmente a partir apenas do código de recibo e integrar o componente ao fluxo oficial de recibo confirmado.
+- [ ] Implementar painel administrativo e recursos reais de gestão/auditoria previstos no manual, com autorização e testes.
+- [ ] Confirmar provedor de hospedagem e criar staging; só depois implementar publicação controlada, health checks e rollback da versão web.
+- [ ] Validar ponta a ponta e preparar checklist de segurança, backup/restauração, observabilidade e requisitos legais antes de qualquer lançamento.
+
+**Limites:** inspeção de arquivos e GitHub Actions apenas; não houve execução local, acesso a banco real, merge, deploy, alteração de produção nem ativação de pagamentos. A diferença Next/ESLint está alinhada nos manifestos, mas isso não substitui CI verde.
