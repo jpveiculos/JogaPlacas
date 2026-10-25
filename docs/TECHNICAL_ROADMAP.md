@@ -159,3 +159,13 @@ O usuário executou manualmente no Codespaces, na branch `feature/dual-plate-dra
 - O login usa cookie `HttpOnly`, `SameSite=Lax`, expiração, verificação de senha e limitação de tentativas; a troca de senha exige senha atual, comprimento mínimo de 12 caracteres e revoga as sessões anteriores dentro da transação antes de emitir nova sessão.
 - Ainda falta verificar os casos em que o armazenamento de auditoria falha, os limites de tentativas e isolamento de conta com integração real PostgreSQL, além da cobertura de todas as rotas. A análise não é um pentest e não certifica a aplicação como pronta para produção.
 - A nota antiga sobre divergência Next/ESLint foi marcada como histórica para evitar instruções contraditórias; a branch atualmente auditada tem ambas as dependências na versão 16.4.3.
+
+### Revisão de sessão e limite de tentativas — 2026-10-25
+
+- As execuções #342 e #343 do workflow `Verify` foram confirmadas como concluídas com sucesso nos três jobs: verificação principal, migração e testes de concorrência PostgreSQL.
+- A revisão estática de `src/lib/auth/session.ts` confirmou token de sessão aleatório de 32 bytes, persistência somente do hash SHA-256, validade de 12 horas, revogação e rejeição de sessões expiradas, revogadas ou pertencentes a contas inativas.
+- O logout revoga a sessão apresentada e limpa o cookie; a rota de identidade retorna apenas campos de sessão necessários e desativa cache; a alteração de senha exige a senha atual e executa atualização da senha, revogação das sessões anteriores e criação da nova sessão numa transação.
+- O limitador de login tem testes de integração PostgreSQL para contagem concorrente, janela de 15 minutos e limpeza após autenticação bem-sucedida. Esses testes só são executados quando `RUN_POSTGRES_INTEGRATION=1`.
+- **Risco a tratar antes de considerar a proteção contra abuso concluída:** o limitador atual é indexado pelo nome de usuário normalizado, sem uma dimensão independente por origem/IP. Isso permite que um terceiro tente provocar bloqueio temporário de uma conta-alvo. A próxima mudança deve avaliar e testar um limite adicional por origem, sem confiar cegamente em cabeçalhos encaminhados por proxy, sem registrar IP bruto desnecessariamente e sem enfraquecer o limite por conta.
+- Esta é uma revisão estática com testes existentes, não um pentest nem uma certificação de segurança. Permanecem pendentes os testes de falha na escrita de auditoria, isolamento de sessão/conta em integração e revisão sistemática das rotas restantes.
+- Nenhum deploy, merge para `main`, cobrança real ou alteração em banco de produção foi realizado.
