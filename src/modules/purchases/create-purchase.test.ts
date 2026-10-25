@@ -220,7 +220,7 @@ describe("createPendingPixPurchase idempotency replay", () => {
         lettersCents: 16,
         fullPlateCents: 16,
         ruleVersion: "test-v1",
-        ruleSnapshot: { version: "test-v1", multipliers: { unit: 2, tens: 20, hundreds: 200, thousands: 2_000, letters: 2_000, fullPlate: 200_000 } },
+        ruleSnapshot: { version: "test-v1", multipliers: { unit: 6, tens: 20, hundreds: 200, thousands: 2_000, letters: 2_000, fullPlate: 200_000 } },
       }],
     }],
     payment: { id: "payment-existing", status: "PENDING" },
