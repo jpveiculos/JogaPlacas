@@ -31,7 +31,7 @@ describe("validatePurchaseDraft", () => {
       .toEqual({ totalCents: 100, participationCount: 1 });
   });
 
-  it("accepts ten rounds as ten participations under one purchase", () => {
+  it("accepts ten sequential rounds as ten participations under one purchase", () => {
     expect(validatePurchaseDraft(makePurchase(10), new Date("2026-10-23T20:00:00.000Z")))
       .toEqual({ totalCents: 1000, participationCount: 10 });
   });
