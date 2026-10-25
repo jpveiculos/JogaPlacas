@@ -1,4 +1,5 @@
 import { PublicResultsBoard } from "@/components/results/public-results-board";
+import { QuickTicketCheck } from "@/components/results/quick-ticket-check";
 
 export const dynamic = "force-dynamic";
 export const metadata = {
@@ -7,5 +8,5 @@ export const metadata = {
 };
 
 export default function ResultsPage() {
-  return <PublicResultsBoard />;
+  return <><QuickTicketCheck /><PublicResultsBoard /></>;
 }
