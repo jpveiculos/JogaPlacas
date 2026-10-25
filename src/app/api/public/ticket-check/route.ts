@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { authPrisma } from "@/lib/auth/session";
 export const runtime="nodejs"; export const dynamic="force-dynamic";
 const headers={"Cache-Control":"no-store, public, max-age=0"};
-function status(line:{prizeCents:number|null;prizeCreditedAt:Date|null},roundStatus:string){if(line.prizeCents!==null&&line.prizeCents>0&&line.prizeCreditedAt)return "PREMIADA";if(roundStatus!=="COMPLETED")return "AGUARDANDO_RESULTADO";if(line.prizeCents===null||!line.prizeCreditedAt)return "AGUARDANDO_APURACAO";return "NAO_PREMIADA"}
+function status(line:{prizeCents:number|null;prizeCreditedAt:Date|null},roundStatus:string){if(line.prizeCents!==null&&line.prizeCents>0&&line.prizeCreditedAt)return "PREMIADA";if(roundStatus!=="COMPLETED")return "AGUARDANDO_RESULTADO";if(line.prizeCents===0)return "NAO_PREMIADA";return "AGUARDANDO_APURACAO"}
 function safe(line:any){const r=line.participation.round;return {id:line.id,plateFormat:line.plateFormat,plateDisplay:line.plateDisplay,roundCode:r.code,resultAt:r.resultAt.toISOString(),roundStatus:r.status,resultLegacyPlate:r.resultLegacyPlate,resultMercosurPlate:r.resultMercosurPlate,status:status(line,r.status),prizeCents:line.prizeCreditedAt&&(line.prizeCents??0)>0?line.prizeCents:null}}
 export async function GET(request:NextRequest){
  const raw=(request.nextUrl.searchParams.get("q")??"").trim();
