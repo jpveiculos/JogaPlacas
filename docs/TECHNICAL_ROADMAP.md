@@ -78,3 +78,7 @@ Cada etapa precisa produzir código, testes e documentação coerentes. Não alt
 ## Atualização de implementação — teste de migração histórica (2026-10-25)
 
 Foi adicionado um teste automatizado de backfill em PostgreSQL descartável: `scripts/test-dual-plate-migration.mjs`, comando `npm run test:migration-backfill`, integrado ao job `migration-test`. Ele testa classificação de registros LEGACY/MERCOSUR, preservação do resultado Mercosul e bloqueio para placa histórica não classificável. A implementação está commitada, mas a aprovação depende do resultado do workflow do commit atual. Executar somente em PostgreSQL descartável com permissão para criar/remover bancos. Nenhum banco real foi alterado.
+
+
+### Correção da primeira falha do teste de backfill — 2026-10-25
+A CI identificou erro na fixture de teste (`Purchase.updatedAt` inexistente na migração inicial), antes de testar o backfill em si. O campo foi removido do INSERT no commit `576ec2afb43a5a6fcb9deeb38027a0fdf53efef8`. O status continua pendente até a CI desse commit terminar.
