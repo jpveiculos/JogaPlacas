@@ -184,3 +184,11 @@ O usuário executou manualmente no Codespaces, na branch `feature/dual-plate-dra
 - Se a gravação de auditoria falhar dentro da transação, a transação inteira deve falhar e reverter junto os créditos e atualizações da apuração. A idempotência existente por `prize-credit:<lineId>` permanece como proteção adicional, não como substituto da atomicidade.
 - Os testes da rota foram ajustados para verificar que o identificador do administrador é entregue ao serviço e que a rota não tenta criar um segundo evento de sucesso fora da transação. A confirmação final depende da CI do commit atual.
 - A alteração está restrita à branch `feature/dual-plate-draw`. Nenhum deploy, merge para `main`, pagamento real ou banco de produção foi tocado.
+
+### Obrigatoriedade de auditoria na apuração — 2026-10-25
+
+- A CI da execução #349 terminou com sucesso nos três jobs: `verify`, `migration-test` e `postgres-concurrency-test`.
+- A revisão seguinte identificou que `settleRoundPrizes` aceitava o identificador do administrador como opcional. Isso permitia que uma chamada futura do serviço concluísse a apuração sem registrar o evento de auditoria, mesmo que a rota administrativa atual já passasse o ator.
+- O serviço agora exige `actorId` e grava obrigatoriamente `ROUND_PRIZES_SETTLED` na mesma transação dos créditos e da apuração. O teste de integração PostgreSQL foi atualizado para fornecer um ator e verificar os eventos de auditoria das chamadas concorrentes/repetidas, além de removê-los na limpeza da fixture.
+- A alteração está na branch `feature/dual-plate-draw`; aguardar CI antes de considerar validada. O teste de integração PostgreSQL depende de `RUN_POSTGRES_INTEGRATION=1` e de `DATABASE_URL`; a CI comum não substitui a execução explícita desse teste contra PostgreSQL.
+- Nenhum deploy, merge para `main` ou alteração de banco de produção foi realizado.
