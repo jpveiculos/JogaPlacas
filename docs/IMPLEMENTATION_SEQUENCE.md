@@ -235,3 +235,22 @@ A alteração permanece pendente de implementação e validação. Não houve me
 - [ ] Integrar geração local do QR Code (conteúdo somente o código completo do recibo), sem serviço público de terceiros.
 - [ ] Integrar o componente ao recibo efetivo do jogador/cambista e executar testes/CI.
 - [ ] Fazer teste físico na impressora específica; o modelo não foi recuperado das informações disponíveis. Confirmar escala sem ajuste, margens e leitura do QR antes de considerar o layout final.
+
+
+### Arquitetura de impressão flexível e multiplataforma — 2026-10-25
+
+**Resultado da pesquisa técnica:** ESC/POS é uma das opções mais difundidas para impressoras térmicas de recibo, mas não é um padrão universal garantido. Fabricantes podem implementar subconjuntos e variar comandos de QR, fontes e tabelas de caracteres. StarPRNT/StarLine e drivers/fila do sistema são alternativas relevantes; não existe um único protocolo de baixo nível que cubra todos os equipamentos e todos os navegadores.
+
+**Plano de implementação:**
+1. Criar um modelo canônico de recibo (dados e semântica) separado de layout/driver; a mesma fonte de dados alimenta visualização, HTML/PDF e impressão direta.
+2. Preservar impressão HTML/PDF como fallback universal por meio do diálogo de impressão do sistema operacional, sem depender de ESC/POS.
+3. Criar uma interface/adaptador de impressão. Primeiro adaptador direto: ESC/POS, com capacidades detectadas/configuradas e fallback para QR como imagem raster.
+4. Planejar adaptadores adicionais para StarPRNT/StarLine e drivers/fila do sistema conforme demanda comprovada; não implementar todos antes de haver necessidade e ambiente de teste.
+5. Tratar conexão separadamente do protocolo: USB, Bluetooth Classic, BLE, rede e fila do sistema têm requisitos distintos. No navegador, Web Bluetooth/WebUSB têm suporte limitado; não assumir que impressão Bluetooth direta funcione em todos os navegadores, principalmente Safari/iOS.
+6. Criar configuração de impressora com largura útil/papel, densidade/resolução, codificação de acentos, QR, corte, conexão e perfil/modelo; incluir teste de impressão e estado de compatibilidade validada.
+7. Testar recibos com acentos portugueses, corte/avanço, QR legível e larguras de 58/80 mm em modelos reais. Compatibilidade só é declarada para combinações efetivamente testadas.
+8. Registrar este requisito no manual mestre e manter o layout do recibo independente de marca e protocolo.
+
+**Compra de impressora:** priorizar ESC/POS documentado e uma conexão que funcione no equipamento que será usado (para maior flexibilidade, USB/rede ou compatibilidade com fila do sistema pode ser preferível a Bluetooth genérico isolado). Confirmar suporte de sistema operacional e testar o modelo antes de recomendar compra.
+
+**Estado:** decisão de arquitetura documentada; adaptadores e integração física ainda não implementados. Não houve merge, deploy ou ativação de pagamento.
