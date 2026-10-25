@@ -41,11 +41,18 @@ export function ThermalReceipt({
     style: "currency",
     currency: "BRL",
   }).format(cents / 100);
-  const date = new Intl.DateTimeFormat("pt-BR", {
+  const issuedDate = new Date(issuedAt);
+  const dateLabel = new Intl.DateTimeFormat("pt-BR", {
     dateStyle: "short",
-    timeStyle: "short",
     timeZone: "America/Sao_Paulo",
-  }).format(new Date(issuedAt));
+  }).format(issuedDate);
+  const timeLabel = new Intl.DateTimeFormat("pt-BR", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+    timeZone: "America/Sao_Paulo",
+  }).format(issuedDate);
+  const date = `${dateLabel} ${timeLabel}`;
 
   const qrStyle: CSSProperties = { width: 76, height: 76, objectFit: "contain" };
 
