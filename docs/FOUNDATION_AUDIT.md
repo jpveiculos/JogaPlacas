@@ -118,3 +118,12 @@ A CI falhou no seed de dados, não na migração dual-plate: `scripts/test-dual-
 
 ### CI do teste histórico após correção — 2026-10-25
 O workflow completo do commit `576ec2afb43a5a6fcb9deeb38027a0fdf53efef8` terminou com `success`, incluindo `migration-test`, `postgres-concurrency-test` e `verify`: https://github.com/jpveiculos/JogaPlacas/actions/runs/40147585024. A fixture corrigida agora alcança os cenários de backfill válido e bloqueio de dados inválidos. Isso não substitui a validação posterior após resolver a diferença de versão Next.js/ESLint. A versão `eslint-config-next@16.4.3` existe; a revisão recomenda alinhar os pacotes na mesma versão de patch, mas a atualização precisa incluir lockfile gerado de modo reproduzível e nova CI.
+
+
+### Revisão adicional de schema e regras — 2026-10-25
+- As migrações declaram PKs, FKs e índices únicos, mas não impõem por `CHECK` constraints os limites monetários (não negativos), soma de alocações, mínimo de R$ 1,00 por linha/participação ou consistência de `Purchase.totalCents` com suas participações/linhas. Hoje essas invariantes dependem dos serviços; isso é um risco se surgir outro caminho de escrita ou manutenção SQL.
+- O schema permite que `Round` tenha apenas um resultado, ou status `COMPLETED` sem os dois resultados. `drawRoundResults`/`settleRoundPrizes` fazem validações de aplicação, mas não há constraint/triggers que protejam contra escrita direta. Avaliar restrições sem impedir estados legítimos de migração/reconciliação.
+- `settleRoundPrizes` grava crédito de prêmio no `LedgerEntry` para jogadores; linhas de venda de cambista ficam como pagamento manual pendente, coerente com a ausência de carteira para `Customer`, mas o fluxo de pagamento manual/auditoria ainda precisa ser implementado.
+- A confirmação de Pix e a reconciliação com provedor continuam fora do serviço de criação de compra pendente. A participação só pode ser confirmada por um fluxo de pagamento que valide confirmação até o cutoff; esse fluxo não deve ser inferido como existente por causa do modelo `Payment`.
+
+Esses são achados de revisão, não decisões de negócio nem alterações de schema. Antes de novos fluxos financeiros, especificar e testar os invariantes e os estados de cancelamento/expiração/reembolso.
