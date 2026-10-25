@@ -67,9 +67,9 @@ suite("PostgreSQL prize settlement idempotency", () => {
   it("credits the same winning line only once across concurrent and repeated settlement calls", async () => {
     const [first, concurrent] = await Promise.all([
       settleRoundPrizes(prisma, roundId, playerId),
-      settleRoundPrizes(prisma, roundId),
+      settleRoundPrizes(prisma, roundId, playerId),
     ]);
-    const second = await settleRoundPrizes(prisma, roundId);
+    const second = await settleRoundPrizes(prisma, roundId, playerId);
 
     expect(first.creditedLines).toBe(1);
     expect(concurrent.creditedLines).toBe(1);
