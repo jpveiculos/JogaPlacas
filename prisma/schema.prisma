@@ -224,6 +224,11 @@ model Payment {
   purchaseId            String        @unique
   provider              String
   providerPaymentId     String?
+  pixCopyPaste           String?
+  pixQrCodeBase64        String?
+  pixTicketUrl           String?
+  providerStatus         String?
+  providerStatusDetail   String?
   idempotencyKey        String        @unique
   status                PaymentStatus @default(PENDING)
   amountCents           Int
