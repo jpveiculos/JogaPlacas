@@ -86,3 +86,7 @@ A CI identificou erro na fixture de teste (`Purchase.updatedAt` inexistente na m
 
 ### CI confirmada e dependências — 2026-10-25
 O workflow completo no commit `576ec2afb43a5a6fcb9deeb38027a0fdf53efef8` concluiu com sucesso, inclusive backfill histórico e testes PostgreSQL: https://github.com/jpveiculos/JogaPlacas/actions/runs/40147585024. O pacote `eslint-config-next@16.4.3` está publicado e sua linha 16 requer ESLint >=9, compatível com a dependência atual. A diferença de patch pode ser alinhada, mas a alteração deve ser acompanhada por lockfile regenerado com npm e nova CI completa; ainda não foi feita.
+
+
+### Revisão de banco e regras de negócio — 2026-10-25
+A primeira revisão das migrações/schema encontrou ausência de `CHECK` constraints para valores/alocações não negativos, mínimo por linha e consistência de totais; também não há constraint que garanta dois resultados juntos quando a rodada é `COMPLETED`. Os serviços protegem partes dessas regras, mas escritas diretas/novos caminhos poderiam contorná-las. Avaliar constraints compatíveis com reconciliação histórica e adicionar testes de migração. O serviço atual cria compra e pagamento Pix pendentes; não há integração real com provedor/webhook nem confirmação financeira. Essas pendências devem ser resolvidas antes de ativar fluxos reais.
