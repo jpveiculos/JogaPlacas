@@ -85,12 +85,23 @@
 - Não implantar em produção sem testes, revisão de segurança, verificação de variáveis de ambiente, migrações e plano de rollback.
 - Questões regulatórias, legais, de elegibilidade e operação comercial devem ser verificadas antes de disponibilizar o serviço ao público.
 
-## 10. Pontos técnicos ainda a decidir
-- Stack, framework, banco de dados e estratégia de migrações.
-- Provedor Pix e contrato exato dos webhooks, autenticação/assinatura e reconciliação.
-- Fonte dos resultados das rodadas, validação e processo de correção.
-- Fórmula final do prêmio, alocação por categoria, regras de empate, limites e tratamento de estornos.
-- Política de retenção de dados e parâmetros de segurança operacional.
+## 10. Decisões técnicas e pontos de negócio ainda a decidir
+
+### Decisões técnicas já aprovadas
+- Aplicação modular única com Next.js App Router, React e TypeScript estrito.
+- PostgreSQL com Prisma ORM e migrações versionadas; Zod para validação de entradas.
+- Vitest para testes unitários/integração; Playwright fica previsto para fluxos críticos de interface quando estes forem implementados.
+- CI deve validar/gerar Prisma, executar lint, typecheck, testes, build e testar migrações em PostgreSQL descartável.
+- Valores monetários em centavos inteiros; instantes em UTC e agenda apresentada no fuso America/Sao_Paulo.
+- Pagamentos isolados do domínio por adaptadores. Webhooks, quando implementados, devem ser autenticados, persistidos e idempotentes.
+- Não fazer deploy, migração de produção, merge para main ou cobrança real sem gates aprovados e autorização explícita.
+
+### Decisões de negócio/técnicas ainda pendentes
+- Provedor Pix e contrato exato dos webhooks, autenticação/assinatura e reconciliação; Mercado Pago permanece adiado para a fase final.
+- Fonte oficial dos resultados, controles de integridade e processo auditável de correção.
+- Política definitiva para pagamento confirmado depois do cutoff, expiração, devolução/estorno e rodadas canceladas.
+- Detalhes de fórmula/arredondamento de prêmios, empates e limites ainda não especificados no manual.
+- Política de retenção de dados e parâmetros operacionais de segurança.
 
 
 ## 11. Controle de decisões e manutenção desta especificação
@@ -102,3 +113,36 @@
 - Ao concluir cada tarefa, conferir a consistência entre esta especificação, o código e os testes pertinentes. Relatar separadamente as alterações documentais, as alterações de código e as verificações efetivamente executadas.
 - Decisões e mudanças devem ser feitas na branch de desenvolvimento ativa apropriada; não alterar `main`, realizar merge, executar migrações de produção ou habilitar pagamentos reais como parte dessa rotina sem autorização explícita.
 - Uma tarefa não é considerada concluída enquanto a especificação não tiver sido atualizada quando necessário e a divergência entre documento, implementação e testes não tiver sido avaliada.
+
+
+## 12. Retrato de implementação verificado — 2026-10-24
+
+Este retrato descreve a branch feature/dual-plate-draw no commit d337082b2d0fa6b24db64a6839d20e24c894fb9e. É um registro de auditoria do código versionado, não uma declaração de prontidão para produção. A auditoria detalhada e os limites de evidência estão em docs/FOUNDATION_AUDIT.md.
+
+### Implementado no repositório
+- Aplicação Next.js App Router/React/TypeScript; package.json, package-lock.json, configuração Prisma e workflow de CI versionados.
+- Schema Prisma e quatro migrações versionadas: inicial, sessões, limite de tentativas de login e sorteio de duas placas. As migrações foram exercitadas pela CI em PostgreSQL descartável; não há evidência de aplicação em produção.
+- Autenticação com rotas de login, logout, consulta de sessão e alteração de senha; componentes de sessão, hash/verificação de senha, proteção por papel e limite de tentativas.
+- Páginas iniciais separadas para jogador, cambista e administrador, protegidas por papel no servidor. São placeholders informativos, não interfaces funcionais completas.
+- Normalização/validação de placas, geração independente de placa, regras de compra, valores em centavos e snapshots de multiplicadores.
+- Serviço de compra pendente com participações por rodada, idempotência e transação; serviço de fechamento de rodada.
+- Rotas administrativas autenticadas para fechar rodada, gerar resultados e apurar prêmios, com testes de rota.
+- Serviço de geração/persistência idempotente dos resultados LEGACY e MERCOSUR e serviço de apuração com linhas de livro-razão idempotentes; testes unitários e de integração PostgreSQL versionados.
+- Workflow de CI com instalação reproduzível por npm ci, validação/geração Prisma, lint, typecheck, testes, build e teste de migrações/concorrência.
+
+### Parcial ou ainda não implementado como fluxo de produto
+- As áreas de jogador, cambista e administrador exibem placeholders; faltam os fluxos de interface e integração ponta a ponta previstos nesta especificação.
+- A criação de compra pendente não integra um provedor Pix e não confirma pagamentos.
+- Carteira/livro-razão, depósitos, saques, comissões, vendas em dinheiro, gestão completa de usuários/rodadas/regras e relatórios ainda não têm fluxos de produto completos comprovados nesta auditoria.
+- A UI ainda não apresenta claramente os dois resultados de placa.
+- Não foi confirmada nesta auditoria uma fonte oficial externa para resultados nem um processo operacional completo de publicação/correção.
+- Mercado Pago, webhooks do provedor, reconciliação real e cobrança real não estão habilitados e permanecem para a fase final.
+
+### Evidência e limites
+- O workflow GitHub Actions do commit acima registra conclusão com sucesso na execução consultada em 2026-10-24. Isso prova apenas os jobs configurados naquela execução, não prontidão operacional nem produção.
+- O repositório é privado; a inspeção foi feita por meio do conector GitHub e da árvore/arquivos versionados. Não foi executada instalação local nesta conversa, não houve acesso a banco de produção, segredos, DNS ou serviço hospedado.
+- A branch feature/dual-plate-draw está 61 commits à frente e 1 atrás de planning/foundation, com divergência; há PR #1 aberto em rascunho para planning/foundation. Não fazer merge automaticamente.
+- A divergência Next.js 16.4.3 versus eslint-config-next 16.4.2 permanece como verificação pendente; não atualizar às cegas.
+
+### Regra de manutenção
+Toda decisão aprovada, mudança de código, resultado de teste, mudança de infraestrutura ou implantação que altere este retrato deve atualizar esta seção e/ou a documentação operacional pertinente no mesmo conjunto de trabalho. Registrar claramente o que foi executado e a evidência; nunca transformar intenção em status concluído.
