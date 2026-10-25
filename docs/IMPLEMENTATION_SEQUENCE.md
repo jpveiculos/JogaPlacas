@@ -38,3 +38,10 @@ Nenhuma fase é concluída só por código commitado ou por build isolado. Regis
 O workflow Verify do commit 1d37b8fc59e0c10717272b96dec1d9bd206a6819 concluiu com sucesso. Nesta sessão, os arquivos package.json, package-lock.json, prisma/schema.prisma, workflow e SQL das quatro migrações foram inspecionados por meio do GitHub. Não houve instalação limpa ou execução local de testes.
 
 Nova pendência identificada: o job de migrações parte de um banco PostgreSQL vazio e não prova o backfill de dados históricos da migração dual_plate_draw. O próximo gate deve testar dados antigos válidos de ambos os formatos e uma linha inválida/ambígua que provoque a interrupção intencional da migração. A diferença next@16.4.3 / eslint-config-next@16.4.2 permanece em revisão; não foi alterada.
+
+
+## Atualização de implementação — 2026-10-25
+
+Implementado: script `scripts/test-dual-plate-migration.mjs`, comando `npm run test:migration-backfill` e etapa `Test dual-plate migration against historical data` no job de migrações da CI. O cenário válido testa o backfill de placas LEGACY e MERCOSUR e a preservação de `resultMercosurPlate`; o cenário inválido exige falha da migração para placa não classificável.
+
+**Status do teste:** pendente de confirmação no GitHub Actions para o commit que introduziu a etapa. Não afirmar que passou até o job concluir com sucesso. Não executar o script contra banco real ou compartilhado: ele cria e remove bancos PostgreSQL temporários.
