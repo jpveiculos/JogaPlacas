@@ -8,11 +8,6 @@ const mocks = vi.hoisted(() => ({
   auditCreate: vi.fn(),
   transaction: vi.fn(),
 }));
-vi.mock("../../generated/prisma/client", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("../../generated/prisma/client")>();
-  return { ...actual };
-});
-
 import { openRound, RoundOpenError } from "./open-round";
 
 const start = new Date("2035-01-01T12:00:00.000Z");
