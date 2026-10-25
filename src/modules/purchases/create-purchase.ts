@@ -226,6 +226,12 @@ export async function createPendingPixPurchase(
       }
       return round;
     });
+    if (selectedRounds[0]?.status !== RoundStatus.OPEN) {
+      throw new PurchaseServiceError(
+        "A repeated purchase must begin with the currently open round",
+        "ROUND_UNAVAILABLE",
+      );
+    }
     for (let index = 1; index < selectedRounds.length; index += 1) {
       const previous = selectedRounds[index - 1]!;
       const current = selectedRounds[index]!;
