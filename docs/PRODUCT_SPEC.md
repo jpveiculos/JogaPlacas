@@ -234,3 +234,27 @@ A revisão de `prisma/schema.prisma` e das quatro migrações encontrou invarian
 - Somente marcar a linha em verde e exibir o valor do prêmio quando prizeCreditedAt estiver preenchido e prizeCents for positivo. A existência de resultado ou de valor isolado não comprova crédito.
 - O histórico não substitui o livro-razão financeiro nem deve permitir editar apostas antigas.
 - A consulta pública por recibo continua retornando apenas dados necessários para conferir as placas/resultados e nunca revela identificador de conta, telefone, nome real ou o código completo do recibo na resposta.
+
+
+## 21. Regra obrigatória de emissão do recibo — 2026-10-25
+
+O recibo oficial só pode ser emitido depois que o pagamento da compra estiver confirmado. Criar uma compra pendente, gerar QR Code, iniciar checkout ou receber um evento intermediário não autoriza emitir nem apresentar um recibo como válido. Sem confirmação, a compra não pode ser finalizada como paga e o jogador não deve receber um código de recibo emitido.
+
+### Pagamento Pix na plataforma
+- A compra permanece pendente enquanto aguarda confirmação final autenticada do provedor por webhook.
+- Somente após processar de forma segura e idempotente a confirmação final do pagamento, o sistema confirma a compra/participações e emite o recibo.
+- Webhooks duplicados, atrasados ou fora de ordem não podem criar recibos duplicados nem confirmar compra sem evidência de pagamento confirmado.
+- O fluxo de integração Pix ainda não está implementado/ativado; esta seção define o comportamento exigido quando for implementado.
+
+### Venda feita por cambista
+- O recibo só é emitido depois de o sistema confirmar o pagamento.
+- Para dinheiro em espécie, o cambista deve acionar explicitamente o botão de confirmação de recebimento. O servidor registra o ator e o instante da confirmação; só então confirma a compra e emite o recibo.
+- Para Pix ou outro meio integrado, a confirmação deve vir da fonte confiável definida para esse meio, não apenas de uma ação visual do cambista.
+- A confirmação por botão deve ser autorizada, transacional e idempotente, impedindo que cliques repetidos emitam recibos ou registrem a venda duas vezes.
+
+### Identificador e estado do recibo
+- O formato visível previsto permanece `JP-` seguido de caracteres alfanuméricos maiúsculos; o comprimento final e a geração precisam ser alinhados ao fluxo implementado e testados.
+- O código deve ser único e associado à compra confirmada. A consulta pública por recibo e a consulta na área do cambista não devem revelar compras pendentes como recibos emitidos.
+- Não basta ocultar o código na interface: a API e o modelo de persistência devem impedir a emissão prematura. Revisar o `receiptCode` atualmente obrigatório na compra pendente e a rota que hoje devolve um código antes da confirmação.
+- Atualizar testes para cobrir compra pendente sem recibo, confirmação Pix final, confirmação de dinheiro pelo cambista, repetição de webhook/clique e consulta de código inexistente ou não emitido.
+- Nenhuma cobrança real, ativação de webhook, migração de produção, merge ou deploy é autorizada por esta decisão.
