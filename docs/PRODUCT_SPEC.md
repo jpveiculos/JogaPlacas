@@ -155,3 +155,10 @@ Toda decisão aprovada, mudança de código, resultado de teste, mudança de inf
 - A CI atual testa a cadeia de migrações em um PostgreSQL vazio. Falta ensaio explícito do backfill com registros históricos válidos dos dois formatos e um caso inválido/ambíguo para provar a preservação e o bloqueio seguro.
 - `package.json` e `package-lock.json` mantêm `next@16.4.3` e `eslint-config-next@16.4.2`. A diferença de patch permanece pendente de revisão; nenhuma versão foi alterada nesta etapa.
 - Evidência e limites: revisão dos arquivos versionados na branch `feature/dual-plate-draw`; nenhuma instalação/teste local ou acesso a banco foi executado nesta sessão. Nenhuma alteração de código, migração, implantação ou produção foi realizada.
+
+
+## 14. Alteração de código e teste de migração histórica — 2026-10-25
+
+Foi adicionado `scripts/test-dual-plate-migration.mjs`, o comando `npm run test:migration-backfill` e uma etapa correspondente no job `migration-test` de `.github/workflows/verify.yml`. O teste cria bancos descartáveis temporários, parte do SQL da migração inicial, marca essa migração como baseline e insere linhas históricas LEGACY/MERCOSUR; verifica o backfill e a preservação do resultado Mercosul. Em um segundo banco, inclui uma placa não classificável e exige que `prisma migrate deploy` falhe com o erro de segurança esperado.
+
+Esta alteração foi commitada na branch `feature/dual-plate-draw`; o resultado do CI para o commit que inclui a nova etapa ainda precisa ser conferido. Nenhuma migração de produção ou alteração de banco real foi executada. O teste depende de uma instância PostgreSQL descartável com permissão para criar e remover bancos, como a instância do serviço PostgreSQL no GitHub Actions.
