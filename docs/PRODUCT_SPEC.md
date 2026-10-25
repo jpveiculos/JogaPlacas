@@ -276,3 +276,13 @@ A regra ainda não está completa ponta a ponta: falta criar a operação transa
 - A consulta continua restrita ao código do recibo; a leitura do QR não pode contornar autorização nem revelar dados privados.
 - A implementação visual deve usar geração de QR confiável no próprio sistema, sem enviar códigos de recibo a serviços públicos de geração de QR de terceiros.
 - Pendência técnica: integrar o QR ao componente/artefato de recibo oficial quando o fluxo transacional de confirmação e emissão estiver implementado. O código atual ainda não possui o fluxo completo de emissão após confirmação; não marcar o QR como implementado até haver interface de recibo e testes.
+
+
+### Recibo térmico de 58 mm — 2026-10-25
+
+- [x] Definido o padrão inicial de impressão para bobina nominal de 58 mm, com largura útil conservadora de 48 mm, tipografia compacta, separadores monocromáticos e layout vertical.
+- [x] Estruturado componente reutilizável `ThermalReceipt` com identificação Joga Placas, data/hora de emissão, código textual do recibo e espaço de QR ao lado, identificação opcional do cliente, lista de placas/formato/rodada/valor, total pago e orientação de consulta.
+- [x] O componente só renderiza com estado de pagamento `CONFIRMED` e código válido `JP-...`; compras pendentes não podem ser impressas como recibo oficial.
+- [ ] Integrar o componente ao fluxo oficial de confirmação/emissão do recibo e gerar o QR localmente a partir apenas do código do recibo.
+- [ ] Validar impressão real na impressora comprada: densidade/tamanho do QR, margens, corte de papel, escala “100%/tamanho real” e largura útil variam conforme modelo/driver. A marca/modelo exato ainda não está registrado, então 48 mm é o padrão inicial, não uma certificação do dispositivo.
+- [ ] Adicionar testes do estado confirmado/pendente e validar a CI completa.
