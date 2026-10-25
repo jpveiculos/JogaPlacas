@@ -72,10 +72,9 @@ describe("POST /api/admin/rounds/[roundId]/settle", () => {
     const result = await POST(request(), context);
     expect(result.status).toBe(200);
     expect(result.headers.get("cache-control")).toBe("no-store");
-    expect(mocks.settleRoundPrizes).toHaveBeenCalledWith(expect.anything(), "round-123456");
-    expect(mocks.auditCreate).toHaveBeenCalledWith(expect.objectContaining({
-      data: expect.objectContaining({ action: "ROUND_PRIZES_SETTLED", entityId: "round-123456" }),
-    }));
+    expect(mocks.settleRoundPrizes).toHaveBeenCalledWith(expect.anything(), "round-123456", "admin-1");
+    // Successful settlement audit is written inside the financial transaction by the service.
+    expect(mocks.auditCreate).not.toHaveBeenCalled();
   });
 
   it("maps an unpublished draw to conflict", async () => {
