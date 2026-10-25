@@ -299,3 +299,21 @@ A alteração permanece pendente de implementação e validação. Não houve me
 9. Não prometer compatibilidade universal irrestrita; publicar os requisitos mínimos testados e manter fallback para dispositivos sem suporte.
 
 **Estado:** estratégia registrada; ainda não existe pipeline completo de atualizações/compatibilidade verificado nesta tarefa. Não houve deploy, alteração de produção nem ativação de pagamentos.
+
+
+### Atualizações manuais com restauração segura — 2026-10-25
+
+- [x] Decidido que a verificação de atualizações é somente leitura: não altera o sistema nem interrompe compras ou confirmações de pagamento.
+- [x] Decidido que **Atualizar site** só aparece quando existe uma versão web aprovada e pronta no processo controlado de publicação.
+- [x] Decidido incluir **Restaurar versão anterior**, voltado à última versão estável conhecida, com confirmação administrativa e auditoria.
+- [x] Registrada a regra de preservar compras, pagamentos, recibos e livro-razão durante atualização/restauração.
+- [x] Registrada a limitação: rollback de código não desfaz automaticamente migrações nem alterações de dados; compatibilidade e recuperação de banco devem ser planejadas e testadas.
+- [ ] Inspecionar o provedor e o pipeline de implantação atuais e identificar como consultar versão implantada, releases aprovadas, estado de saúde e release anterior.
+- [ ] Implementar painel administrativo protegido com versão atual/disponível, impacto em linguagem simples, estado dos testes e botões de verificar, atualizar e restaurar.
+- [ ] Integrar os botões somente ao pipeline oficial de publicação; não permitir instalação arbitrária de código pelo site.
+- [ ] Implementar trava/coordenação para adiar troca de versão durante compras ou confirmações críticas, sem bloquear a operação de verificação.
+- [ ] Garantir retenção de artefatos e rollback para release anterior; validar compatibilidade de schema e plano de recuperação de dados.
+- [ ] Adicionar trilha de auditoria, health checks antes/depois, teste de falha pós-publicação e teste de restauração em ambiente de staging.
+- [ ] Validar a CI e ensaiar atualização e rollback em staging antes de disponibilizar o botão em produção.
+
+**Estado real:** decisão documentada nesta branch; nenhum painel ou mecanismo de atualização/restauração foi implementado por este registro. Nenhuma publicação, reversão, merge ou alteração de produção foi executada.
