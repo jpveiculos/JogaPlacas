@@ -117,7 +117,15 @@ describe("POST /api/player/purchases", () => {
     expect(body.message).toContain("Nenhuma cobrança Pix foi criada");
   });
 
-  it("uses a stable receipt code when the same idempotency key is retried", async () => {\n    await POST(request(validBody()));\n    await POST(request(validBody()));\n    const first = mocks.createPendingPixPurchase.mock.calls[0]![1];\n    const second = mocks.createPendingPixPurchase.mock.calls[1]![1];\n    expect(second.receiptCode).toBe(first.receiptCode);\n    expect(second.idempotencyKey).toBe(first.idempotencyKey);\n  });\n  it("does not expose internal errors for unexpected failures", async () => {
+  it("uses a stable receipt code when the same idempotency key is retried", async () => {
+    await POST(request(validBody()));
+    await POST(request(validBody()));
+    const first = mocks.createPendingPixPurchase.mock.calls[0]![1];
+    const second = mocks.createPendingPixPurchase.mock.calls[1]![1];
+    expect(second.receiptCode).toBe(first.receiptCode);
+    expect(second.idempotencyKey).toBe(first.idempotencyKey);
+  });
+  it("does not expose internal errors for unexpected failures", async () => {
     mocks.createPendingPixPurchase.mockRejectedValue(new Error("database secret"));
     const response = await POST(request(validBody()));
     expect(response.status).toBe(500);
