@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
         orderBy: { resultAt: "desc" },
         select: { resultAt: true },
       });
-      const startsAt = previous ? new Date(previous.resultAt.getTime() + MINUTE_MS) : new Date(resultAt.getTime() - HALF_HOUR_MS);
+      const startsAt = previous ? new Date(previous.resultAt.getTime() + MINUTE_MS) : new Date(resultAt.getTime() - HALF_HOUR_MS + MINUTE_MS);
       const cutoffAt = new Date(resultAt.getTime() - MINUTE_MS);
       if (startsAt >= cutoffAt) continue;
       await authPrisma.$transaction(async (tx) => {
