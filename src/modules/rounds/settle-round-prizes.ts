@@ -100,7 +100,7 @@ export function calculateLinePrizeCents(line: SettlementLine, legacyResult: stri
  * are credited in the same transaction. Cashier/customer awards remain pending
  * for manual reconciliation because Customer has no wallet in the current schema.
  */
-export async function settleRoundPrizes(prisma: PrismaClient, roundId: string, actorId?: string) {
+export async function settleRoundPrizes(prisma: PrismaClient, roundId: string, actorId: string) {
   for (let attempt = 0; ; attempt += 1) {
     try {
       return await prisma.$transaction(async (tx) => {
@@ -193,8 +193,7 @@ export async function settleRoundPrizes(prisma: PrismaClient, roundId: string, a
 
         // Keep the success audit event in the same transaction as prize credits.
         // If audit persistence fails, the financial settlement rolls back as well.
-        if (actorId) {
-          await tx.auditEvent.create({
+        await tx.auditEvent.create({
             data: {
               actorId,
               action: "ROUND_PRIZES_SETTLED",
@@ -208,7 +207,6 @@ export async function settleRoundPrizes(prisma: PrismaClient, roundId: string, a
               },
             },
           });
-        }
 
         return {
           roundId,
