@@ -196,3 +196,14 @@ A revisão de `prisma/schema.prisma` e das quatro migrações encontrou invarian
 - A interface deve priorizar letras legíveis, contraste, alvos de toque confortáveis, linguagem simples, layout responsivo e redução de animações quando o sistema operacional pedir movimento reduzido.
 - A página é apenas informativa. Deve exibir somente resultados concluídos/publicados e ganhadores com prêmios efetivamente creditados; não pode sugerir que alguém ganhou quando o prêmio ainda não foi confirmado. Identificadores públicos permanecem mascarados.
 - A página não substitui recibo nem oferece confirmação individual de uma aposta. Nesta fase, ela mostra os resultados gerais e os ganhadores publicados, não uma consulta privada que determine se uma pessoa específica ganhou.
+
+
+## 17. Consulta rápida de aposta por placa ou recibo — 2026-10-25
+
+- A consulta rápida é prioritária e disponível na página pública sem exigir conta.
+- Um único campo aceita placa apostada ou código completo do recibo (prefixo JP-). A consulta por recibo retorna apenas compras e participações confirmadas; consulta por placa retorna até 20 apostas confirmadas recentes.
+- A resposta mostra placa apostada, rodada, data/hora, resultados publicados dos formatos cinza e Mercosul e estado explícito: prêmio confirmado, não premiada, sorteio ainda não concluído ou apuração pendente.
+- Só confirmar valor de prêmio quando prizeCreditedAt estiver preenchido e prizeCents for maior que zero; não inferir prêmio só por comparação visual.
+- A rota não revela nome, telefone, conta, método de pagamento, valor total gasto nem o recibo na resposta. Erros genéricos e respostas no-store.
+- O componente é reutilizável na área do cambista e do jogador; a integração nessas telas autenticadas ainda depende de localizar os pontos de entrada corretos.
+- A consulta por placa pode encontrar apostas de outras pessoas com a mesma placa; não expõe dados pessoais. O recibo é preferível para localizar uma compra específica.
