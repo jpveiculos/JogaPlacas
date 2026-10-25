@@ -41,7 +41,7 @@ export function AdminRoundManager() {
   }, [load]);
 
   function saoPauloWallTimeToIso(value: string): string | null {
-    const match = /^(\\d{4})-(\\d{2})-(\\d{2})T(\\d{2}):(\\d{2})$/.exec(value);
+    const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/.exec(value);
     if (!match) return null;
     const [, y, mo, d, h, mi] = match;
     const desired = Date.UTC(Number(y), Number(mo) - 1, Number(d), Number(h), Number(mi));
