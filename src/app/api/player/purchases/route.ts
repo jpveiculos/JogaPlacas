@@ -3,6 +3,7 @@ import { z } from "zod";
 import { createCurrentPrizeRuleSnapshot, CURRENT_PRIZE_RULE_VERSION } from "@/domain/prize-rule-snapshot";
 import { createPendingPixPurchase, PurchaseServiceError } from "@/modules/purchases/create-purchase";
 import { authPrisma, getSessionUser, SESSION_COOKIE } from "@/lib/auth/session";
+import { createPixOrder, getPixOrder } from "@/modules/payments/mercado-pago";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -61,6 +62,46 @@ export async function POST(request: NextRequest) {
       })),
     });
 
+    let pixCheckout: { copyPaste: string | null; qrCodeBase64: string | null; ticketUrl: string | null } | null = null;
+    const payment = purchase.payment;
+    if (payment && process.env.MERCADOPAGO_ACCESS_TOKEN?.trim()) {
+      try {
+        const checkout = payment.providerPaymentId
+          ? await getPixOrder(payment.providerPaymentId)
+          : await createPixOrder({
+              purchaseId: purchase.id,
+              paymentIdempotencyKey: payment.idempotencyKey,
+              playerId: user.id,
+              amountCents: purchase.totalCents,
+            });
+        if (checkout) {
+          const updated = await authPrisma.payment.update({
+            where: { id: payment.id },
+            data: {
+              providerPaymentId: checkout.orderId,
+              pixCopyPaste: checkout.qrCode,
+              pixQrCodeBase64: checkout.qrCodeBase64,
+              pixTicketUrl: checkout.ticketUrl,
+              providerStatus: checkout.status,
+              providerStatusDetail: checkout.statusDetail,
+            },
+            select: { pixCopyPaste: true, pixQrCodeBase64: true, pixTicketUrl: true },
+          });
+          pixCheckout = {
+            copyPaste: updated.pixCopyPaste,
+            qrCodeBase64: updated.pixQrCodeBase64,
+            ticketUrl: updated.pixTicketUrl,
+          };
+        }
+      } catch {
+        return NextResponse.json({
+          error: "A compra foi registrada, mas não foi possível preparar o Pix agora. Tente novamente; a mesma chave de idempotência será reutilizada.",
+          code: "PIX_CHECKOUT_UNAVAILABLE",
+          purchaseId: purchase.id,
+        }, { status: 502, headers: { "Cache-Control": "no-store" } });
+      }
+    }
+
     return NextResponse.json({
       purchase: {
         id: purchase.id,
@@ -87,8 +128,11 @@ export async function POST(request: NextRequest) {
           })),
         })),
       },
+      pixCheckout,
       paymentActionRequired: true,
-      message: "Compra registrada como pendente. Nenhum recibo foi emitido porque o pagamento ainda não foi confirmado. Nenhuma cobrança Pix foi criada ou confirmada por esta etapa.",
+      message: pixCheckout
+        ? "Pix preparado. A compra e o recibo continuam pendentes até a confirmação autêntica do Mercado Pago."
+        : "Compra registrada como pendente. Nenhum recibo foi emitido porque o pagamento ainda não foi confirmado. A cobrança Pix ainda não foi criada: configure as credenciais do Mercado Pago no ambiente de desenvolvimento.",
     }, { status: 201, headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     if (error instanceof PurchaseServiceError) {
