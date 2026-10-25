@@ -138,3 +138,14 @@ O usuário executou manualmente no Codespaces, na branch `feature/dual-plate-dra
 - Testes existentes cobrem o rateio de R$ 1,00, preservação de centavos, rejeição de valores inválidos, mínimo por placa, validação dos totais do domínio e persistência da divisão no serviço. Ainda é recomendável ampliar testes de integração com várias placas em uma participação e múltiplas participações, verificando total da compra, total por rodada e valor do pagamento em conjunto.
 - CI da migração de integridade: execução #338 concluída com sucesso; CI do commit de documentação #339 também concluída com sucesso. Nenhuma alteração foi aplicada a produção e não houve deploy.
 - Próxima etapa: ampliar os testes de compra com múltiplas linhas/rodadas e depois revisar autorização e propriedade dos registros nos endpoints antes de começar os fluxos funcionais.
+
+
+### Revisão inicial de autorização das rotas — 2026-10-25
+
+- A execução #341 do workflow `Verify` passou no commit `231003c0319f89884bdff1936381c5f50fa8060b`, incluindo o novo teste de totais financeiros para compra com múltiplas placas e rodadas.
+- Revisadas estaticamente as rotas de compra, histórico, resultados e rodadas do jogador, consulta pública de recibo e operações administrativas de fechar, sortear e apurar rodadas.
+- Rotas do jogador verificam sessão ativa, papel `PLAYER` e bloqueio por troca obrigatória de senha; histórico filtra compras por `playerId` da sessão. A criação de compra deriva o `playerId` da sessão, rejeita campos extras no schema e valida origem quando o cabeçalho `Origin` está presente.
+- Rotas administrativas revisadas verificam sessão, troca obrigatória de senha e papel `ADMIN`, validam o identificador da rodada e registram tentativas negadas por papel insuficiente. A apuração registra evento de auditoria após executar o serviço.
+- A consulta pública por recibo exige código completo com formato `JP-`, retorna somente compras confirmadas e expõe campos limitados de resultado; não retorna nome, usuário ou dados de pagamento do jogador.
+- Limite desta etapa: revisão estática não substitui testes automatizados de cada papel, tentativa de acesso cruzado entre contas, origem ausente/maliciosa, enumeração de recibos, limites de requisição e comportamento quando a escrita de auditoria falha. Não afirmar que a auditoria de segurança está concluída.
+- Próxima etapa: revisar os testes de rota existentes e acrescentar casos negativos de autorização/isolamento onde estiverem ausentes; depois examinar os fluxos de login, alteração de senha, sessão e limitação de tentativas. Nenhum deploy, cobrança ou alteração de banco de produção foi realizado.
