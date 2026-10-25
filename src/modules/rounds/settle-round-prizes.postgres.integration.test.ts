@@ -13,6 +13,7 @@ suite("PostgreSQL prize settlement idempotency", () => {
   const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: databaseUrl }) });
   const suffix = randomUUID();
   const playerId = "settlement-player-" + suffix;
+  const adminId = "settlement-admin-" + suffix;
   const roundId = "settlement-round-" + suffix;
   const purchaseId = "settlement-purchase-" + suffix;
   const participationId = "settlement-participation-" + suffix;
@@ -20,6 +21,7 @@ suite("PostgreSQL prize settlement idempotency", () => {
 
   beforeAll(async () => {
     await prisma.user.create({ data: { id: playerId, username: playerId, passwordHash: "integration-test-only" } });
+    await prisma.user.create({ data: { id: adminId, username: adminId, passwordHash: "integration-test-only", role: "ADMIN" } });
     await prisma.round.create({
       data: {
         id: roundId, code: "SETTLEMENT-" + suffix,
@@ -60,13 +62,13 @@ suite("PostgreSQL prize settlement idempotency", () => {
     await prisma.purchaseParticipation.deleteMany({ where: { id: participationId } });
     await prisma.purchase.deleteMany({ where: { id: purchaseId } });
     await prisma.round.deleteMany({ where: { id: roundId } });
-    await prisma.user.deleteMany({ where: { id: playerId } });
+    await prisma.user.deleteMany({ where: { id: { in: [playerId, adminId] } } });
     await prisma.$disconnect();
   });
 
   it("credits the same winning line only once across concurrent and repeated settlement calls", async () => {
     const [first, concurrent] = await Promise.all([
-      settleRoundPrizes(prisma, roundId, playerId),
+      settleRoundPrizes(prisma, roundId, adminId),
       settleRoundPrizes(prisma, roundId, playerId),
     ]);
     const second = await settleRoundPrizes(prisma, roundId, playerId);
