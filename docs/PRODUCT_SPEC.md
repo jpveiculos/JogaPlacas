@@ -420,3 +420,8 @@ A implementação desta arquitetura ainda está pendente; o componente térmico 
 - O recibo oficial só pode ser emitido/exibido após confirmação real do pagamento. Uma compra pendente não é comprovante de pagamento. A geração e resolução do QR Code ainda dependem de integração.
 - Reimprimir deve reutilizar o mesmo código de recibo e os mesmos dados da compra; não criar compra, participação, código ou movimento financeiro novo. Falha na impressora não desfaz o pagamento.
 - A especificação não significa que o fluxo completo de pagamento, confirmação, emissão, consulta por QR e impressão esteja integrado ou validado; esses pontos precisam de testes ponta a ponta antes da operação.
+
+
+## Recibo oficial na área do jogador
+
+Quando uma compra estiver confirmada pelo sistema e o pagamento estiver confirmado, o histórico do jogador pode carregar os dados do recibo oficial pelo endpoint autenticado da própria compra e apresentar a versão térmica para impressão. O servidor valida novamente a titularidade e a confirmação; ocultar a ação na interface não substitui autorização. A consulta e a reimpressão reutilizam o mesmo código e não geram nova compra nem novo lançamento financeiro. O QR Code real e a integração com provedor de pagamento permanecem pendentes; compras pendentes não geram recibo oficial.
