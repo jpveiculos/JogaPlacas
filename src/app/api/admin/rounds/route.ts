@@ -77,8 +77,8 @@ export async function POST(request: NextRequest) {
   const resultAt = new Date(parsed.data.resultAt);
   const cutoffAt = new Date(resultAt.getTime() - 60_000);
   const now = Date.now();
-  if (startsAt.getTime() <= now || resultAt.getTime() <= now || resultAt.getTime() - startsAt.getTime() !== 30 * 60_000) {
-    return NextResponse.json({ error: "A rodada deve começar no futuro e ter resultado exatamente 30 minutos após o início." }, { status: 400, headers: { "Cache-Control": "no-store" } });
+  if (startsAt.getTime() <= now || resultAt.getTime() <= now || ![29, 30].includes((resultAt.getTime() - startsAt.getTime()) / 60_000)) {
+    return NextResponse.json({ error: "A rodada deve começar no futuro e ter resultado 29 ou 30 minutos após o início." }, { status: 400, headers: { "Cache-Control": "no-store" } });
   }
   const code = roundCodeFor(resultAt);
   try {
