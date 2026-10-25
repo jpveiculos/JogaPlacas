@@ -135,3 +135,12 @@ Não houve merge, deploy, migração em produção nem cobrança real.
 - [x] Adicionados testes de rota para os dois resultados, ganhadores mascarados, paginação, cursor inválido e falha genérica do banco.
 - [ ] Confirmar lint, TypeScript, testes, build e workflows no HEAD final. As verificações devem ser consultadas após os commits.
 - Limites mantidos: sem menu nesta página, sem cobranças Pix, sem migração em produção, sem merge e sem deploy.
+
+
+### Objetivo de acesso simples e inclusão digital — 2026-10-25
+
+- [x] Registrada a razão estratégica da página: permitir consulta sem conta para quem apostou presencialmente com cambista e precisa conferir o resultado depois.
+- [x] Prioridade de UX documentada para pessoas idosas e usuários com pouca familiaridade digital: acesso direto, sem menu/login, histórico grande e legível, horários claros e seção menor de ganhadores.
+- [x] Reforçados tamanhos de fonte, espaçamento e alvo de toque na página pública para facilitar leitura em celular.
+- [ ] Fazer revisão de acessibilidade visual em telas reais e validar a CI antes de considerar concluído.
+- Limite funcional explicitado: a página informa resultados gerais e prêmios confirmados; não identifica o resultado individual de um bilhete sem uma funcionalidade própria de consulta.
