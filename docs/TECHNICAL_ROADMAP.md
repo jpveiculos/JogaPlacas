@@ -248,3 +248,13 @@ O usuário executou manualmente no Codespaces, na branch `feature/dual-plate-dra
 - O agendador agora processa: fechamentos vencidos, aberturas cujo início chegou e sorteios vencidos. Compras também validam `startsAt`, para impedir apostas antes da abertura mesmo que a rodada já esteja criada com status SCHEDULED.
 - Adicionados testes para abertura, rejeição antes do início/depois do fechamento, execução idempotente do scheduler e autorização; testes de compra cobrem o instante de abertura.
 - A CI destes commits está pendente. A execução automática em produção ainda exige escolher/confirmar a hospedagem correta, configurar segredo e agendar chamada a cada minuto. Nenhum deploy ou banco de produção foi alterado.
+
+
+### Correção final do alinhamento de minutos — 2026-10-25
+
+- A regra aprovada foi aplicada literalmente: resultado em :00 ou :30; abertura em :01 ou :31; fechamento em :59 ou :29 imediatamente antes do próximo resultado. Exemplo: resultado 00:00, abertura da rodada seguinte 00:01, fechamento 00:29 e resultado 00:30.
+- Para uma rodada com resultado às 00:30, o horário de início é 00:01 (29 minutos antes do resultado), o fechamento é 00:29. A rotina não usa 00:00 como início dessa rodada.
+- A criação manual foi restringida à mesma regra: resultado precisa estar nos minutos :00 ou :30 do fuso de São Paulo e o início exatamente 29 minutos antes. Os testes foram ajustados para esses instantes.
+- Se o scheduler iniciar no minuto anterior ao resultado e a rodada ainda não existir, ele ainda pode criar a rodada vencendo o cutoff e fechá-la imediatamente, para permitir o sorteio no horário programado. Se o instante do sorteio já passou, não cria retrospectivamente uma rodada nova.
+- O serviço de compra valida `startsAt` e `cutoffAt`; portanto, mesmo uma rodada previamente criada não aceita apostas antes da abertura.
+- A execução mais recente da CI ainda precisa concluir para confirmar essas correções.
