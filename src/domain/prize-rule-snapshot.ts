@@ -40,3 +40,17 @@ export function readPrizeMultipliers(ruleVersion: string, snapshot: unknown): Pr
   }
   return parsed;
 }
+
+/** Stable version identifier for the currently approved multipliers. */
+export const CURRENT_PRIZE_RULE_VERSION = "approved-v2";
+
+/** Build the server-owned snapshot stored with every new purchase line. */
+export function createCurrentPrizeRuleSnapshot(): {
+  version: string;
+  multipliers: PrizeMultipliers;
+} {
+  return {
+    version: CURRENT_PRIZE_RULE_VERSION,
+    multipliers: { ...APPROVED_PRIZE_MULTIPLIERS },
+  };
+}
