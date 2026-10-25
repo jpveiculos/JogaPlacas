@@ -91,13 +91,6 @@ export async function createPixOrder(input: {
     throw new Error("Invalid Pix amount");
   }
 
-  // An already persisted provider ID is reconciled instead of creating another order.
-  const existingOrderId = process.env.MERCADOPAGO_RECONCILE_ORDER_ID?.trim();
-  if (existingOrderId) {
-    // This optional override is intentionally not used: provider IDs must come from Payment.
-    throw new Error("Unexpected provider reconciliation override");
-  }
-
   const amount = (input.amountCents / 100).toFixed(2);
   const response = await fetch(`${API_BASE}/v1/orders`, {
     method: "POST",
