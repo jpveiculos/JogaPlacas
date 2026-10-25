@@ -1,6 +1,6 @@
 # Joga Placas — Manual técnico de implementação
 
-Status: manual operacional da branch `planning/foundation`. A especificação funcional em `docs/PRODUCT_SPEC.md` é a fonte de verdade para comportamento; decisões arquiteturais em `docs/ADR-001-FOUNDATION.md` e `docs/TARGET_DOMAIN_MODEL.md` complementam o manual.
+Status: manual operacional vigente, atualizado em 2026-10-24 após auditoria de feature/dual-plate-draw no commit d337082b2d0fa6b24db64a6839d20e24c894fb9e. A especificação funcional em docs/PRODUCT_SPEC.md é a fonte de verdade para comportamento; decisões arquiteturais em docs/ADR-001-FOUNDATION.md e docs/TARGET_DOMAIN_MODEL.md complementam o manual. Não presumir que planning/foundation contém as alterações da branch de feature: as branches divergem.
 
 ## Produto e navegação obrigatórios
 
