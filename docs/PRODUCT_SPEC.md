@@ -176,3 +176,13 @@ A execução completa do workflow no commit `576ec2afb43a5a6fcb9deeb38027a0fdf53
 
 ### Revisão técnica do banco — pontos a fechar antes de fluxos financeiros
 A revisão de `prisma/schema.prisma` e das quatro migrações encontrou invariantes importantes que hoje dependem principalmente dos serviços TypeScript, sem `CHECK` constraints equivalentes no PostgreSQL: valores monetários e alocações não negativos, mínimo por linha/participação e consistência entre totais de compra/participação/linhas. A tabela `Round` também permite estruturalmente um estado com apenas um resultado preenchido ou status `COMPLETED` sem ambos os resultados; os serviços detectam parte desses casos, mas o banco não os impede por si só. Antes de ativar checkout ou pagamentos reais, avaliar constraints compatíveis com estados históricos, acompanhadas de migração e testes. Nenhuma regra nova foi aprovada por esta observação; regras financeiras e operacionais pendentes continuam bloqueadas.
+
+
+## 15. Página pública exclusiva de resultados e ganhadores — 2026-10-25
+
+- Decisão aprovada: criar uma página pública dedicada, em /resultados, sem menu de navegação e sem conteúdo promocional ou funcionalidades de aposta. A tela deve conter somente o histórico de resultados e uma área menor de ganhadores.
+- A parte principal mostra os resultados em linhas, com código da rodada, dia e horário em America/Sao_Paulo, e duas plaquinhas separadas: resultado cinza e resultado Mercosul. Nunca converter um formato no outro.
+- A página carrega inicialmente até 100 rodadas concluídas e publicadas, permite carregar páginas anteriores e conserva o histórico já carregado. Atualiza automaticamente os resultados mais recentes a cada 15 segundos; não anunciar resultado antes de estar persistido/publicado como concluído.
+- A faixa inferior mostra até 12 ganhadores recentes dos últimos 30 dias apenas quando o prêmio foi efetivamente creditado (prizeCreditedAt), com valor, rodada, data e formato/placa da aposta. Nome de usuário é mascarado publicamente; não expor nome real, telefone, dados da conta ou dados financeiros pessoais. Se não houver ganhadores elegíveis, mostrar uma mensagem neutra.
+- A rota pública de leitura não exige login, mas retorna somente campos explicitamente selecionados e usa Cache-Control: no-store. Erros internos não devem vazar detalhes do banco.
+- A tela não deve conter menu nem permitir apostas/pagamentos; é exclusivamente consulta pública. Nenhuma cobrança real, merge ou deploy está autorizado por esta decisão.
