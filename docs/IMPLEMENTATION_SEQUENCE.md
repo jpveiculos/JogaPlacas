@@ -268,3 +268,19 @@ A alteração permanece pendente de implementação e validação. Não houve me
 8. Implementar testes para configurações isoladas por cambista, falha/repetição de impressão, fallback, QR legível e preservação do mesmo código de recibo.
 
 **Estado:** requisito de experiência documentado; integração direta e fallbacks ainda não implementados nem testados fisicamente.
+
+
+### Alvo móvel para impressão do cambista — 2026-10-25
+
+1. Priorizar Android para a primeira implementação de impressão direta; manter compatibilidade planejada com iOS.
+2. Não desenvolver fluxo de impressão de cambista para computador como requisito do produto.
+3. Inspecionar a arquitetura atual Next.js e decidir a menor integração móvel segura: app auxiliar/nativo ou app móvel que compartilhe APIs e regras do JogaPlacas. Não assumir que PWA/navegador consegue enviar dados diretamente a qualquer Bluetooth.
+4. Criar uma camada de impressão independente do recibo e da lógica financeira; transporte e linguagem de impressão são capacidades separadas.
+5. Primeiro alvo de impressão direta: Android com impressoras térmicas ESC/POS, suportando Bluetooth Classic e BLE conforme biblioteca/modelo. Testar em aparelhos e impressoras reais.
+6. Segundo alvo: iOS, priorizando BLE compatível e avaliando integrações de fabricante quando necessárias; impressoras Bluetooth Classic-only não devem ser consideradas compatíveis sem comprovação.
+7. Manter configuração isolada por cambista/dispositivo; testar que uma alteração de perfil não afeta outros usuários.
+8. Exibir o recibo confirmado, botão **Imprimir**, estados de conexão/envio/falha e fallback de PDF/compartilhamento. Reimpressão deve preservar o mesmo código de recibo e não criar efeitos financeiros.
+9. Registrar matriz de compatibilidade por modelo, conexão, protocolo e versão do sistema operacional; não prometer universalidade absoluta.
+10. Validar em testes físicos: acentos, tamanho do QR, alinhamento 58/80 mm quando aplicável, desconexão, repetição e recuperação após falha.
+
+**Estado:** alvo Android-primeiro/iOS-compatível documentado; ainda é necessário inspecionar a arquitetura mobile atual e implementar a integração. Nenhuma impressão direta está certificada até testes físicos.
