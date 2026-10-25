@@ -1,6 +1,6 @@
 # Plano de testes PostgreSQL: concorrência e idempotência
 
-Status: acompanhamento ativo na branch `planning/foundation`. Atualizado em 2026-10-24 após a CI do commit `8ec470dd8c5e0a76be4083d6854dabaac84d3932`.
+Status: plano de verificação da branch `feature/dual-plate-draw`, atualizado em 2026-10-24 após auditoria do HEAD de código `d337082b2d0fa6b24db64a6839d20e24c894fb9e`. A execução de CI desse HEAD terminou com sucesso. As atualizações documentais posteriores acionaram novas execuções, ainda pendentes no momento desta edição. O commit antigo `8ec470dd8c5e0a76be4083d6854dabaac84d3932` citado abaixo é evidência histórica, não o HEAD atual.
 
 ## Estado verificado
 
@@ -11,7 +11,7 @@ Status: acompanhamento ativo na branch `planning/foundation`. Atualizado em 2026
 - Testes PostgreSQL cobrem idempotência concorrente com mesma chave, conflito de conteúdo, rollback, repetição após timeout simulado, campos relevantes, limites do cutoff e corrida entre compra e fechamento.
 - O teste de compra/fechamento aceita dois resultados coerentes: compra confirmada no lado anterior ao cutoff antes do fechamento, ou compra rejeitada se o fechamento ganhar a disputa. Em ambos os casos verifica estado final e ausência de registros parciais no caminho rejeitado.
 - **Cobertura temporal adicional:** além da corrida com horários determinísticos, a suíte contém um teste que mantém um bloqueio PostgreSQL até o cutoff real passar, verifica por `pg_stat_activity` que a compra está esperando pelo lock e confirma que a compra é rejeitada sem registros parciais após a liberação. Esse teste passou na CI do commit `8ec470dd8c5e0a76be4083d6854dabaac84d3932`.
-- A CI do commit `8ec470dd8c5e0a76be4083d6854dabaac84d3932` terminou com sucesso nos três jobs: `verify`, `migration-test` e `postgres-concurrency-test`. Execução: https://github.com/jpveiculos/JogaPlacas/actions/runs/40114297532
+- A execução histórica do commit `8ec470dd8c5e0a76be4083d6854dabaac84d3932` terminou com sucesso nos três jobs (`verify`, `migration-test` e `postgres-concurrency-test`): https://github.com/jpveiculos/JogaPlacas/actions/runs/40114297532. A execução mais recente consultada para o HEAD de código `d337082b2d0fa6b24db64a6839d20e24c894fb9e` também terminou com sucesso no workflow Verify. Não afirmar que todos os testes locais foram executados nesta conversa.
 - `package-lock.json` existe e a CI usa `npm ci`.
 - `prisma/migrations/20261023000000_init/migration.sql` existe e o workflow aplica as migrações a um PostgreSQL descartável.
 - A migração e os testes da CI não tocam a base de produção. Não há autorização para migração produtiva.
