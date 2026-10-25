@@ -75,6 +75,10 @@ jobs:
         run: npx prisma migrate status
         env:
           DATABASE_URL: postgresql://test:test@localhost:5432/testdb?schema=public
+      - name: Test dual-plate migration against historical data
+        run: npm run test:migration-backfill
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/testdb?schema=public
 
   postgres-concurrency-test:
     runs-on: ubuntu-latest
