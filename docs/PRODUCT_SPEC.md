@@ -303,3 +303,16 @@ A regra ainda não está completa ponta a ponta: falta criar a operação transa
 - Nenhuma marca, modelo, protocolo ou conexão será requisito para as regras de compra, confirmação de pagamento, emissão do recibo ou consulta do código.
 
 A implementação desta arquitetura ainda está pendente; o componente térmico atual é um primeiro layout de 58 mm, não uma integração universal de impressão.
+
+
+### Fluxo prioritário de impressão do cambista — 2026-10-25
+
+**Experiência desejada pelo produto:** ao concluir a compra e tocar para pagar/finalizar, o recibo oficial confirmado deve aparecer na tela do cambista. O cambista toca em **Imprimir**, e a impressão deve ser enviada diretamente à impressora já conectada/configurada, sem abrir o diálogo de impressão como caminho normal.
+
+- A configuração da impressora, conexão e preferências pertence ao perfil/dispositivo de cada cambista e não altera configurações globais nem outros cambistas.
+- A impressão direta é o caminho prioritário. O diálogo HTML/PDF/compartilhamento é fallback para falha, indisponibilidade ou impressora incompatível.
+- A interface deve mostrar estados claros: pronta, enviando, impressa quando houver confirmação confiável do mecanismo, ou falha com alternativa de reimpressão/fallback. Não afirmar que imprimiu se só foi enviado o comando sem confirmação confiável.
+- O fluxo de pagamento e a emissão do recibo não dependem do sucesso da impressão. Uma falha de impressora não desfaz uma compra paga nem emite um segundo recibo; permite reimprimir o mesmo recibo/código oficial.
+- O sistema web sozinho não garante impressão Bluetooth direta universal, especialmente em iPhone/Safari. Para cumprir o caminho prioritário em cada plataforma, selecionar integração compatível (por exemplo, aplicativo auxiliar/ponte nativa ou aplicativo do sistema) e adaptadores de protocolo. Não prometer que qualquer Bluetooth funcione sem esse suporte.
+- Não adicionar uma configuração global de protocolo. Manter as configurações por cambista/dispositivo, com perfil automático quando possível e configuração manual mínima apenas quando necessária.
+- Fallbacks, reimpressão e mudanças de impressora nunca podem gerar outro código de recibo nem alterar os dados financeiros.
