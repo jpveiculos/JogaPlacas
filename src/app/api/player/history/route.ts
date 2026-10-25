@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
 
     const history = purchases.map((purchase) => ({
       id: purchase.id,
-      receiptCode: purchase.receiptCode,
+      receiptCode: purchase.status === "CONFIRMED" ? purchase.receiptCode : null,
       purchaseStatus: purchase.status,
       createdAt: purchase.createdAt.toISOString(),
       totalCents: purchase.totalCents,
