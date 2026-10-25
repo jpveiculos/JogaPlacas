@@ -151,3 +151,32 @@ h1 {
 .purchase-confirmation p{margin:8px 0}
 .purchase-confirmation small{display:block;margin-bottom:12px;color:var(--muted);line-height:1.7}
 
+
+.plate-format-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.format-choice{display:flex;align-items:flex-start;gap:10px;padding:12px;border:1px solid var(--border);border-radius:12px;cursor:pointer}
+.format-choice.selected{border-color:var(--accent);background:var(--accent-soft)}
+.format-choice input{margin-top:5px;accent-color:var(--accent)}
+.format-choice small,.plate-entry>small{color:var(--muted);font-weight:400}
+.plate-entry{display:grid;gap:8px}
+.plate-entry>label{font-weight:700;font-size:.94rem}
+.plate-visual{position:relative;display:flex;flex-direction:column;justify-content:space-between;width:min(100%,360px);min-height:100px;padding:5px 12px 7px;border:3px solid #202a33;border-radius:9px;box-shadow:0 3px 0 rgb(0 0 0 / 14%);overflow:hidden;font-family:Arial,Helvetica,sans-serif}
+.plate-legacy{background:#d5d8da;color:#101820}
+.plate-mercosur{background:#fdfdfb;color:#101820}
+.plate-topline{display:flex;align-items:center;justify-content:space-between;min-height:19px;margin:-5px -12px 0;padding:3px 10px;background:#f8fafb;border-bottom:1px solid #c8d0d6;color:#152d50;font-size:.62rem;font-weight:800;letter-spacing:.15em}
+.plate-legacy .plate-topline{background:#d5d8da;border-bottom-color:#aab0b5;color:#333}
+.plate-mercosur .plate-topline{background:#154b91;color:#fff}
+.mercosur-flag{font-size:.8rem}
+.plate-characters{display:flex;align-items:center;justify-content:center;min-height:52px;font-family:monospace;font-size:clamp(1.7rem,6vw,2.4rem);font-weight:900;letter-spacing:.06em;line-height:1}
+.plate-bottomline{align-self:flex-end;color:#4b5660;font-size:.52rem;font-weight:800;letter-spacing:.16em}
+.plate-entry>input{width:100%;max-width:360px;min-height:44px;padding:10px 12px;border:1px solid var(--border);border-radius:9px;background:var(--surface);font:inherit}
+.receipt-plate-line{padding:12px 0;border-top:1px solid #c5e5d2}
+.receipt-plate-line .plate-visual{margin-top:8px}
+.results-card{max-width:none;margin-top:24px}
+.recent-results-list{display:grid;gap:16px;margin-top:18px}
+.recent-result{padding:16px;border:1px solid var(--border);border-radius:14px}
+.recent-result-heading{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;margin-bottom:14px}
+.recent-result-heading time{color:var(--muted);font-size:.9rem}
+.result-plates{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.result-plates>div{display:grid;align-content:start;gap:8px}
+.result-plates>div>span{font-size:.9rem;font-weight:700}
+@media(max-width:600px){.plate-format-options,.result-plates{grid-template-columns:1fr}.plate-visual{min-height:92px}}
