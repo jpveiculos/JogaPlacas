@@ -180,3 +180,21 @@ A decisão posterior substituiu a proposta inicial de pesquisar por placa ou rec
 - [ ] Confirmar lint, TypeScript, todos os testes, build e workflow no commit resultante. Os commits feitos por esta integração via API ainda precisam de CI observada antes de serem considerados validados.
 - [ ] Revisar em teste de integração o status financeiro de linhas antigas e confirmar que prizeCents = 0 representa apuração encerrada sem prêmio em todos os caminhos de liquidação.
 - Limites mantidos: nenhuma cobrança real, migração em produção, merge ou deploy.
+
+
+### Regra de emissão do recibo após confirmação do pagamento — 2026-10-25
+
+**Decisão de negócio confirmada:** o recibo oficial só é gerado depois da confirmação do pagamento. Para Pix na plataforma, a confirmação final deve vir do webhook validado do provedor. Para venda em dinheiro pelo cambista, o cambista confirma o recebimento pelo botão dedicado; o servidor registra quem confirmou e quando. Em qualquer caminho, compra pendente não pode expor código como recibo emitido nem ser tratada como jogo finalizado.
+
+**Divergência encontrada na revisão do código:** `POST /api/player/purchases` atualmente deriva e devolve `receiptCode` mesmo com status `PENDING_PAYMENT`, e `Purchase.receiptCode` é obrigatório no schema. Isso contradiz a regra aprovada e precisa ser corrigido antes de considerar recibos concluídos.
+
+Próxima tarefa técnica:
+1. Rever o schema e o fluxo de criação para permitir compra pendente sem recibo emitido; avaliar `receiptCode` anulável até confirmação, mantendo unicidade quando preenchido e migração segura.
+2. Criar uma única operação de domínio/transação para confirmar pagamento, confirmar compra/participações e emitir um único código de recibo.
+3. Integrar o Pix somente na fase final, por webhook autenticado, com idempotência e validação da confirmação final do provedor.
+4. Implementar confirmação de dinheiro do cambista com autorização por papel, registro auditável de ator/horário e proteção contra clique repetido.
+5. Atualizar a interface para mostrar “aguardando pagamento” sem código de recibo e só mostrar/imprimir/compartilhar o recibo depois da confirmação.
+6. Atualizar consulta pública, consulta do cambista e histórico do jogador para não tratar compras pendentes como recibos emitidos.
+7. Testar compra pendente sem recibo, confirmação Pix, confirmação em dinheiro, concorrência, eventos/cliques duplicados e falhas transacionais; então observar a CI completa.
+
+A alteração permanece pendente de implementação e validação. Não houve merge, deploy, migração em produção nem ativação de pagamentos reais.
