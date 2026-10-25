@@ -1,8 +1,13 @@
 # Plano de construção de pagamentos e integração Pix
 
-Data: 2026-10-23
-Branch: planning/foundation
+Documento de planejamento atualizado: 2026-10-24
+Branch auditada: feature/dual-plate-draw
+HEAD de código auditado: d337082b2d0fa6b24db64a6839d20e24c894fb9e
 Base funcional: docs/PRODUCT_SPEC.md
+
+## Estado atual após auditoria — 2026-10-24
+
+O repositório agora contém autenticação inicial, serviço de criação de compra pendente com participações por rodada, schema Prisma refatorado e rotas/serviços de sorteio e apuração de prêmios. Isso não constitui integração de pagamento real. Não foi encontrada integração ativa com Mercado Pago, criação real de cobranças Pix, webhook de provedor ou reconciliação real. As páginas de jogador/cambista/admin ainda são placeholders. A implementação de pagamentos continua pendente e deve ocorrer somente na fase final, após os gates técnicos e funcionais. A CI do HEAD de código consultado passou; a CI disparada pelas atualizações documentais posteriores estava em andamento no momento desta atualização.
 
 ## Correção de escopo
 
