@@ -63,9 +63,25 @@ export function PlayerPurchaseForm() {
     : normalizedPlate.replace("-", "");
 
   function toggleRound(id: string) {
-    setSelectedRounds((current) => current.includes(id)
-      ? current.filter((value) => value !== id)
-      : current.length < 10 ? [...current, id] : current);
+    const index = rounds.findIndex((round) => round.id === id);
+    if (index < 0) return;
+    setSelectedRounds((current) => {
+      const selectedIndex = current.indexOf(id);
+      if (selectedIndex >= 0) {
+        // Removing one round also removes every later repetition so the sequence stays contiguous.
+        return current.slice(0, selectedIndex);
+      }
+      if (current.length >= 10 || index !== current.length) return current;
+      const round = rounds[index]!;
+      if (current.length === 0 && round.status !== "OPEN") return current;
+      if (current.length > 0) {
+        const previous = rounds.find((item) => item.id === current[current.length - 1]);
+        if (!previous || new Date(round.resultAt).getTime() - new Date(previous.resultAt).getTime() !== 30 * 60_000) {
+          return current;
+        }
+      }
+      return [...current, id];
+    });
   }
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
@@ -102,8 +118,8 @@ export function PlayerPurchaseForm() {
   return (
     <section className="feature-card" aria-labelledby="player-purchase-heading">
       <span className="feature-label">Nova aposta</span>
-      <h2 id="player-purchase-heading">Escolha o modelo da placa e a rodada</h2>
-      <p>Você pode jogar nos dois formatos. Cada aposta concorre somente ao resultado do mesmo formato. O valor é dividido automaticamente entre seis categorias. A compra ficará pendente; o Pix ainda não está conectado.</p>
+      <h2 id="player-purchase-heading">Escolha a placa e a sequência de rodadas</h2>
+      <p>Você pode jogar nos dois formatos. Cada aposta concorre somente ao resultado do mesmo formato. O valor é dividido automaticamente entre seis categorias. Ao repetir, as rodadas são consecutivas: a primeira precisa estar aberta e cada próxima fica exatamente 30 minutos depois, sem pular sorteios. A compra ficará pendente; o Pix ainda não está conectado.</p>
       <form onSubmit={submit} className="purchase-form">
         <fieldset className="plate-format-options">
           <legend>Formato da placa</legend>
@@ -126,11 +142,11 @@ export function PlayerPurchaseForm() {
           <input inputMode="decimal" value={stake} onChange={(event) => setStake(event.target.value)} placeholder="1,00" required />
         </label>
         <fieldset>
-          <legend>Rodadas disponíveis (até 10)</legend>
+          <legend>Sequência de rodadas (até 10, sem pular sorteios)</legend>
           {loadingRounds ? <p>Carregando rodadas…</p> : rounds.length === 0 ? <p>Não há rodadas disponíveis para compra no momento.</p> : (
-            <div className="round-options">{rounds.map((round) => (
+            <div className="round-options">{rounds.map((round, index) => (
               <label key={round.id} className="round-option">
-                <input type="checkbox" checked={selectedRounds.includes(round.id)} onChange={() => toggleRound(round.id)} />
+                <input type="checkbox" checked={selectedRounds.includes(round.id)} disabled={index > selectedRounds.length || (index === 0 && round.status !== "OPEN") || (index === selectedRounds.length && selectedRounds.length > 0 && new Date(round.resultAt).getTime() - new Date(rounds[index - 1]!.resultAt).getTime() !== 30 * 60_000)} onChange={() => toggleRound(round.id)} />
                 <span><strong>{round.code}</strong><br />Início: {formatDate(round.startsAt)}<br />Encerramento: {formatDate(round.cutoffAt)}</span>
               </label>
             ))}</div>
