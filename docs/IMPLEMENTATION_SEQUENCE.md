@@ -73,3 +73,14 @@ A revisão inicial confirma que PK/FK/uniqueness estão presentes, mas os limite
 Decisão aprovada e registrada em `docs/PRODUCT_SPEC.md`: cada placa deve ter no mínimo 100 centavos; o valor total em centavos é dividido por seis usando `base = floor(totalCents / 6)`; todas as categorias recebem `base`, e todo o resíduo `totalCents % 6` é adicionado somente à unidade. Para R$ 1,00, a unidade recebe R$ 0,20 e as outras cinco categorias recebem R$ 0,16 cada. O multiplicador da unidade foi atualizado para 6x no snapshot de regras; nesse exemplo, o prêmio de unidade é R$ 1,20.
 
 Adicionado o helper puro `src/domain/allocate-plate-stake.ts` e testes `src/domain/allocate-plate-stake.test.ts`, incluindo conservação de centavos para totais de R$ 1,00 a R$ 10,00. **Limite atual:** o helper ainda precisa ser conectado ao fluxo de criação de apostas e à apuração/versão de regras; não considerar o comportamento financeiro ponta a ponta concluído até atualizar esses caminhos e executar a CI do commit resultante. Nenhuma alteração foi feita em `main`, produção ou pagamentos reais.
+### Integração do rateio no serviço de compra — 2026-10-25
+
+- [x] A entrada do serviço de compra agora recebe o valor total da placa em centavos (`stakeCents`), sem exigir que o jogador/cambista envie manualmente os seis valores por categoria.
+- [x] O servidor calcula a alocação usando `allocatePlateStake` antes da validação financeira e persiste os seis valores calculados.
+- [x] A comparação de idempotência compara valor total, placa e snapshot de regras, permitindo que uma repetição legítima de uma compra histórica seja reconhecida sem exigir que a alocação antiga coincida com a regra nova.
+- [x] Adicionado teste do serviço para verificar a persistência do rateio de R$ 1,00: 20 centavos na unidade e 16 centavos em cada uma das outras cinco categorias.
+- [ ] Confirmar a CI completa no commit mais recente antes de considerar a integração aprovada.
+- [ ] Auditar a apuração para garantir que ela usa os valores alocados persistidos e o snapshot de multiplicadores da própria linha. Não migrar nem recalcular apostas históricas.
+- [ ] Verificar os consumidores/API do serviço para confirmar que enviam `stakeCents`; ajustar todos os chamadores identificados pela CI/revisão antes de finalizar.
+
+Esta alteração continua somente na branch de desenvolvimento. Nenhuma cobrança real, migração em produção, merge ou deploy foi executado.
