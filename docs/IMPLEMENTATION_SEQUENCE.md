@@ -125,3 +125,13 @@ Não houve merge, deploy, migração em produção nem cobrança real.
 - [x] Adicionada rota autenticada de resultados recentes (GET /api/player/results) e seção na área do jogador que apresenta os dois resultados independentes em plaquinhas, para rodadas concluídas nas últimas 24 horas.
 - [ ] Confirmar lint, typecheck, testes e build da CI no commit final. Esta alteração não foi validada por execução local nesta sessão.
 - Limites mantidos: resultados não são convertidos um no outro; nenhuma cobrança Pix real, migração de produção, merge ou deploy foi executado.
+
+
+### Página pública de resultados e ganhadores — 2026-10-25
+
+- [x] Decisão registrada no manual mestre: página limpa em /resultados, sem menu, com histórico em linhas, data/hora de São Paulo e duas plaquinhas independentes por rodada.
+- [x] Implementada rota pública de leitura com paginação de resultados concluídos/publicados e seção de até 12 prêmios efetivamente creditados nos últimos 30 dias. Identificadores de usuário são mascarados; nenhum telefone ou dado financeiro pessoal é exposto.
+- [x] Interface atualiza os resultados recentes automaticamente a cada 15 segundos e permite carregar resultados anteriores sem apagar o histórico já carregado.
+- [x] Adicionados testes de rota para os dois resultados, ganhadores mascarados, paginação, cursor inválido e falha genérica do banco.
+- [ ] Confirmar lint, TypeScript, testes, build e workflows no HEAD final. As verificações devem ser consultadas após os commits.
+- Limites mantidos: sem menu nesta página, sem cobranças Pix, sem migração em produção, sem merge e sem deploy.
