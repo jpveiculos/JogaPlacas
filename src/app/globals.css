@@ -424,3 +424,9 @@ h1 {
 @media (min-width: 760px) {
   .admin-round-list > .round-option { grid-template-columns: minmax(0, 1fr); }
 }
+
+
+.admin-round-create { display: grid; gap: 12px; margin: 18px 0; padding: 16px; border: 1px solid var(--border); border-radius: 12px; }
+.admin-round-create h3, .admin-round-create p { margin: 0; }
+.admin-round-create label { display: grid; gap: 6px; font-weight: 700; }
+.admin-round-create input { width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface, #fff); color: inherit; }
