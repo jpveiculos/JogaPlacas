@@ -11,7 +11,7 @@ export type PrizeCategory = (typeof PRIZE_CATEGORIES)[number];
 export type PrizeMultipliers = Record<PrizeCategory, number>;
 
 export const APPROVED_PRIZE_MULTIPLIERS: PrizeMultipliers = {
-  unit: 2,
+  unit: 6,
   tens: 20,
   hundreds: 200,
   thousands: 2_000,
