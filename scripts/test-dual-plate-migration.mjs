@@ -90,10 +90,11 @@ async function seedLegacyRows(url, includeInvalid) {
 async function assertValidBackfill(url) {
   const client = await connect(url);
   try {
-    const round = await client.query(
-      `SELECT "resultPlate" AS legacy_old_column FROM "Round" LIMIT 0`,
-    ).catch(() => null);
-    assert.equal(round, null, "the old resultPlate column should no longer exist");
+    const oldColumn = await client.query(
+      `SELECT 1 FROM information_schema.columns
+       WHERE table_schema = 'public' AND table_name = 'Round' AND column_name = 'resultPlate'`,
+    );
+    assert.equal(oldColumn.rowCount, 0, "the old resultPlate column should no longer exist");
 
     const results = await client.query(
       `SELECT "resultLegacyPlate", "resultMercosurPlate" FROM "Round" WHERE "id" = 'round-legacy'`,
