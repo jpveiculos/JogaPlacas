@@ -172,3 +172,16 @@ Não houve merge, deploy, migração em produção nem cobrança real.
 - [x] Diferenciado status de rodada em andamento, prêmio confirmado, não premiada e apuração pendente conforme os campos persistidos.
 - [ ] Implementar histórico individual de apostas do jogador com destaques verdes para prêmios confirmados; não adicionar consulta por recibo nessa área.
 - [ ] Criar testes automatizados da rota de recibo e executar/validar CI.
+
+
+### Histórico do jogador e segurança da consulta por recibo — 2026-10-25
+
+- [x] Corrigida a rota pública de recibo para remover any, normalizar o código JP- e serializar os campos necessários sem expor dados de conta.
+- [x] Adicionados testes de rota da consulta por recibo: código inválido, resultado premiado somente após crédito, compra não confirmada e erro genérico do banco.
+- [x] Criado GET /api/player/history, autenticado, limitado ao jogador da sessão e aos últimos 7 dias, com limite de 100 compras e cache privado desabilitado.
+- [x] Criada a interface de histórico individual no jogador, agrupada por recibo/rodada/placa; prêmio confirmado recebe destaque verde somente se o crédito estiver registrado.
+- [x] Adicionados testes de autorização e filtro por proprietário para o histórico do jogador.
+- [x] O campo de consulta por recibo não foi adicionado à área do jogador; permanece na página pública de resultados e na área do cambista.
+- [ ] Confirmar lint, TypeScript, todos os testes, build e workflow no commit resultante. Os commits feitos por esta integração via API ainda precisam de CI observada antes de serem considerados validados.
+- [ ] Revisar em teste de integração o status financeiro de linhas antigas e confirmar que prizeCents = 0 representa apuração encerrada sem prêmio em todos os caminhos de liquidação.
+- Limites mantidos: nenhuma cobrança real, migração em produção, merge ou deploy.
