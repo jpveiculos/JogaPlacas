@@ -258,3 +258,10 @@ O usuário executou manualmente no Codespaces, na branch `feature/dual-plate-dra
 - Se o scheduler iniciar no minuto anterior ao resultado e a rodada ainda não existir, ele ainda pode criar a rodada vencendo o cutoff e fechá-la imediatamente, para permitir o sorteio no horário programado. Se o instante do sorteio já passou, não cria retrospectivamente uma rodada nova.
 - O serviço de compra valida `startsAt` e `cutoffAt`; portanto, mesmo uma rodada previamente criada não aceita apostas antes da abertura.
 - A execução mais recente da CI ainda precisa concluir para confirmar essas correções.
+
+
+### Auditoria das transições automáticas
+
+- Fechamentos e sorteios acionados pelo scheduler agora geram eventos de auditoria próprios (`ROUND_CLOSED_AUTOMATICALLY` e `ROUND_RESULTS_DRAWN_AUTOMATICALLY`), dentro da mesma transação que altera o estado ou persiste os resultados.
+- Operações manuais de administrador preservam os eventos de auditoria existentes com o ator associado.
+- CI ainda pendente para as alterações mais recentes.
