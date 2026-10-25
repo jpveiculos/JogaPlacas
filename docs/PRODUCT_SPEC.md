@@ -215,3 +215,11 @@ A revisão de `prisma/schema.prisma` e das quatro migrações encontrou invarian
 - A consulta pública retorna todas as linhas/rodadas confirmadas do recibo informado e apresenta, por rodada, prêmio confirmado, não premiada ou estado ainda pendente conforme a apuração persistida.
 - O campo de consulta não será duplicado na área do jogador: essa área deve mostrar o histórico de jogos do próprio jogador em lista organizada, destacando visualmente os prêmios confirmados em verde.
 - O mesmo componente de consulta por recibo deve ser disponibilizado na área do cambista, que poderá consultar o recibo do cliente e apoiar a impressão/segunda via do comprovante. Não se deve expor informações privadas além das necessárias para conferir a aposta.
+
+
+## 19. Consulta por recibo na área do cambista — 2026-10-25
+
+- O componente público de consulta exclusivamente por código de recibo também fica disponível dentro da área autenticada do cambista para conferência presencial.
+- Não adicionar pesquisa por placa nem consulta duplicada na área do jogador.
+- O histórico individual do jogador deve ser uma lista de suas próprias apostas/rodadas, com prêmios efetivamente confirmados destacados em verde; não deve ser confundido com a lista pública de resultados gerais.
+- Para status individual: compra/participação ainda não concluída ou rodada não concluída deve indicar que está em andamento; prêmio positivo com crédito registrado indica premiada; valor de prêmio igual a zero em rodada concluída indica não premiada; valores ainda não apurados permanecem pendentes.
