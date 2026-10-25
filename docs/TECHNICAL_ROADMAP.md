@@ -219,3 +219,13 @@ O usuário executou manualmente no Codespaces, na branch `feature/dual-plate-dra
 - Adicionado teste de rota para sessão ausente, papéis não autorizados, agregados e cabeçalho sem cache. Os commits de implementação do endpoint, componente, página, CSS e teste ainda precisam ser confirmados pela CI subsequente.
 - Limites conhecidos: ainda não existe interface de criação/recorrência de rodadas, nem painéis completos de usuários, configurações, comissões, saques e relatório financeiro. Pagamento Pix real e fluxo de cambista continuam pendentes; o painel não deve ser considerado a conclusão da plataforma.
 - Nenhum deploy, merge para `main`, cobrança real ou alteração de banco de produção foi executado.
+
+
+### Criação administrativa de rodadas — 2026-10-25
+
+- A execução #363 confirmou que o painel operacional anterior passou em lint, typecheck, testes, build, migração e concorrência PostgreSQL após a correção do efeito React.
+- Acrescentada criação manual de rodada na API administrativa: apenas ADMIN com senha inicial já alterada pode criar; requisição de outra origem é recusada quando o cabeçalho Origin está presente; os horários são validados no servidor; o início deve ser futuro e o resultado deve ocorrer exatamente 30 minutos depois; o cutoff é calculado como um minuto antes do resultado.
+- O código da rodada é derivado do horário de resultado no fuso `America/Sao_Paulo`; criação e evento `ROUND_CREATED` são persistidos na mesma transação. Código duplicado retorna conflito em vez de sobrescrever a rodada.
+- A interface converte horários de parede do fuso São Paulo para ISO antes de enviar, exibe a regra de cutoff e atualiza a lista após a criação. Foram acrescentados testes de rota para origem, papel, intervalo e auditoria transacional.
+- As alterações de criação de rodada e seus testes ainda aguardam a CI dos commits mais recentes; não considerar aprovadas até a conclusão do workflow.
+- Ainda faltam recorrência automática de rodadas, administração financeira e de contas, fluxo completo de cambista, confirmação de pagamento real e revisão final de segurança. O sistema não está pronto para produção nem foi implantado.
