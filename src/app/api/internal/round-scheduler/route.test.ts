@@ -20,7 +20,7 @@ vi.mock("@/modules/rounds/close-round", () => ({ closeRound: mocks.closeRound })
 vi.mock("@/modules/rounds/open-round", () => ({ openRound: mocks.openRound }));
 vi.mock("@/modules/rounds/draw-round-results", () => ({ drawRoundResults: mocks.drawRoundResults }));
 
-import { GET } from "./route";
+import { POST } from "./route";
 
 function request(authorization?: string) {
   return new NextRequest("https://example.test/api/internal/round-scheduler", {
@@ -28,7 +28,7 @@ function request(authorization?: string) {
   });
 }
 
-describe("GET /api/internal/round-scheduler", () => {
+describe("POST /api/internal/round-scheduler", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.stubEnv("ROUND_SCHEDULER_SECRET", "test-secret-long-enough");
@@ -38,13 +38,13 @@ describe("GET /api/internal/round-scheduler", () => {
   });
 
   it("rejects missing and invalid scheduler credentials", async () => {
-    expect((await GET(request())).status).toBe(401);
-    expect((await GET(request("Bearer wrong-secret"))).status).toBe(401);
+    expect((await POST(request())).status).toBe(401);
+    expect((await POST(request("Bearer wrong-secret"))).status).toBe(401);
     expect(mocks.findUnique).not.toHaveBeenCalled();
   });
 
   it("accepts a valid scheduler credential and reports an idempotent run", async () => {
-    const response = await GET(request("Bearer test-secret-long-enough"));
+    const response = await POST(request("Bearer test-secret-long-enough"));
     expect(response.status).toBe(200);
     expect(await response.json()).toMatchObject({
       ok: true, created: 0, closed: 0, drawn: 0, failures: 0, timeZone: "America/Sao_Paulo",
