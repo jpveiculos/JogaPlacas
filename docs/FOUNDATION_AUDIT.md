@@ -110,3 +110,7 @@ Esta verificação posterior confirmou que o workflow **Verify** para o commit-b
 ### Evidência após adicionar o teste de backfill — 2026-10-25
 
 O teste de migração histórica foi adicionado ao repositório e ao workflow, mas não foi executado localmente nesta sessão. Seu resultado deve ser tratado como pendente até que a execução GitHub Actions do commit correspondente termine com sucesso. O script cria bancos temporários no PostgreSQL configurado, portanto deve ser executado apenas em ambiente de teste descartável com permissão de criação/remoção de bancos.
+
+
+### Resultado da primeira execução do teste histórico — 2026-10-25
+A CI falhou no seed de dados, não na migração dual-plate: `scripts/test-dual-plate-migration.mjs` referenciava `Purchase.updatedAt`, inexistente na migração inicial. Corrigido no commit `576ec2afb43a5a6fcb9deeb38027a0fdf53efef8`. O teste precisa ser reexecutado na CI; aprovação permanece pendente até o resultado do novo commit.
