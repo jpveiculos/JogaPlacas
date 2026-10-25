@@ -11,7 +11,7 @@ import {
 
 export type PixPurchaseInput = {
   idempotencyKey: string;
-  receiptCode: string | null;
+  receiptCode?: string | null;
   playerId?: string;
   cashierId?: string;
   customerId?: string;
@@ -161,7 +161,7 @@ export async function createPendingPixPurchase(
       ]));
       const sameRequest =
         existing.paymentMethod === PaymentMethod.PIX &&
-        existing.receiptCode === input.receiptCode &&
+        existing.receiptCode === (input.receiptCode ?? null) &&
         existing.playerId === (input.playerId ?? null) &&
         existing.cashierId === (input.cashierId ?? null) &&
         existing.customerId === (input.customerId ?? null) &&
@@ -268,7 +268,7 @@ export async function createPendingPixPurchase(
         paymentMethod: PaymentMethod.PIX,
         totalCents: totals.totalCents,
         currency: "BRL",
-        receiptCode: input.receiptCode,
+        receiptCode: input.receiptCode ?? null,
         idempotencyKey: input.idempotencyKey,
         participations: {
           create: input.participations.map((participation) => ({
