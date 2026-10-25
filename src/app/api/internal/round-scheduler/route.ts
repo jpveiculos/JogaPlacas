@@ -47,8 +47,9 @@ function resultSlots(from: Date, through: Date): Date[] {
   const localMinute = Number(local.minute);
   const firstMinute = localMinute < 30 ? 0 : 30;
   let cursor = wallTimeToUtc(Number(local.year), Number(local.month), Number(local.day), Number(local.hour), firstMinute);
-  // Include the current half-hour result only while its betting cutoff is still ahead.
-  if (cursor.getTime() <= from.getTime() || cursor.getTime() - MINUTE_MS <= from.getTime()) {
+  // Skip only result instants that have already passed. If the scheduler starts during
+  // the final cutoff minute, still create that round so it can close and draw on time.
+  if (cursor.getTime() <= from.getTime()) {
     if (firstMinute === 0) {
       cursor = wallTimeToUtc(Number(local.year), Number(local.month), Number(local.day), Number(local.hour), 30);
     } else {
