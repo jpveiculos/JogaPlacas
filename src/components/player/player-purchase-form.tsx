@@ -51,7 +51,8 @@ export function PlayerPurchaseForm() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
-  const [purchase, setPurchase] = useState<CreatedPurchase | null>(null);\n  const idempotencyKey = useRef<string | null>(null);
+  const [purchase, setPurchase] = useState<CreatedPurchase | null>(null);
+  const idempotencyKey = useRef<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -109,7 +110,8 @@ export function PlayerPurchaseForm() {
       });
       const body = await response.json();
       if (!response.ok) throw new Error(body.error ?? "Não foi possível registrar a compra.");
-      setPurchase(body.purchase as CreatedPurchase);\n      idempotencyKey.current = null;
+      setPurchase(body.purchase as CreatedPurchase);
+      idempotencyKey.current = null;
       setNotice(body.message ?? "Compra registrada.");
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Erro ao registrar a compra.");
