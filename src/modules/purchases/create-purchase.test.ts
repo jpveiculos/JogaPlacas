@@ -363,8 +363,8 @@ describe("createPendingPixPurchase financial totals", () => {
         .mockResolvedValueOnce([{ decisionTime: new Date("2026-10-23T20:00:00.000Z") }]),
       round: {
         findMany: vi.fn().mockResolvedValue([
-          { id: "round-1", status: "OPEN", cutoffAt: new Date("2026-10-23T21:00:00.000Z") },
-          { id: "round-2", status: "OPEN", cutoffAt: new Date("2026-10-23T21:00:00.000Z") },
+          { id: "round-1", status: "OPEN", startsAt: new Date("2026-10-23T19:31:00.000Z"), cutoffAt: new Date("2026-10-23T20:29:00.000Z"), resultAt: new Date("2026-10-23T20:30:00.000Z") },
+          { id: "round-2", status: "SCHEDULED", startsAt: new Date("2026-10-23T20:31:00.000Z"), cutoffAt: new Date("2026-10-23T20:59:00.000Z"), resultAt: new Date("2026-10-23T21:00:00.000Z") },
         ]),
       },
     };
