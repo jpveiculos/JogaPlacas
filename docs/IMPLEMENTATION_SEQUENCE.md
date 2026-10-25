@@ -1,6 +1,6 @@
 # Sequência de implementação — estado atual
 
-Atualizado em 2026-10-24 após auditoria da branch feature/dual-plate-draw, HEAD d337082b2d0fa6b24db64a6839d20e24c894fb9e.
+Atualizado em 2026-10-25 após revisão adicional da branch feature/dual-plate-draw, HEAD 1d37b8fc59e0c10717272b96dec1d9bd206a6819.
 
 ## Decisão permanente
 A integração com Mercado Pago fica para a última fase. Até a aprovação dos gates anteriores, não criar cobranças reais, não ativar webhooks do provedor e não colocar segredos reais do provedor no ambiente. Não alterar main, banco de produção, domínio/DNS nem serviços ativos sem autorização explícita.
@@ -15,9 +15,9 @@ A branch feature/dual-plate-draw está 61 commits à frente e 1 atrás de planni
 
 ## Ordem de trabalho revisada
 
-1. **Reproduzir a qualidade do HEAD atual:** checkout limpo, versão de Node/npm registrada, npm ci, Prisma validate/generate, lint, typecheck, testes, build e suites PostgreSQL de integração. Guardar evidência por commit. A CI recente passou, mas repetir é parte da auditoria e ainda não foi feito nesta conversa.
+1. **Reproduzir a qualidade do HEAD atual:** a CI Verify do commit 1d37b8fc59e0c10717272b96dec1d9bd206a6819 passou. A instalação limpa e os testes locais não foram executados nesta sessão. Manter a diferença de patch Next.js/ESLint como pendência de revisão e alinhar somente com justificativa, lockfile regenerado e pipeline verde.
 2. **Resolver compatibilidade de dependências:** revisar next@16.4.3 versus eslint-config-next@16.4.2; corrigir apenas com justificativa, lockfile reproduzível e pipeline verde.
-3. **Auditar schema e migrações:** revisar as quatro migrações e o SQL da migração de duas placas em PostgreSQL descartável; avaliar dados históricos e snapshots. Não executar em produção.
+3. **Auditar schema e migrações:** revisão estática confirmou que a migração de duas placas aborta se não conseguir classificar qualquer `plateDisplay` histórico. O teste CI atual usa banco vazio; acrescentar ensaio de backfill com linhas LEGACY/MERCOSUR válidas e registro inválido/ambíguo em PostgreSQL descartável. Não executar em produção.
 4. **Consolidar domínio e regras pendentes:** validar formato/resultado LEGACY e MERCOSUR, snapshots de regras, rateio em centavos, cutoff, regras de cancelamento/estorno e fonte/publicação de resultados. Não inventar decisões de negócio ausentes; atualizar docs/PRODUCT_SPEC.md quando aprovadas.
 5. **Completar os serviços financeiros:** ledger append-only, saldo disponível, débitos, prêmios, saques/reservas, estornos, comissões e recebimento em espécie, com invariantes transacionais e testes concorrentes.
 6. **Construir os fluxos do jogador:** compra, seleção de placa/categoria, gerador aleatório, repetição de rodadas, checkout pendente, recibos, histórico, carteira e resultados.
@@ -31,3 +31,10 @@ A branch feature/dual-plate-draw está 61 commits à frente e 1 atrás de planni
 ## Critérios de avanço
 
 Nenhuma fase é concluída só por código commitado ou por build isolado. Registrar comandos/testes executados, commit exato, resultado e limitações. Cada decisão, mudança de implementação, resultado de teste ou implantação que afete o comportamento deve atualizar o manual mestre e os documentos operacionais pertinentes no mesmo conjunto de trabalho. Se uma regra for ambígua, manter o fluxo afetado bloqueado e pedir decisão; não inferir comportamento financeiro.
+
+
+## Atualização de evidência — 2026-10-25
+
+O workflow Verify do commit 1d37b8fc59e0c10717272b96dec1d9bd206a6819 concluiu com sucesso. Nesta sessão, os arquivos package.json, package-lock.json, prisma/schema.prisma, workflow e SQL das quatro migrações foram inspecionados por meio do GitHub. Não houve instalação limpa ou execução local de testes.
+
+Nova pendência identificada: o job de migrações parte de um banco PostgreSQL vazio e não prova o backfill de dados históricos da migração dual_plate_draw. O próximo gate deve testar dados antigos válidos de ambos os formatos e uma linha inválida/ambígua que provoque a interrupção intencional da migração. A diferença next@16.4.3 / eslint-config-next@16.4.2 permanece em revisão; não foi alterada.
