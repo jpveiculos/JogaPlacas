@@ -87,3 +87,21 @@ Nenhum recurso é considerado pronto apenas porque existe no schema, arquivo ou 
 2. Revisar o schema e as migrações, em especial a migração de duas placas e o snapshot de regras.
 3. Atualizar o restante da documentação que ainda carrega estado histórico como se fosse atual.
 4. Só então selecionar o próximo módulo funcional conforme a ordem do roteiro técnico.
+
+
+## Complemento de auditoria — 2026-10-25, commit-base 1d37b8fc59e0c10717272b96dec1d9bd206a6819
+
+Esta verificação posterior confirmou que o workflow **Verify** para o commit-base acima concluiu com sucesso (GitHub Actions run 40146476873). O resultado confirma somente os jobs configurados no workflow; a execução local limpa não foi realizada nesta sessão.
+
+### Revisão adicional de dependências e migrações
+
+- A diferença de patch continua presente: `next@16.4.3` e `eslint-config-next@16.4.2`. O pipeline verde mostra que a combinação atual passa pelos jobs configurados, mas não elimina a recomendação de alinhar versões após confirmar disponibilidade e compatibilidade. Não foi feita alteração de dependências nesta etapa.
+- A migração `20261024020000_dual_plate_draw` renomeia `Round.resultPlate` para `resultMercosurPlate`, cria `resultLegacyPlate` e classifica `ParticipationLine.plateFormat` a partir de `plateDisplay`. Ela interrompe deliberadamente a migração se qualquer linha histórica não puder ser classificada.
+- O job atual de migração aplica toda a cadeia num PostgreSQL novo e vazio. Isso verifica a criação do schema, mas **não exercita o backfill com linhas históricas** nem demonstra o comportamento quando há entradas antigas inválidas/ambíguas. Antes de aprovar a migração para qualquer banco com dados, criar um ensaio isolado com dados representativos de ambos os formatos e um caso inválido que confirme o bloqueio seguro.
+- A inspeção foi feita nos arquivos versionados pelo conector GitHub. Não foi executado `npm ci`, testes locais ou conexão a banco nesta sessão; não foi tocada produção.
+
+### Próximas ações, em ordem
+
+1. Criar um teste de migração de dados históricos em PostgreSQL descartável, cobrindo placas LEGACY, MERCOSUR e registro não classificável; verificar que os registros válidos são preservados e o caso inválido interrompe a migração sem prosseguir silenciosamente.
+2. Resolver a diferença de patch Next.js/ESLint com uma alteração pequena e lockfile regenerado por npm, depois de validar compatibilidade; executar pipeline completo.
+3. Só depois iniciar o próximo módulo funcional, mantendo as regras financeiras pendentes bloqueadas até decisão explícita.
