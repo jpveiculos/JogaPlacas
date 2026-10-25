@@ -402,3 +402,10 @@ A implementação desta arquitetura ainda está pendente; o componente térmico 
 - O endpoint interno `POST /api/internal/round-scheduler` cria uma janela móvel de rodadas e processa abertura, fechamento e sorteio, com auditoria e proteção por segredo.
 - O endpoint é código implementado e coberto por CI, mas só executará automaticamente quando uma tarefa externa for configurada no ambiente de hospedagem com chamada a cada minuto e a variável `ROUND_SCHEDULER_SECRET`.
 - A ativação em produção permanece pendente; não há confirmação registrada de hospedagem, domínio e banco de produção corretos. Não afirmar que há rodadas automáticas ativas antes dessa configuração e validação operacional.
+
+
+## Representação visual de horários
+- Exibir horários no formato de 24 horas `HH:mm`, usando dois pontos entre horas e minutos.
+- Exemplos: `00:00`, `12:30`, `23:59`.
+- Não acrescentar `h`, `hs` nem outra abreviação após o horário. Os dois pontos são suficientes.
+- Essa é uma regra de apresentação; não altera o fuso horário oficial (`America/Sao_Paulo`), os instantes armazenados nem as regras de agendamento.
