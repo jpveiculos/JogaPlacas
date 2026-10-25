@@ -145,7 +145,7 @@ export async function createPendingPixPurchase(
           return [
             normalized.format,
             normalized.normalized,
-            ...Object.values(allocatePlateStake(line.stakeCents)),
+            line.stakeCents,
             line.ruleVersion,
             stableJsonStringify(line.ruleSnapshot),
           ].join("|");
@@ -156,12 +156,8 @@ export async function createPendingPixPurchase(
         participation.lines.map((line) => [
           String(line.plateFormat).toLowerCase(),
           line.normalizedPlate,
-          line.unitCents,
-          line.tensCents,
-          line.hundredsCents,
-          line.thousandsCents,
-          line.lettersCents,
-          line.fullPlateCents,
+          line.unitCents + line.tensCents + line.hundredsCents
+            + line.thousandsCents + line.lettersCents + line.fullPlateCents,
           line.ruleVersion,
           stableJsonStringify(line.ruleSnapshot),
         ].join("|")).sort().join("\\n"),
