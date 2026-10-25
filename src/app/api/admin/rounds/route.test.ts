@@ -126,15 +126,15 @@ describe("POST /api/admin/rounds", () => {
     }));
     expect(result.status).toBe(201);
     expect(mocks.roundCreate).toHaveBeenCalledWith({ data: expect.objectContaining({
-      startsAt: new Date("2035-01-01T12:00:00.000Z"),
-      cutoffAt: new Date("2035-01-01T12:28:00.000Z"),
-      resultAt: new Date("2035-01-01T12:29:00.000Z"),
+      startsAt: new Date("2035-01-01T12:01:00.000Z"),
+      cutoffAt: new Date("2035-01-01T12:29:00.000Z"),
+      resultAt: new Date("2035-01-01T12:30:00.000Z"),
     }), select: expect.any(Object) });
   });
 
   it("creates and audits a future round transactionally", async () => {
     const result = await (await import("./route")).POST(createRequest({
-      startsAt: "2035-01-01T12:00:00.000Z", resultAt: "2035-01-01T12:30:00.000Z",
+      startsAt: "2035-01-01T12:01:00.000Z", resultAt: "2035-01-01T12:30:00.000Z",
     }));
     expect(result.status).toBe(201);
     expect(mocks.transaction).toHaveBeenCalledOnce();
