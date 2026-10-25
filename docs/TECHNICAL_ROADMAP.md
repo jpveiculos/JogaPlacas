@@ -209,3 +209,13 @@ O usuário executou manualmente no Codespaces, na branch `feature/dual-plate-dra
 - A área do cambista continua sendo um placeholder protegido por papel, sem fluxo de venda, cliente ou comissão habilitado. Não tratar os fluxos Pix/cambista como prontos.
 - A limitação de tentativas de login permanece por conta e o risco de bloqueio provocado por terceiros continua pendente. Não foi adicionada uma dimensão por IP/origem sem conhecer um sinal de cliente confiável da infraestrutura.
 - Nenhum deploy, merge para `main`, cobrança real ou alteração em banco de produção foi realizado.
+
+
+### Painel operacional inicial do administrador — 2026-10-25
+
+- Implementado endpoint protegido `GET /api/admin/rounds`, com verificação de sessão, papel `ADMIN` e troca obrigatória de senha. Retorna até 100 rodadas, seus estados/resultados e contagem de participações, além de totais agregados de compras pendentes e confirmadas; respostas sem cache.
+- A área administrativa deixou de ser apenas placeholder para o ciclo operacional de rodadas: lista rodadas, exibe os dois resultados como placas separadas e permite acionar fechamento, sorteio e apuração por meio das rotas existentes. A interface confirma ações antes de executá-las, mostra erros retornados pelo servidor e atualiza os dados após a operação.
+- As regras críticas permanecem no servidor: cutoff, estado da rodada, horário do sorteio, existência dos dois resultados e idempotência da apuração não são confiados à interface. O painel não permite editar resultados publicados.
+- Adicionado teste de rota para sessão ausente, papéis não autorizados, agregados e cabeçalho sem cache. Os commits de implementação do endpoint, componente, página, CSS e teste ainda precisam ser confirmados pela CI subsequente.
+- Limites conhecidos: ainda não existe interface de criação/recorrência de rodadas, nem painéis completos de usuários, configurações, comissões, saques e relatório financeiro. Pagamento Pix real e fluxo de cambista continuam pendentes; o painel não deve ser considerado a conclusão da plataforma.
+- Nenhum deploy, merge para `main`, cobrança real ou alteração de banco de produção foi executado.
