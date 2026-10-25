@@ -207,3 +207,11 @@ A revisão de `prisma/schema.prisma` e das quatro migrações encontrou invarian
 - A rota não revela nome, telefone, conta, método de pagamento, valor total gasto nem o recibo na resposta. Erros genéricos e respostas no-store.
 - O componente é reutilizável na área do cambista e do jogador; a integração nessas telas autenticadas ainda depende de localizar os pontos de entrada corretos.
 - A consulta por placa pode encontrar apostas de outras pessoas com a mesma placa; não expõe dados pessoais. O recibo é preferível para localizar uma compra específica.
+
+
+## 18. Escopo definitivo da consulta pública — somente recibo — 2026-10-25
+
+- A consulta pública aceita exclusivamente o código completo do recibo com prefixo JP-. A busca por placa foi removida porque a mesma placa pode aparecer em diversas apostas e rodadas, misturando resultados e gerando confusão.
+- A consulta pública retorna todas as linhas/rodadas confirmadas do recibo informado e apresenta, por rodada, prêmio confirmado, não premiada ou estado ainda pendente conforme a apuração persistida.
+- O campo de consulta não será duplicado na área do jogador: essa área deve mostrar o histórico de jogos do próprio jogador em lista organizada, destacando visualmente os prêmios confirmados em verde.
+- O mesmo componente de consulta por recibo deve ser disponibilizado na área do cambista, que poderá consultar o recibo do cliente e apoiar a impressão/segunda via do comprovante. Não se deve expor informações privadas além das necessárias para conferir a aposta.
