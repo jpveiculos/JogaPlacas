@@ -320,3 +320,8 @@ Testes pendentes antes de considerar o fluxo pronto:
 
 
 Implementação parcial do recibo — 2026-10-25: o componente térmico agora identifica visualmente cada linha pela repetição sequencial e mantém o código da rodada explícito. Foi adicionada cobertura unitária para várias linhas na mesma rodada e para dez rodadas em sequência. Isso cobre a apresentação do índice, não substitui a futura integração de pagamento, QR Code, consulta completa da compra ou impressão real no cambista.
+
+
+### Correção de teste do recibo — 2026-10-25
+
+- A CI #428/#429 encontrou que o arquivo de teste importava diretamente o componente TSX, mas a configuração Vitest não transformava JSX nessa importação. A regra de numeração foi extraída para `receipt-repetition.ts`, os tipos para `thermal-receipt-types.ts`, e o teste agora importa o módulo puro sem carregar JSX. O componente continua usando e exportando o mesmo helper. A correção aguarda CI; não considerar validada até todos os jobs terminarem.
