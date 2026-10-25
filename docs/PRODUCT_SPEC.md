@@ -316,3 +316,19 @@ A implementação desta arquitetura ainda está pendente; o componente térmico 
 - O sistema web sozinho não garante impressão Bluetooth direta universal, especialmente em iPhone/Safari. Para cumprir o caminho prioritário em cada plataforma, selecionar integração compatível (por exemplo, aplicativo auxiliar/ponte nativa ou aplicativo do sistema) e adaptadores de protocolo. Não prometer que qualquer Bluetooth funcione sem esse suporte.
 - Não adicionar uma configuração global de protocolo. Manter as configurações por cambista/dispositivo, com perfil automático quando possível e configuração manual mínima apenas quando necessária.
 - Fallbacks, reimpressão e mudanças de impressora nunca podem gerar outro código de recibo nem alterar os dados financeiros.
+
+
+### Plataformas de cambista e impressão móvel — 2026-10-25
+
+**Decisão de produto:** a área do cambista será utilizada em celulares Android e iOS, com prioridade de uso e otimização para Android. Não é requisito oferecer fluxo de cambista em computador.
+
+**Experiência prioritária:** após a compra e a confirmação de pagamento, exibir o recibo oficial e permitir que o cambista toque em **Imprimir** para enviar o recibo diretamente à impressora conectada. Se a impressão direta falhar ou não estiver disponível, oferecer reimpressão do mesmo recibo e alternativas (abrir/compartilhar PDF ou imprimir pelo sistema).
+
+**Arquitetura recomendada:** manter regras de negócio, dados de compra, emissão do recibo e layout canônico independentes da plataforma. Para impressão direta móvel, usar uma camada nativa/bridge compatível com Android e iOS; não depender exclusivamente das APIs do navegador. Priorizar Android e suportar Bluetooth Classic e BLE quando viável; para iOS, implementar o transporte que a impressora e as APIs permitirem, dando preferência a BLE compatível ou integração de fabricante quando necessária.
+
+- Bluetooth não é protocolo de impressão: o transporte pode ser Classic/SPP ou BLE, e a impressora ainda precisa entender comandos compatíveis, por exemplo ESC/POS.
+- O suporte a Bluetooth Classic SPP genérico no iOS é restrito; não prometer que uma impressora Classic-only funcionará em iPhone. Antes de recomendar ou certificar um modelo, validar conexão, protocolo, QR e impressão real em Android e iOS.
+- Configuração de impressora e preferências ficam no escopo de cada cambista/dispositivo. Não existe configuração global de impressora que altere todos os cambistas.
+- O sucesso/falha da impressão é independente do estado financeiro: reimprimir utiliza o mesmo recibo e código, sem duplicar compra ou efeitos financeiros.
+- O navegador/PDF/compartilhamento é fallback, não o caminho normal desejado para o cambista.
+- A base web atual não deve ser presumida capaz de imprimir diretamente por Bluetooth em todos os celulares. Avaliar e implementar uma camada móvel nativa/bridge apropriada antes de prometer impressão direta universal.
