@@ -214,3 +214,13 @@ A alteração permanece pendente de implementação e validação. Não houve me
 - [ ] Rever componentes/consumidores restantes que tipam ou assumem `receiptCode` não nulo, e adicionar testes de confirmação e concorrência antes de considerar a regra concluída.
 
 **Limite importante:** esta etapa remove a emissão prematura; não implementa ainda o mecanismo de emissão após pagamento confirmado. Nenhum webhook real, cobrança, merge, deploy ou migração em produção foi executado.
+
+
+### Requisito de QR Code no recibo — 2026-10-25
+
+- [x] Registrada a decisão: QR Code pequeno ao lado do código textual do recibo, codificando apenas o código completo `JP-...`.
+- [x] Registradas as restrições de privacidade e segurança: sem dados pessoais no QR, sem gerador público de terceiros, e sem QR para compra pendente.
+- [ ] Implementar geração local/confiável do QR Code e exibi-lo junto ao código no recibo oficial.
+- [ ] Garantir que leitura do QR forneça o código completo para consulta e que a consulta continue validando recibo emitido/compra confirmada.
+- [ ] Testar QR/código em recibos confirmados e ausência de ambos em compras pendentes; validar acessibilidade/tamanho em impressão e celular.
+- [ ] Concluir primeiro o fluxo transacional de confirmação e emissão do recibo; o QR depende desse ponto de emissão.
