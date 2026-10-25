@@ -126,3 +126,15 @@ O usuário executou manualmente no Codespaces, na branch `feature/dual-plate-dra
 - A migração deliberadamente não exige os dois resultados em toda rodada concluída: não há política aprovada para preencher ou classificar rodadas históricas que tenham apenas um resultado.
 - A soma entre as seis alocações de uma linha e o total da participação continua precisando de validação transacional no serviço; um `CHECK` SQL de linha não pode garantir sozinho igualdade entre tabelas. Não foi inventado um total de linha adicional nesta etapa.
 - A mudança está apenas na branch `feature/dual-plate-draw`; aguardar CI para confirmar a migração em PostgreSQL descartável. Nenhuma migração foi aplicada a produção.
+
+
+### Revisão da consistência dos totais de compra — 2026-10-25
+
+- Revisados `src/domain/allocate-plate-stake.ts`, `src/domain/purchase-rules.ts`, `src/modules/purchases/create-purchase.ts` e seus testes na branch `feature/dual-plate-draw`.
+- A alocação automática preserva exatamente o valor informado em centavos: divide por seis e destina todo o resto à Unidade. Para R$ 1,00, o resultado é Unidade R$ 0,20 e cinco categorias de R$ 0,16.
+- O serviço de compra valida o valor de cada placa antes da transação, recalcula a divisão no servidor (não confia em alocações enviadas pelo cliente), valida que cada placa totaliza pelo menos R$ 1,00 e soma os valores das linhas para obter o total da participação e da compra.
+- Os totais da participação são derivados das linhas calculadas pelo servidor; o total da compra é derivado de todas as linhas e usado também no pagamento pendente. A criação de compra, participações, linhas e pagamento ocorre na mesma transação serializável.
+- A soma das seis categorias por linha não é um total separado persistido; portanto, sua garantia vem da função central de rateio e da validação do serviço, não de uma constraint SQL entre tabelas. A auditoria não identificou necessidade imediata de duplicar o total da linha no schema.
+- Testes existentes cobrem o rateio de R$ 1,00, preservação de centavos, rejeição de valores inválidos, mínimo por placa, validação dos totais do domínio e persistência da divisão no serviço. Ainda é recomendável ampliar testes de integração com várias placas em uma participação e múltiplas participações, verificando total da compra, total por rodada e valor do pagamento em conjunto.
+- CI da migração de integridade: execução #338 concluída com sucesso; CI do commit de documentação #339 também concluída com sucesso. Nenhuma alteração foi aplicada a produção e não houve deploy.
+- Próxima etapa: ampliar os testes de compra com múltiplas linhas/rodadas e depois revisar autorização e propriedade dos registros nos endpoints antes de começar os fluxos funcionais.
