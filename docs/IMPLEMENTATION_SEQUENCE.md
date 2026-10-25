@@ -254,3 +254,17 @@ A alteração permanece pendente de implementação e validação. Não houve me
 **Compra de impressora:** priorizar ESC/POS documentado e uma conexão que funcione no equipamento que será usado (para maior flexibilidade, USB/rede ou compatibilidade com fila do sistema pode ser preferível a Bluetooth genérico isolado). Confirmar suporte de sistema operacional e testar o modelo antes de recomendar compra.
 
 **Estado:** decisão de arquitetura documentada; adaptadores e integração física ainda não implementados. Não houve merge, deploy ou ativação de pagamento.
+
+
+### Prioridade de experiência: imprimir diretamente no dispositivo do cambista — 2026-10-25
+
+1. Após compra confirmada e recibo oficial emitido, exibir o recibo na tela do cambista com botão **Imprimir**.
+2. Caminho principal: enviar à impressora já conectada usando o adaptador/mecanismo compatível com aquele dispositivo, sem diálogo do sistema como etapa normal.
+3. Armazenar preferências e impressora no escopo do cambista/dispositivo; nunca alterar a configuração global ou a de outros cambistas.
+4. Se a impressão direta falhar ou não estiver disponível, oferecer reimpressão do mesmo recibo e fallback HTML/PDF/diálogo de impressão ou compartilhamento.
+5. Não gerar novo código, nova compra ou novo efeito financeiro em reimpressões. Falha de impressão não desfaz pagamento confirmado.
+6. Implementar estados de impressão e distinguir “enviado” de “impresso” quando o dispositivo não der confirmação real.
+7. Escolher a integração por plataforma depois de confirmar o ambiente-alvo. Em iPhone/Safari, não assumir Bluetooth direto pelo navegador; avaliar app auxiliar/ponte nativa ou outro mecanismo compatível.
+8. Implementar testes para configurações isoladas por cambista, falha/repetição de impressão, fallback, QR legível e preservação do mesmo código de recibo.
+
+**Estado:** requisito de experiência documentado; integração direta e fallbacks ainda não implementados nem testados fisicamente.
