@@ -332,3 +332,19 @@ A implementação desta arquitetura ainda está pendente; o componente térmico 
 - O sucesso/falha da impressão é independente do estado financeiro: reimprimir utiliza o mesmo recibo e código, sem duplicar compra ou efeitos financeiros.
 - O navegador/PDF/compartilhamento é fallback, não o caminho normal desejado para o cambista.
 - A base web atual não deve ser presumida capaz de imprimir diretamente por Bluetooth em todos os celulares. Avaliar e implementar uma camada móvel nativa/bridge apropriada antes de prometer impressão direta universal.
+
+
+### Compatibilidade evolutiva e estratégia de atualização do JogaPlacas — 2026-10-25
+
+**Objetivo:** manter o site utilizável em celulares Android/iOS antigos e novos, tanto quanto tecnicamente possível, e criar um caminho sustentável para corrigir incompatibilidades e atualizar dependências ao longo do tempo.
+
+- O sistema deve usar melhoria progressiva e detecção de recursos em tempo de execução, em vez de depender apenas da versão declarada do sistema operacional. Se uma API de impressão não existir, deve oferecer uma alternativa funcional.
+- Definir uma matriz de suporte com versões mínimas testadas de Android/iOS e navegadores, revisada periodicamente. Não prometer suporte infinito a todo aparelho antigo: o sistema operacional, o navegador e as políticas de segurança do fabricante impõem limites.
+- Separar o núcleo web (regras de negócio, APIs, telas e recibo canônico) das integrações específicas de plataforma (Bluetooth, impressão e APIs nativas). Assim, uma mudança em iOS/Android pode exigir atualizar um adaptador, sem reescrever o sistema inteiro.
+- Manter um canal formal de atualização: dependências e runtime atualizados em ciclos planejados; verificações automáticas de segurança e compatibilidade; CI para lint, tipos, testes, build e migrações de banco em ambiente de teste; ambientes de staging antes de produção; releases versionados, changelog, rollback e monitoramento pós-release.
+- Usar dependências com versões controladas e atualizações de segurança prioritárias. Mudanças maiores devem ser testadas antes de atualizar frameworks, runtime, bibliotecas Bluetooth/impressão ou schema.
+- Para eventual app/bridge nativa de impressão, planejar distribuição e atualizações pelas lojas/plataformas apropriadas, respeitando suporte do fabricante. Um site não consegue atualizar silenciosamente o sistema operacional nem substituir código nativo instalado quando as lojas exigirem nova versão.
+- Não fazer atualizações automáticas sem teste que possam quebrar pagamentos, recibos ou dados. Atualizações do site devem ser implantadas com CI e staging, migrações compatíveis e plano de rollback; mudanças críticas exigem revisão e autorização.
+- Registrar a versão da aplicação, a versão do adaptador de impressão e capacidades detectadas para ajudar suporte a diagnosticar incompatibilidades, sem coletar dados pessoais desnecessários.
+
+**Limite técnico:** não existe implementação capaz de garantir que todos os celulares e todas as impressoras Bluetooth, atuais e futuras, funcionem sem adaptação. A arquitetura deve reduzir o custo de adaptação e oferecer fallback; compatibilidade concreta precisa ser testada.
