@@ -68,10 +68,10 @@ function roundCode(date: Date): string {
 }
 
 /**
- * Protected scheduler endpoint. Configure the hosting platform to call it every minute
+ * Protected scheduler endpoint. Configure the hosting platform to POST to it every minute
  * with Authorization: Bearer <ROUND_SCHEDULER_SECRET>. It only manages scheduled rounds.
  */
-export async function GET(request: NextRequest) {
+export async function POST(request: NextRequest) {
   const secret = process.env.ROUND_SCHEDULER_SECRET;
   if (!secret || !safeSecretMatch(request.headers.get("authorization"), secret)) {
     return NextResponse.json({ error: "Não autorizado." }, { status: 401, headers: { "Cache-Control": "no-store" } });
