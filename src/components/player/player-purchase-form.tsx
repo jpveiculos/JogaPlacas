@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 type AvailableRound = {
   id: string;
@@ -51,7 +51,7 @@ export function PlayerPurchaseForm() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
-  const [purchase, setPurchase] = useState<CreatedPurchase | null>(null);
+  const [purchase, setPurchase] = useState<CreatedPurchase | null>(null);\n  const idempotencyKey = useRef<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -102,14 +102,14 @@ export function PlayerPurchaseForm() {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
-          idempotencyKey: crypto.randomUUID(),
+          idempotencyKey: idempotencyKey.current ?? (idempotencyKey.current = crypto.randomUUID()),
           roundIds: selectedRounds,
           lines: [{ plateDisplay: plate.trim().toUpperCase(), stakeCents }],
         }),
       });
       const body = await response.json();
       if (!response.ok) throw new Error(body.error ?? "Não foi possível registrar a compra.");
-      setPurchase(body.purchase as CreatedPurchase);
+      setPurchase(body.purchase as CreatedPurchase);\n      idempotencyKey.current = null;
       setNotice(body.message ?? "Compra registrada.");
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Erro ao registrar a compra.");
