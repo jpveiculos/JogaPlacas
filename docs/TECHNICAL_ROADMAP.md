@@ -281,3 +281,11 @@ O usuário executou manualmente no Codespaces, na branch `feature/dual-plate-dra
 - A validação de domínio considera a primeira participação como a que precisa estar aberta no instante da compra; as participações seguintes podem estar agendadas, desde que estejam dentro do cutoff de cada rodada.
 - O serviço de compra valida os horários oficiais carregados do banco: cada rodada selecionada precisa ter resultado exatamente 30 minutos depois da anterior, preservando a ordem enviada e impedindo saltos. A sequência é recusada se houver lacuna.
 - Esta implementação permanece na branch `feature/dual-plate-draw`; nenhuma hospedagem, produção, cobrança real ou banco produtivo foi alterado. A conclusão depende da CI e de testes de integração adicionais.
+
+
+### Ajuste de interface e correção da CI — repetição sequencial — 2026-10-25
+
+- A primeira CI que executou a nova validação detectou uma fixture de teste financeiro antiga sem os horários `resultAt` e com a segunda rodada marcada como `OPEN`. A falha foi de fixture incompatível com o novo contrato, não do teste que rejeita sorteios pulados. A fixture foi corrigida para modelar a rodada aberta e a seguinte agendada, com resultados separados por 30 minutos.
+- A interface do jogador foi ajustada para orientar a seleção sequencial: a primeira rodada só pode ser a que está aberta; só a próxima rodada consecutiva pode ser adicionada; remover uma rodada também remove as posteriores; rodadas não consecutivas ficam desabilitadas. O servidor continua sendo a autoridade final e rejeita qualquer sequência inválida.
+- O teste automatizado de compra que tenta pular uma rodada passou na execução #412; porém a execução geral falhou por causa da fixture financeira, e não deve ser considerada aprovada. A nova execução após a correção precisa terminar com sucesso antes de validar a mudança.
+- Sem deploy, sem merge para `main`, sem banco de produção e sem cobrança real.
