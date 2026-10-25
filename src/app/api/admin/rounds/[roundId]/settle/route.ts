@@ -37,21 +37,7 @@ export async function POST(
   if (!parsedId.success) return response({ error: "Identificador de rodada inválido." }, 400);
 
   try {
-    const result = await settleRoundPrizes(authPrisma, parsedId.data);
-    await authPrisma.auditEvent.create({
-      data: {
-        actorId: user.id,
-        action: "ROUND_PRIZES_SETTLED",
-        entityType: "Round",
-        entityId: parsedId.data,
-        metadata: {
-          eligibleLines: result.eligibleLines,
-          creditedLines: result.creditedLines,
-          pendingManualPayouts: result.pendingManualPayouts,
-          totalPrizeCents: result.totalPrizeCents,
-        },
-      },
-    });
+    const result = await settleRoundPrizes(authPrisma, parsedId.data, user.id);
     return response({ settled: true, result }, 200);
   } catch (error) {
     if (error instanceof RoundSettlementError) {
