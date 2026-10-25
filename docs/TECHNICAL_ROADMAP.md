@@ -102,3 +102,12 @@ O usuário executou manualmente no Codespaces, na branch `feature/dual-plate-dra
 - A verificação da execução GitHub Actions `40147783753` (commit `2bf9d5099fcba793108ef44c0290ce07aa282a8d`) confirma `success` em `verify`, `migration-test` e `postgres-concurrency-test`. A instalação reproduzível com `npm ci`, build, teste histórico de migração e testes PostgreSQL passaram no CI desse commit.
 - A diferença `next@16.4.3` / `eslint-config-next@16.4.2` permanece sem alteração; ainda requer alinhamento com lockfile regenerado e CI completa. Nenhum merge para `main`, migração produtiva, deploy ou pagamento real foi realizado.
 
+### Auditoria de CI e dependências — 2026-10-25 (atualização)
+
+- A execução GitHub Actions #334, no commit `ca0bd28c8e92a459379e8225956241a340fd1762`, terminou com sucesso: `verify`, `migration-test` e `postgres-concurrency-test` aprovados. No job `verify`, lint, typecheck, testes unitários e build passaram.
+- Correção do lint em `src/components/results/public-results-board.tsx`: a carga inicial foi agendada e os temporizadores são limpos no desmontar do componente.
+- Correção de resolução de imports nos testes: `vitest.config.ts` agora define o alias `@` para `src`, mantendo o alias de `server-only`. Isso resolveu a falha de testes causada pelo alias ausente.
+- Revisão das dependências na branch `feature/dual-plate-draw`: `package.json` e `package-lock.json` declaram `next@16.4.3` e `eslint-config-next@16.4.3`. A divergência de patch mencionada em notas anteriores não está presente nesta branch neste momento; não é necessário alterar versões agora. Confirmar a branch/commit antes de repetir essa verificação.
+- Este CI não executa nem autoriza deploy. Nenhuma implantação ou alteração de banco de produção foi realizada.
+- Próxima etapa: revisar regras de negócio e restrições de integridade do banco; conferir a especificação funcional antes de implementar novos fluxos. A interface principal ainda é descrita neste documento como placeholder e os fluxos de compra/pagamento continuam sem integração real com provedor Pix.
+
