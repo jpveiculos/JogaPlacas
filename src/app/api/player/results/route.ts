@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
     });
     return NextResponse.json({ results: rounds.map((round) => ({
       id: round.id, code: round.code, resultAt: round.resultAt.toISOString(),
-      legacyPlate: round.resultLegacyPlate, mercosurPlate: round.resultMercosurPlate,
+      legacyPlate: round.resultLegacyPlate!, mercosurPlate: round.resultMercosurPlate!,
     })) }, { headers: { "Cache-Control": "no-store, private" } });
   } catch {
     return NextResponse.json({ error: "Não foi possível carregar os resultados agora." }, { status: 500, headers: { "Cache-Control": "no-store" } });
