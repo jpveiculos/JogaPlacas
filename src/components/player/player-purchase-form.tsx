@@ -7,7 +7,7 @@ type AvailableRound = {
   id: string; code: string; startsAt: string; cutoffAt: string; resultAt: string; status: "SCHEDULED" | "OPEN";
 };
 type CreatedPurchase = {
-  id: string; receiptCode: string; status: string; totalCents: number; currency: string;
+  id: string; receiptCode: string | null; status: string; totalCents: number; currency: string;
   participations: Array<{ roundId: string; totalCents: number; lines: Array<{ plateDisplay: string; totalCents: number; allocationCents: Record<string, number> }> }>;
 };
 type PlateFormat = "LEGACY" | "MERCOSUR";
@@ -144,7 +144,7 @@ export function PlayerPurchaseForm() {
       {notice && <p role="status" className="note-inline">{notice}</p>}
       {purchase && (
         <div className="purchase-confirmation">
-          <h3>Recibo {purchase.receiptCode}</h3><p>Status: pendente de pagamento</p><p>Total: <strong>{formatMoney(purchase.totalCents)}</strong></p>
+          <h3>Compra registrada</h3><p>Status: aguardando confirmação do pagamento</p><p>Total: <strong>{formatMoney(purchase.totalCents)}</strong></p>
           {purchase.participations.flatMap((participation) => participation.lines.map((line, index) => (
             <div key={participation.roundId + line.plateDisplay + index} className="receipt-plate-line">
               <PlateVisual format={/^[A-Z]{3}-?\d{4}$/.test(line.plateDisplay) ? "LEGACY" : "MERCOSUR"} value={line.plateDisplay} />
@@ -152,7 +152,7 @@ export function PlayerPurchaseForm() {
               <small>Unidade: {formatMoney(line.allocationCents.unit)} · Dezena: {formatMoney(line.allocationCents.tens)} · Centena: {formatMoney(line.allocationCents.hundreds)} · Milhar: {formatMoney(line.allocationCents.thousands)} · Letras: {formatMoney(line.allocationCents.letters)} · Placa completa: {formatMoney(line.allocationCents.fullPlate)}</small>
             </div>
           )))}
-          <p>Este recibo comprova apenas o registro pendente. Não há QR Code nem cobrança Pix nesta etapa.</p>
+          <p>O recibo será gerado somente depois que o pagamento for confirmado. Esta compra ainda não está finalizada; não há QR Code nem cobrança Pix nesta etapa.</p>
         </div>
       )}
     </section>
