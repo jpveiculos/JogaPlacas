@@ -37,7 +37,7 @@ const validBody = () => ({
   lines: [{ plateDisplay: "ABC-1234", stakeCents: 100 }],
 });
 const purchase = () => ({
-  id: "purchase-1", receiptCode: "JP-123", status: "PENDING_PAYMENT",
+  id: "purchase-1", receiptCode: null, status: "PENDING_PAYMENT",
   payment: { status: "PENDING" }, totalCents: 100, currency: "BRL",
   participations: [{
     roundId: "round-1", totalCents: 100,
@@ -113,16 +113,19 @@ describe("POST /api/player/purchases", () => {
     expect(body.purchase.participations[0].lines[0].allocationCents).toEqual({
       unit: 20, tens: 16, hundreds: 16, thousands: 16, letters: 16, fullPlate: 16,
     });
+    expect(body.purchase.receiptCode).toBeNull();
+    expect(body.message).toContain("Nenhum recibo foi emitido");
     expect(body.paymentActionRequired).toBe(true);
     expect(body.message).toContain("Nenhuma cobrança Pix foi criada");
   });
 
-  it("uses a stable receipt code when the same idempotency key is retried", async () => {
+  it("does not issue a receipt code while the purchase is pending", async () => {
     await POST(request(validBody()));
     await POST(request(validBody()));
     const first = mocks.createPendingPixPurchase.mock.calls[0]![1];
     const second = mocks.createPendingPixPurchase.mock.calls[1]![1];
-    expect(second.receiptCode).toBe(first.receiptCode);
+    expect(first.receiptCode).toBeUndefined();
+    expect(second.receiptCode).toBeUndefined();
     expect(second.idempotencyKey).toBe(first.idempotencyKey);
   });
   it("does not expose internal errors for unexpected failures", async () => {
