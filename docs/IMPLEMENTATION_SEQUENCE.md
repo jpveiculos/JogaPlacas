@@ -45,3 +45,7 @@ Nova pendência identificada: o job de migrações parte de um banco PostgreSQL 
 Implementado: script `scripts/test-dual-plate-migration.mjs`, comando `npm run test:migration-backfill` e etapa `Test dual-plate migration against historical data` no job de migrações da CI. O cenário válido testa o backfill de placas LEGACY e MERCOSUR e a preservação de `resultMercosurPlate`; o cenário inválido exige falha da migração para placa não classificável.
 
 **Status do teste:** pendente de confirmação no GitHub Actions para o commit que introduziu a etapa. Não afirmar que passou até o job concluir com sucesso. Não executar o script contra banco real ou compartilhado: ele cria e remove bancos PostgreSQL temporários.
+
+
+### Correção de fixture — 2026-10-25
+A primeira execução do teste histórico falhou antes da migração por incluir `Purchase.updatedAt` no INSERT, embora essa coluna não exista na migração inicial. O INSERT foi corrigido no commit `576ec2afb43a5a6fcb9deeb38027a0fdf53efef8`. Aguardando nova execução da CI para validar os dois cenários de backfill.
