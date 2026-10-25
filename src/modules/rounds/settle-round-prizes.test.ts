@@ -42,7 +42,7 @@ describe("calculateLinePrizeCents", () => {
       },
       ruleVersion: "approved-v2",
     });
-    expect(calculateLinePrizeCents(line, "XYZ-9876", "ABC1K99")).toBe(120);
+    expect(calculateLinePrizeCents(line, "XYZ-9874", "ABC1K99")).toBe(120);
   });
 
   it("uses the multiplier snapshot stored with the bet, not the current default", () => {
