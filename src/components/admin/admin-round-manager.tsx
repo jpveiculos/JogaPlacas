@@ -9,7 +9,12 @@ type Round = {
   resultLegacyPlate: string | null; resultMercosurPlate: string | null; participationCount: number;
 };
 type Dashboard = { rounds: Round[]; summary: { pendingPayments: number; confirmedPurchases: number } };
-const formatDate = (value: string) => new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short", timeZone: "America/Sao_Paulo" }).format(new Date(value));
+const formatDate = (value: string) => {
+  const date = new Date(value);
+  const dateLabel = new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeZone: "America/Sao_Paulo" }).format(date);
+  const timeLabel = new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit", hourCycle: "h23", timeZone: "America/Sao_Paulo" }).format(date);
+  return `${dateLabel} ${timeLabel}`;
+};
 const statusLabels: Record<Round["status"], string> = {
   SCHEDULED: "Programada", OPEN: "Aberta", CLOSED: "Fechada", COMPLETED: "Sorteada", CANCELLED: "Cancelada",
 };
