@@ -1,58 +1,89 @@
 # Auditoria da fundação — estado verificado
 
-> Atualizado em 2026-10-24; o plano de autenticação foi documentado no commit `25fe292b7f6cec6b95633409cfa6340629d9b38e`. Este documento registra achados observáveis na branch `planning/foundation`; não certifica prontidão para produção. Revalidar cada item após mudanças de código.
+> **Atualizado em 2026-10-24.** Esta auditoria descreve a branch feature/dual-plate-draw no commit d337082b2d0fa6b24db64a6839d20e24c894fb9e. As afirmações antigas sobre a ausência de autenticação, rotas de API e lockfile pertenciam a uma inspeção anterior de planning/foundation e não descrevem esta branch. Fonte funcional: docs/PRODUCT_SPEC.md; roteiro operacional: docs/TECHNICAL_ROADMAP.md.
 
 ## Escopo e limites
 
-A inspeção cobre a árvore versionada, os módulos atuais, o schema Prisma, a configuração de dependências e o workflow `.github/workflows/verify.yml`. Não houve conexão com banco de produção, leitura de segredos, execução de cobranças, implantação ou alteração de `main`.
+Inspecionados a árvore Git, arquivos relevantes, schema Prisma, migrações, package.json, documentação, PR #1 e estado da CI. Não foi executada instalação limpa ou suíte local nesta conversa; não houve acesso a banco de produção, segredos, DNS, serviço hospedado, cobranças ou webhooks reais. Nenhuma implantação ou alteração em main foi realizada.
 
-## Estado confirmado
+## Identidade e estado da branch
 
-- A aplicação Next.js ainda contém somente a página inicial, o layout e o CSS global em `src/app`; não há rotas de API em `src/app/api` nem implementação de autenticação/sessões/controle de acesso encontrada na árvore atual.
-- Há lógica isolada e testes unitários para normalização de placas, regras de compra, janela de rodada, valores e criação transacional de compra Pix pendente.
-- `createPendingPixPurchase` persiste compra e pagamento pendente; não chama o provedor e não confirma pagamento.
-- O schema contém modelos para usuários, rodadas, compras, pagamentos, eventos de webhook, livro-razão, comissões, saques, configurações e auditoria. A existência de modelos não comprova que os fluxos correspondentes estejam implementados.
-- O workflow valida/genera Prisma, executa lint, typecheck, testes e build; um job separado aplica as migrações em PostgreSQL 16 descartável.
-- A CI do commit `8ec470dd8c5e0a76be4083d6854dabaac84d3932` terminou com sucesso nos três jobs: `verify`, `migration-test` e `postgres-concurrency-test`. Execução: https://github.com/jpveiculos/JogaPlacas/actions/runs/40114297532
-- Os testes de integração PostgreSQL cobrem idempotência concorrente, conflito de conteúdo, rollback, retry simulado e limites do cutoff.
-- Existe agora o serviço `src/modules/rounds/close-round.ts`, com bloqueio de linha, validação de estado/cutoff e transação Serializable. Compra e fechamento usam o mesmo protocolo de bloqueio; ambos repetem conflitos de serialização reconhecidos de forma limitada.
-- O teste de corrida compra/fechamento passou na CI. Ele usa horários determinísticos injetados e valida os resultados permitidos e a ausência de registros parciais quando a compra perde a disputa.
-- O teste temporal comprova, por `pg_stat_activity`, que a compra está efetivamente esperando por um bloqueio; depois o cutoff real passa, o lock é liberado e o teste verifica rejeição sem registros parciais. A CI do commit `8ec470dd8c5e0a76be4083d6854dabaac84d3932` terminou com sucesso nos três jobs.
-- **Limite de integração com a aplicação:** o serviço de fechamento ainda não está exposto por rota autenticada/autorizada. A existência do serviço não significa que um administrador já possa fechar rodadas pela aplicação.
-- Foi adicionado `docs/AUTHENTICATION_DESIGN.md` com os requisitos de segurança e critérios de aceite para autenticação, sessões revogáveis, provisionamento administrativo e rota de fechamento. É um plano documentado, não uma implementação de autenticação.
-- `package.json` fixa `next@16.4.3` e `eslint-config-next@16.4.2`. É uma divergência de patch a verificar; não foi alterada sem resolver a versão e atualizar o lockfile de forma reproduzível.
-- `.env.example` usa valores ilustrativos e deixa as configurações do provedor Pix comentadas. `.gitignore` ignora arquivos `.env*` e mantém a exceção para `.env.example`.
+- Repositório: jpveiculos/JogaPlacas.
+- Branch inspecionada: feature/dual-plate-draw.
+- HEAD: d337082b2d0fa6b24db64a6839d20e24c894fb9e (commit “Handle undefined safely in canonical JSON serializer”).
+- planning/foundation HEAD consultado: a6cd47bb62c3c1cd4887ad52493f4a0756987ceb.
+- Comparação: a branch de feature está 61 commits à frente e 1 atrás de planning/foundation; status diverged. Não fazer merge automático.
+- PR #1 está aberto em rascunho, da branch feature/dual-plate-draw para planning/foundation; não está mergeado e não está liberado para produção.
+- A execução GitHub Actions consultada para o HEAD terminou com conclusão success. A CI cobre apenas os jobs configurados e não comprova fluxos ponta a ponta nem prontidão de produção.
+
+## Estado confirmado no código
+
+### Fundação e qualidade
+- Next.js App Router, React e TypeScript; scripts de dev/build/lint/typecheck/teste e Prisma declarados em package.json.
+- package-lock.json está presente; o workflow usa instalação reproduzível com npm ci.
+- Workflow .github/workflows/verify.yml inclui validação/geração Prisma, lint, typecheck, testes, build e teste de migrações/concorrência.
+- Schema Prisma e migrações versionadas: inicial (20261023000000_init), sessões (20261024000000_add_sessions), limite de tentativas de login (20261024010000_login_rate_limit) e sorteio de duas placas (20261024020000_dual_plate_draw). A CI testa migrações em PostgreSQL descartável; isso não comprova aplicação em produção.
+- Dependências declaradas incluem Next.js 16.4.3 e eslint-config-next 16.4.2; a diferença de patch precisa ser revisada e resolvida com lockfile/testes, sem atualização cega.
+
+### Autenticação e rotas
+- Existem rotas API de login, logout, consulta da sessão atual e alteração de senha, com testes de rota.
+- Existem componentes/serviços para senha, sessão, papel de usuário, limite de tentativas e provisionamento de administrador.
+- As páginas /player, /cashier e /admin chamam requireRole no servidor. Elas ainda exibem placeholders e informam que os fluxos completos estão por implementar.
+- Rotas administrativas autenticadas para fechamento de rodada, geração de resultados e apuração de prêmios estão presentes, com testes de autorização/rota.
+
+### Domínio e transações
+- Normalização e validação de placas antiga e Mercosul, com formato persistido separadamente; a quinta posição Mercosul é preservada como letra A-Z.
+- Gerador de placa e testes correspondentes.
+- Regras de compra, cálculo em centavos inteiros e snapshots de multiplicadores.
+- Serviço de compra pendente que cria compra, pagamento pendente e participações/linhas em transação, com chave idempotente e lógica de retry limitada para conflitos reconhecidos.
+- Serviço de fechamento de rodada com transação e controle concorrente.
+- Serviço de geração dos dois resultados independentes, com bloqueio da linha da rodada e tratamento de inconsistência/duplicidade.
+- Serviço de apuração dos prêmios com seleção do resultado por formato, leitura de snapshots históricos e chaves idempotentes para lançamentos de prêmio.
+- Testes unitários e suítes de integração PostgreSQL para compra concorrente, limite de login e apuração de prêmios estão versionados. A execução recente de CI foi bem-sucedida; para afirmações de cobertura específica, consultar docs/POSTGRES_CONCURRENCY_TEST_PLAN.md e o workflow do mesmo commit.
+
+## Gaps funcionais importantes
+
+- **Interfaces:** as três áreas autenticadas são placeholders, não fluxos de produto completos.
+- **Compras:** existe serviço de persistência de compra pendente, mas não há checkout completo integrado à interface.
+- **Pagamentos:** não há integração ativa com Mercado Pago, criação real de cobrança Pix, webhooks do provedor ou reconciliação de pagamentos reais.
+- **Carteira/financeiro:** a existência de modelos no schema não prova serviços completos para depósitos, débitos, saldo disponível, saques, reservas, estornos e reconciliação do livro-razão.
+- **Cambista:** ainda faltam fluxos completos de cliente, venda, recebimento em dinheiro, recibos, histórico e comissão.
+- **Administração:** ainda faltam telas/fluxos completos para usuários, regras, recorrência de rodadas, relatórios financeiros e auditoria navegável.
+- **Resultados:** os serviços de sorteio/apuração existem, mas a UI ainda não mostra claramente as duas placas; não foi comprovada fonte externa oficial nem operação completa de publicação/correção.
+- **Operação:** não foi auditado deploy, hospedagem, variáveis de ambiente, backups, DNS ou produção.
+- **Regras pendentes:** pagamento Pix depois do cutoff, expiração/estorno, cancelamento de rodada e fonte/processo de resultado precisam de decisões operacionais claras antes da ativação.
 
 ## Pendências priorizadas
 
 ### P0 — antes de qualquer operação real
+1. Resolver as questões de regra e operação que bloqueiam pagamentos/resultados e manter os fluxos afetados desabilitados até decisão explícita.
+2. Completar os serviços financeiros com invariantes transacionais, ledger append-only, reservas de saque, estornos e idempotência; adicionar testes de concorrência e reconciliação.
+3. Implementar checkout/compra na interface e conectar os serviços existentes com autorização, propriedade de registros e recibos.
+4. Rever autenticação e todas as operações sensíveis, incluindo sessões, alteração obrigatória de senha, provisionamento de administrador, ownership e auditoria.
+5. Revisar formalmente a migração de duas placas e snapshots de regras, incluindo dados históricos; não aplicar migração de produção nesta fase.
+6. Revisão de segurança e requisitos legais/regulatórios antes de disponibilização pública.
 
-1. Implementar login, armazenamento seguro de senha, sessão segura e autorização no servidor para jogador, cambista e administrador; provisionamento administrativo exclusivamente por segredo/configuração protegida do servidor, nunca por segredo exposto ao frontend.
-2. Implementar os fluxos de compra e pagamento com estados explícitos, reconciliação idempotente e tratamento de falhas. A integração Mercado Pago continua deliberadamente adiada para a fase final.
-3. Implementar o livro-razão e garantir atomicidade entre operações financeiras, saldo disponível, reservas de saque e auditoria.
-4. Expor o fechamento de rodada somente por uma operação autenticada e autorizada no servidor; preservar o serviço transacional e não permitir que usuários não autorizados fechem rodadas.
-5. Repetir os cenários concorrentes, incluindo o teste temporal com bloqueio real atravessando o cutoff, para avaliar flakiness e estabilidade.
-6. Realizar revisão de segurança e de regras do produto antes de qualquer ativação em produção.
+### P1 — fundação e testes
+1. Reproduzir npm ci, Prisma validate/generate, lint, typecheck, testes e build no mesmo checkout limpo/commit e registrar os resultados.
+2. Resolver ou documentar a diferença de patch Next.js/ESLint após verificar compatibilidade.
+3. Reexecutar os testes de integração PostgreSQL no mesmo commit e verificar estabilidade de concorrência, rollback, idempotência e cutoff.
+4. Conferir schema e SQL de todas as migrações num banco descartável, com foco em compatibilidade e classificação segura de dados históricos.
+5. Adicionar testes ponta a ponta quando os fluxos de interface forem implementados.
 
-### P1 — validação técnica da fundação
+### P2 — interface e operação
+1. Construir as três áreas funcionais segundo docs/PRODUCT_SPEC.md.
+2. Implementar consultas, recibos, notificações e relatórios de cada perfil.
+3. Definir e testar fonte/fluxo de publicação dos resultados e correções auditáveis.
+4. Preparar monitoramento, backup/restauração, recuperação e plano de rollback para ambiente novo, sem alterar a produção atual.
+5. Atualizar documentação em cada mudança e identificar claramente documentos históricos.
 
-1. Repetir e ampliar, quando necessário, os testes de integração PostgreSQL para compras concorrentes com chaves iguais e diferentes, cutoff, fechamento concorrente e rollback. O teste com bloqueio atravessando o cutoff real já está implementado e passou na CI do commit atual.
-2. Adicionar testes de contrato para repetição de rodadas, normalização e unicidade de placas, totais em centavos e limites do banco.
-3. Resolver a divergência de versões Next.js/ESLint e confirmar `npm ci`, lint, typecheck, testes e build.
-4. Definir e testar uma estratégia para tempo/fuso de rodadas usando `America/Sao_Paulo`, incluindo transições de data e limites exatos.
-5. Confirmar restrições e índices do schema contra as regras funcionais e verificar que todas as migrações versionadas são reproduzíveis em banco vazio.
+## Critério de aprovação
 
-### P2 — manutenção e limpeza
+Nenhum recurso é considerado pronto apenas porque existe no schema, arquivo ou rota. Exigir implementação completa, autorização/ownership no servidor, testes pertinentes, execução verificada no commit, documentação consistente e revisão operacional. Nenhuma cobrança, migração produtiva, alteração de domínio/DNS, deploy ou merge em main fica autorizada por esta auditoria.
 
-1. Procurar referências e consumidores antes de remover arquivos, dependências ou documentação antiga.
-2. Reescrever ou arquivar documentos históricos apenas após confirmar que o conteúdo útil foi preservado e que os avisos atuais não são suficientes.
-3. Revisar dependências diretas e transitivas com evidência do lockfile e do uso real; não remover ferramentas de teste, migração ou segurança apenas por não serem importadas pela aplicação.
-4. Atualizar esta auditoria junto com os marcos de implementação, registrando evidência de teste e os itens ainda bloqueados.
+## Próxima ação recomendada
 
-## Critério de conclusão
-
-A fundação não deve ser considerada pronta para produção até que autenticação, autorização e fluxos de aplicação estejam implementados, os testes de integração cubram concorrência e rollback inclusive o cutoff atravessado durante bloqueio, as migrações sejam reproduzíveis e o pipeline esteja verde. Isso não substitui homologação, revisão operacional ou validação jurídica/comercial.
-
-## Ambiente protegido
-
-Este trabalho permanece na branch `planning/foundation`. Não modificar `main`, banco, domínio, DNS ou serviços de produção; não iniciar cobranças nem ativar webhooks. A integração Pix/Mercado Pago permanece para a fase final.
+1. Fazer a revisão limpa do pipeline no HEAD atual e resolver a diferença de patch de dependências se confirmada como problema.
+2. Revisar o schema e as migrações, em especial a migração de duas placas e o snapshot de regras.
+3. Atualizar o restante da documentação que ainda carrega estado histórico como se fosse atual.
+4. Só então selecionar o próximo módulo funcional conforme a ordem do roteiro técnico.
