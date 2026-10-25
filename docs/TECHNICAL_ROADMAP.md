@@ -240,3 +240,11 @@ O usuário executou manualmente no Codespaces, na branch `feature/dual-plate-dra
 - A criação manual agora aceita janelas de 29 ou 30 minutos, compatíveis com a rodada inicial e com as rodadas recorrentes. A criação manual não substitui o agendador.
 - **Não está ativado em produção:** é necessário configurar `ROUND_SCHEDULER_SECRET` no ambiente de hospedagem e criar uma tarefa externa com frequência de um minuto. O repositório não identifica ainda um provedor de hospedagem/agendador de produção confirmado, e nenhuma URL ativa, segredo ou banco produtivo foi alterado. A programação só será efetivamente automática quando essa tarefa for configurada no ambiente correto.
 - Validação de CI pendente para os commits desta implementação. Não considerar sorteios automáticos ativos nem fazer cobranças reais até validar o workflow e configurar o agendador com acesso ao banco correto.
+
+
+### Ajuste de ciclo: abertura efetiva e proteção de compras — 2026-10-25
+- O serviço `src/modules/rounds/open-round.ts` abre uma rodada SCHEDULED quando o relógio do banco alcança `startsAt`, desde que ainda esteja antes de `cutoffAt`. Usa bloqueio da linha, transação serializável e auditoria; rodadas já abertas são tratadas como no-op idempotente.
+- O endpoint interno foi alterado para POST, pois realiza mutações. A autenticação exige `ROUND_SCHEDULER_SECRET` em `Authorization: Bearer ...`, comparado em tempo constante.
+- O agendador agora processa: fechamentos vencidos, aberturas cujo início chegou e sorteios vencidos. Compras também validam `startsAt`, para impedir apostas antes da abertura mesmo que a rodada já esteja criada com status SCHEDULED.
+- Adicionados testes para abertura, rejeição antes do início/depois do fechamento, execução idempotente do scheduler e autorização; testes de compra cobrem o instante de abertura.
+- A CI destes commits está pendente. A execução automática em produção ainda exige escolher/confirmar a hospedagem correta, configurar segredo e agendar chamada a cada minuto. Nenhum deploy ou banco de produção foi alterado.
