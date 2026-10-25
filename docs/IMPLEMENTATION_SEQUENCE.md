@@ -198,3 +198,19 @@ Próxima tarefa técnica:
 7. Testar compra pendente sem recibo, confirmação Pix, confirmação em dinheiro, concorrência, eventos/cliques duplicados e falhas transacionais; então observar a CI completa.
 
 A alteração permanece pendente de implementação e validação. Não houve merge, deploy, migração em produção nem ativação de pagamentos reais.
+
+
+### Primeira correção do recibo pendente — 2026-10-25
+
+- [x] Tornado `Purchase.receiptCode` anulável no schema e adicionada migração versionada para permitir compra pendente sem código; a migração também limpa códigos de compras ainda `PENDING_PAYMENT`.
+- [x] O endpoint de compra do jogador deixou de gerar código a partir da chave de idempotência e não emite recibo ao criar compra pendente.
+- [x] O serviço de criação de compra aceita `receiptCode: null` para checkout pendente.
+- [x] A área do jogador passa a mostrar “Compra registrada” e “Recibo ainda não emitido” em vez de apresentar uma compra pendente como recibo.
+- [x] O histórico do jogador oculta o código enquanto a compra não estiver confirmada; a consulta pública já exige compra `CONFIRMED`.
+- [x] Atualizado o teste da rota para exigir ausência de recibo no estado pendente e o teste do serviço para aceitar entrada sem código.
+- [ ] Executar/observar CI completa após estes commits, incluindo geração do Prisma Client e migração PostgreSQL.
+- [ ] Implementar a operação transacional de confirmação que gera o código único no mesmo fluxo que confirma compra/participações; depois implementar confirmação de dinheiro pelo cambista com ator, horário, autorização e idempotência.
+- [ ] Implementar integração Pix/webhook validado na fase final. Até lá, o checkout continua pendente e não emite recibo.
+- [ ] Rever componentes/consumidores restantes que tipam ou assumem `receiptCode` não nulo, e adicionar testes de confirmação e concorrência antes de considerar a regra concluída.
+
+**Limite importante:** esta etapa remove a emissão prematura; não implementa ainda o mecanismo de emissão após pagamento confirmado. Nenhum webhook real, cobrança, merge, deploy ou migração em produção foi executado.
