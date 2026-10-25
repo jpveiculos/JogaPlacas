@@ -154,3 +154,12 @@ Não houve merge, deploy, migração em produção nem cobrança real.
 - [x] Registradas regras de privacidade e confirmação de prêmio no manual mestre.
 - [ ] Integrar nas telas autenticadas do cambista e do jogador após confirmar os caminhos exatos dessas páginas.
 - [ ] Adicionar testes automatizados e validar a CI no HEAD final.
+
+
+### Ajuste de escopo da consulta — somente recibo — 2026-10-25
+
+- [x] Removida a pesquisa por placa da rota e da interface pública; a consulta agora aceita apenas recibos JP-.
+- [x] Simplificada a orientação da tela para usar o código impresso no recibo.
+- [x] Atualizado o manual para não duplicar consulta na área do jogador: o jogador terá histórico organizado com prêmios confirmados destacados em verde.
+- [ ] Localizar e integrar o componente de recibo na área do cambista, sem criar pesquisa adicional na área do jogador.
+- [ ] Corrigir/expandir os estados da apuração com base no modelo real de liquidação, adicionar testes e validar a CI no HEAD final.
