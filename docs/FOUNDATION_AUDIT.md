@@ -100,8 +100,13 @@ Esta verificação posterior confirmou que o workflow **Verify** para o commit-b
 - O job atual de migração aplica toda a cadeia num PostgreSQL novo e vazio. Isso verifica a criação do schema, mas **não exercita o backfill com linhas históricas** nem demonstra o comportamento quando há entradas antigas inválidas/ambíguas. Antes de aprovar a migração para qualquer banco com dados, criar um ensaio isolado com dados representativos de ambos os formatos e um caso inválido que confirme o bloqueio seguro.
 - A inspeção foi feita nos arquivos versionados pelo conector GitHub. Não foi executado `npm ci`, testes locais ou conexão a banco nesta sessão; não foi tocada produção.
 
-### Próximas ações, em ordem
+### Atualização após implementação do teste de migração histórica
 
-1. Criar um teste de migração de dados históricos em PostgreSQL descartável, cobrindo placas LEGACY, MERCOSUR e registro não classificável; verificar que os registros válidos são preservados e o caso inválido interrompe a migração sem prosseguir silenciosamente.
-2. Resolver a diferença de patch Next.js/ESLint com uma alteração pequena e lockfile regenerado por npm, depois de validar compatibilidade; executar pipeline completo.
-3. Só depois iniciar o próximo módulo funcional, mantendo as regras financeiras pendentes bloqueadas até decisão explícita.
+- Foi criado `scripts/test-dual-plate-migration.mjs`, adicionado `npm run test:migration-backfill` e integrado o comando ao job `migration-test` do workflow. O teste cria bancos descartáveis, verifica o backfill LEGACY/MERCOSUR e exige falha explícita para uma placa não classificável.
+- A alteração está versionada; o CI do commit que contém a nova etapa ainda precisa ser consultado antes de considerar o teste aprovado.
+- Próximas ações: (1) verificar o resultado do workflow; corrigir falhas se houver; (2) resolver a diferença de patch Next.js/ESLint com lockfile regenerado e pipeline completo; (3) só depois iniciar o próximo módulo funcional, mantendo as regras financeiras pendentes bloqueadas até decisão explícita.
+
+
+### Evidência após adicionar o teste de backfill — 2026-10-25
+
+O teste de migração histórica foi adicionado ao repositório e ao workflow, mas não foi executado localmente nesta sessão. Seu resultado deve ser tratado como pendente até que a execução GitHub Actions do commit correspondente termine com sucesso. O script cria bancos temporários no PostgreSQL configurado, portanto deve ser executado apenas em ambiente de teste descartável com permissão de criação/remoção de bancos.
