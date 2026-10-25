@@ -344,3 +344,12 @@ Implementação parcial do recibo — 2026-10-25: o componente térmico agora id
 - O recibo só é retornado quando compra e pagamento estão `CONFIRMED`, ambos têm timestamp de confirmação e existe `receiptCode`. Compra pendente ou inconsistente não recebe payload de recibo.
 - Linhas e rodadas são lidas do banco, ordenadas por horário da rodada, e os valores por placa são reconstruídos a partir das seis alocações em centavos. O endpoint não cria cobranças nem altera estados financeiros.
 - Testes cobrem sessão ausente, proprietário, acesso cruzado, pagamento pendente e ordem/total de linhas. A implementação precisa passar a CI; ainda não está ligada ao componente de impressão nem à confirmação real de pagamento.
+
+
+## Recibo oficial: consulta autenticada na área do jogador (2026-10-25)
+
+- O histórico do jogador oferece a ação de consultar/imprimir recibo somente para compras cujo estado esteja `CONFIRMED`.
+- A interface consulta `GET /api/player/purchases/[purchaseId]/receipt`; o servidor repete a verificação de sessão, titularidade e confirmação de compra e pagamento. Não confiar apenas na condição visual.
+- Os dados retornados pelo servidor alimentam o componente térmico de 58 mm, com linhas agrupadas por código de rodada e um único código de recibo para a compra inteira. A reimpressão não cria compra nem movimentação financeira.
+- QR Code real ainda não está integrado; o componente mantém o espaço reservado. A consulta pública pelo código já existe, mas a navegação QR ponta a ponta depende de URL de destino definida e geração local confiável do QR.
+- A integração de pagamento não está ativa: sem confirmação autêntica do provedor, o recibo oficial permanece indisponível. Testes da CI devem confirmar esta alteração antes de considerar a etapa validada.
