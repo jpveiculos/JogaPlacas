@@ -425,3 +425,8 @@ A implementação desta arquitetura ainda está pendente; o componente térmico 
 ## Recibo oficial na área do jogador
 
 Quando uma compra estiver confirmada pelo sistema e o pagamento estiver confirmado, o histórico do jogador pode carregar os dados do recibo oficial pelo endpoint autenticado da própria compra e apresentar a versão térmica para impressão. O servidor valida novamente a titularidade e a confirmação; ocultar a ação na interface não substitui autorização. A consulta e a reimpressão reutilizam o mesmo código e não geram nova compra nem novo lançamento financeiro. O QR Code real e a integração com provedor de pagamento permanecem pendentes; compras pendentes não geram recibo oficial.
+
+
+## Consulta pública do recibo
+
+A página pública `/consulta` permite digitar o código do recibo e consultar as placas, as rodadas, os resultados publicados e os prêmios que já foram efetivamente creditados. A consulta não exige login, mas somente retorna apostas de compras confirmadas e não expõe dados pessoais da conta. O endpoint do servidor é a fonte de verdade para estados e créditos. O QR Code do comprovante ainda não está conectado à página; essa integração permanece pendente.
