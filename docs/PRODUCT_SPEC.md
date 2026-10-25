@@ -170,3 +170,7 @@ A primeira execução do novo teste falhou antes de alcançar a migração dual-
 
 ### Resultado da CI após corrigir a fixture — 2026-10-25
 A execução completa do workflow no commit `576ec2afb43a5a6fcb9deeb38027a0fdf53efef8` terminou com sucesso: teste de migração histórica, validação/build/lint/typecheck/testes e concorrência PostgreSQL passaram. Execução: https://github.com/jpveiculos/JogaPlacas/actions/runs/40147585024. A diferença entre `next@16.4.3` e `eslint-config-next@16.4.2` segue em revisão; não foi alterada neste commit.
+
+
+### Revisão técnica do banco — pontos a fechar antes de fluxos financeiros
+A revisão de `prisma/schema.prisma` e das quatro migrações encontrou invariantes importantes que hoje dependem principalmente dos serviços TypeScript, sem `CHECK` constraints equivalentes no PostgreSQL: valores monetários e alocações não negativos, mínimo por linha/participação e consistência entre totais de compra/participação/linhas. A tabela `Round` também permite estruturalmente um estado com apenas um resultado preenchido ou status `COMPLETED` sem ambos os resultados; os serviços detectam parte desses casos, mas o banco não os impede por si só. Antes de ativar checkout ou pagamentos reais, avaliar constraints compatíveis com estados históricos, acompanhadas de migração e testes. Nenhuma regra nova foi aprovada por esta observação; regras financeiras e operacionais pendentes continuam bloqueadas.
