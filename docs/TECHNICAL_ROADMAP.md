@@ -301,3 +301,19 @@ O usuário executou manualmente no Codespaces, na branch `feature/dual-plate-dra
 
 ## Padrão visual de horário — 2026-10-25
 Decisão funcional confirmada: todos os horários apresentados na interface, no recibo e em informações de rodadas devem usar o formato de 24 horas `HH:mm`, com dois pontos e sem sufixos `h` ou `hs`. Exemplos: `00:00`, `12:30`, `23:59`. Aplicar o mesmo padrão às mensagens, cartões de rodada, sequência de repetição e recibo térmico. Isso é somente formatação visual: não muda `America/Sao_Paulo`, os valores de data/hora armazenados nem a lógica do agendador. A aplicação visual em todos os componentes ainda precisa ser verificada e coberta por testes.
+
+
+## Decisão e pendências do recibo para repetição — 2026-10-25
+Decisão funcional: uma compra com 1 a 10 rodadas consecutivas gera um único recibo oficial e uma única sequência de impressão térmica. O recibo usa Purchase.receiptCode como código estável da compra e lista cada participação em ordem, com índice da repetição, código da rodada, placa/formato e valor; o total do recibo deve corresponder ao total confirmado da compra. Um único QR Code consulta a compra completa, não cada repetição separadamente. Reimpressão reaproveita o código e não altera estados financeiros; falha física de impressão não cancela pagamento.
+
+Estado atual e limites: src/components/receipts/thermal-receipt.tsx é um componente de apresentação que só renderiza com status CONFIRMED e formato válido do código. Ele recebe os dados e o QR Code da camada chamadora; o QR ainda pode ser apenas um espaço reservado. Não foi concluída a integração ponta a ponta entre confirmação real de pagamento, emissão do código, carregamento das participações, resolução do QR e impressão pelo fluxo do cambista.
+
+Testes pendentes antes de considerar o fluxo pronto:
+- recibo único para compras com 1, 5 e 10 repetições;
+- ordem contínua e índice correto da repetição, sem pular rodadas;
+- total impresso igual à soma das participações/linhas confirmadas;
+- preservação literal dos formatos de placa cinza e Mercosul;
+- recibo não renderizado para pagamento pendente/cancelado/estornado;
+- reimpressão com o mesmo código, sem efeitos financeiros;
+- QR Code levando à consulta da compra completa e somente dados autorizados;
+- integração real com a tela do cambista e com o provedor de pagamento após confirmação assinada e idempotente.
