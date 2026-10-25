@@ -66,3 +66,10 @@ A revisão inicial confirma que PK/FK/uniqueness estão presentes, mas os limite
 - [x] CI completa verde no commit add8084f643844a1d193d2dd9e4474b49839a42b.
 - [ ] Auditar e propor constraints para valores não negativos, soma das alocações, mínimo de R$ 1,00 por placa/rodada e consistência dos dois resultados. Separar o que está definido na especificação do que exige decisão de negócio.
 - [ ] Continuar mantendo a interface como pendência: página inicial e áreas de jogador/cambista/administrador ainda não implementadas como fluxos de produto.
+
+
+### Regra de rateio e multiplicador da unidade — 2026-10-25
+
+Decisão aprovada e registrada em `docs/PRODUCT_SPEC.md`: cada placa deve ter no mínimo 100 centavos; o valor total em centavos é dividido por seis usando `base = floor(totalCents / 6)`; todas as categorias recebem `base`, e todo o resíduo `totalCents % 6` é adicionado somente à unidade. Para R$ 1,00, a unidade recebe R$ 0,20 e as outras cinco categorias recebem R$ 0,16 cada. O multiplicador da unidade foi atualizado para 6x no snapshot de regras; nesse exemplo, o prêmio de unidade é R$ 1,20.
+
+Adicionado o helper puro `src/domain/allocate-plate-stake.ts` e testes `src/domain/allocate-plate-stake.test.ts`, incluindo conservação de centavos para totais de R$ 1,00 a R$ 10,00. **Limite atual:** o helper ainda precisa ser conectado ao fluxo de criação de apostas e à apuração/versão de regras; não considerar o comportamento financeiro ponta a ponta concluído até atualizar esses caminhos e executar a CI do commit resultante. Nenhuma alteração foi feita em `main`, produção ou pagamentos reais.
