@@ -353,3 +353,11 @@ Implementação parcial do recibo — 2026-10-25: o componente térmico agora id
 - Os dados retornados pelo servidor alimentam o componente térmico de 58 mm, com linhas agrupadas por código de rodada e um único código de recibo para a compra inteira. A reimpressão não cria compra nem movimentação financeira.
 - QR Code real ainda não está integrado; o componente mantém o espaço reservado. A consulta pública pelo código já existe, mas a navegação QR ponta a ponta depende de URL de destino definida e geração local confiável do QR.
 - A integração de pagamento não está ativa: sem confirmação autêntica do provedor, o recibo oficial permanece indisponível. Testes da CI devem confirmar esta alteração antes de considerar a etapa validada.
+
+
+## Consulta pública de recibo e resultados (2026-10-25)
+
+- Criada a página `/consulta`, que aceita código de recibo `JP-...` e consulta `GET /api/public/ticket-check` sem exigir sessão.
+- A página só exibe resultados retornados pelo endpoint, que limita a consulta a compras confirmadas e não retorna identificadores do jogador. Prêmio só é apresentado como creditado quando existe registro de crédito.
+- O endpoint permanece a fonte de verdade; a página não calcula premiação nem altera registros financeiros.
+- A integração com QR Code físico/digital ainda não foi ligada. O destino web pode ser `/consulta?...` numa próxima etapa, mas o fluxo precisa codificar o código do recibo com uma biblioteca local confiável e validar o link no impresso. A CI desta mudança ainda precisa terminar antes de considerar a etapa validada.
