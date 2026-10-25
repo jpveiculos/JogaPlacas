@@ -146,3 +146,12 @@ Este retrato descreve a branch feature/dual-plate-draw no commit d337082b2d0fa6b
 
 ### Regra de manutenção
 Toda decisão aprovada, mudança de código, resultado de teste, mudança de infraestrutura ou implantação que altere este retrato deve atualizar esta seção e/ou a documentação operacional pertinente no mesmo conjunto de trabalho. Registrar claramente o que foi executado e a evidência; nunca transformar intenção em status concluído.
+
+
+## 13. Verificação técnica complementar — 2026-10-25
+
+- O GitHub Actions `Verify` do commit `1d37b8fc59e0c10717272b96dec1d9bd206a6819` concluiu com sucesso. Isso não equivale a uma instalação limpa executada nesta sessão nem a uma validação de produção.
+- Foi confirmado que a migração `20261024020000_dual_plate_draw` classifica dados históricos pelo valor exibido em `plateDisplay` e aborta se qualquer linha não puder ser classificada. Esse comportamento é uma proteção intencional e não deve ser removido para fazer uma migração passar.
+- A CI atual testa a cadeia de migrações em um PostgreSQL vazio. Falta ensaio explícito do backfill com registros históricos válidos dos dois formatos e um caso inválido/ambíguo para provar a preservação e o bloqueio seguro.
+- `package.json` e `package-lock.json` mantêm `next@16.4.3` e `eslint-config-next@16.4.2`. A diferença de patch permanece pendente de revisão; nenhuma versão foi alterada nesta etapa.
+- Evidência e limites: revisão dos arquivos versionados na branch `feature/dual-plate-draw`; nenhuma instalação/teste local ou acesso a banco foi executado nesta sessão. Nenhuma alteração de código, migração, implantação ou produção foi realizada.
