@@ -284,3 +284,18 @@ A alteração permanece pendente de implementação e validação. Não houve me
 10. Validar em testes físicos: acentos, tamanho do QR, alinhamento 58/80 mm quando aplicável, desconexão, repetição e recuperação após falha.
 
 **Estado:** alvo Android-primeiro/iOS-compatível documentado; ainda é necessário inspecionar a arquitetura mobile atual e implementar a integração. Nenhuma impressão direta está certificada até testes físicos.
+
+
+### Canal contínuo de atualização e compatibilidade futura — 2026-10-25
+
+1. Inspecionar e documentar runtime, framework, dependências, navegador/PWA e possíveis integrações nativas; manter uma matriz de versões Android/iOS/navegadores e dispositivos de teste.
+2. Manter o núcleo do JogaPlacas independente de APIs específicas de Bluetooth/impressora. Criar interfaces estáveis para adaptadores de impressão e detecção de capacidades.
+3. Usar detecção de recursos e melhoria progressiva; oferecer recibo HTML/PDF/compartilhamento quando impressão direta não for compatível.
+4. Estabelecer rotina de manutenção de dependências: verificar releases e avisos de segurança, atualizar em branch, executar lint, typecheck, testes e build, validar migrações em banco de teste e testar em staging.
+5. Adotar versionamento, changelog, release notes, plano de rollback e monitoramento após deploy. Não atualizar produção sem CI verde, revisão e autorização.
+6. Para componente nativo de impressão, documentar versão e processo de distribuição/atualização. Atualização web não substitui atualização de aplicativo nativo quando a mudança exigir release de loja.
+7. Criar testes de regressão de compra/pagamento/recibo, impressão, QR e fallback antes de alterações de dependências.
+8. Revisar periodicamente a matriz de compatibilidade e ampliar a cobertura com aparelhos Android mais antigos e recentes e iPhones suportados.
+9. Não prometer compatibilidade universal irrestrita; publicar os requisitos mínimos testados e manter fallback para dispositivos sem suporte.
+
+**Estado:** estratégia registrada; ainda não existe pipeline completo de atualizações/compatibilidade verificado nesta tarefa. Não houve deploy, alteração de produção nem ativação de pagamentos.
