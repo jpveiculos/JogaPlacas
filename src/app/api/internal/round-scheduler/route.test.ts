@@ -6,6 +6,8 @@ const mocks = vi.hoisted(() => ({
   findFirst: vi.fn(),
   findMany: vi.fn(),
   transaction: vi.fn(),
+  createRound: vi.fn(),
+  createAuditEvent: vi.fn(),
   closeRound: vi.fn(),
   openRound: vi.fn(),
   drawRoundResults: vi.fn(),
@@ -35,12 +37,40 @@ describe("POST /api/internal/round-scheduler", () => {
     mocks.findUnique.mockResolvedValue({ id: "already-scheduled" });
     mocks.findFirst.mockResolvedValue(null);
     mocks.findMany.mockResolvedValue([]);
+    mocks.createRound.mockResolvedValue({ id: "created-round" });
+    mocks.createAuditEvent.mockResolvedValue({});
+    mocks.transaction.mockImplementation(async (callback: (tx: unknown) => Promise<unknown>) =>
+      callback({ round: { create: mocks.createRound }, auditEvent: { create: mocks.createAuditEvent } }),
+    );
   });
 
   it("rejects missing and invalid scheduler credentials", async () => {
     expect((await POST(request())).status).toBe(401);
     expect((await POST(request("Bearer wrong-secret"))).status).toBe(401);
     expect(mocks.findUnique).not.toHaveBeenCalled();
+  });
+
+  it("creates the imminent round when the scheduler starts during its cutoff minute", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-10-25T15:29:00.000Z")); // 12:29 in São Paulo
+    mocks.findUnique.mockImplementation(({ where }: { where: { code: string } }) =>
+      where.code === "JP-20261025-1230" ? null : { id: "already-scheduled" },
+    );
+
+    const response = await POST(request("Bearer test-secret-long-enough"));
+
+    expect(response.status).toBe(200);
+    expect(mocks.createRound).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        code: "JP-20261025-1230",
+        startsAt: new Date("2026-10-25T15:01:00.000Z"),
+        cutoffAt: new Date("2026-10-25T15:29:00.000Z"),
+        resultAt: new Date("2026-10-25T15:30:00.000Z"),
+        status: "SCHEDULED",
+      }),
+    }));
+    expect(mocks.createAuditEvent).toHaveBeenCalled();
+    vi.useRealTimers();
   });
 
   it("accepts a valid scheduler credential and reports an idempotent run", async () => {
