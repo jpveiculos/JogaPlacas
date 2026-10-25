@@ -409,3 +409,14 @@ A implementação desta arquitetura ainda está pendente; o componente térmico 
 - Exemplos: `00:00`, `12:30`, `23:59`.
 - Não acrescentar `h`, `hs` nem outra abreviação após o horário. Os dois pontos são suficientes.
 - Essa é uma regra de apresentação; não altera o fuso horário oficial (`America/Sao_Paulo`), os instantes armazenados nem as regras de agendamento.
+
+
+## Recibo único para compras com repetição
+- Uma compra gera um único recibo oficial, mesmo quando contém de 1 a 10 rodadas consecutivas. Não emitir um recibo separado para cada repetição.
+- O código oficial do recibo pertence à compra (Purchase.receiptCode). Cada participação continua registrada individualmente e vinculada à sua rodada; o código da rodada (Round.code) identifica cada sorteio.
+- O recibo térmico deve listar as participações em ordem sequencial, indicando o número da repetição, o código da rodada, a placa e seu formato, o valor correspondente e o total pago da compra.
+- A impressão preferida é uma única impressão contínua em papel térmico de 58 mm, com todas as repetições da compra no mesmo comprovante.
+- Um único QR Code deve consultar a compra inteira e apresentar todas as participações confirmadas. Não gerar um QR Code separado por repetição.
+- O recibo oficial só pode ser emitido/exibido após confirmação real do pagamento. Uma compra pendente não é comprovante de pagamento. A geração e resolução do QR Code ainda dependem de integração.
+- Reimprimir deve reutilizar o mesmo código de recibo e os mesmos dados da compra; não criar compra, participação, código ou movimento financeiro novo. Falha na impressora não desfaz o pagamento.
+- A especificação não significa que o fluxo completo de pagamento, confirmação, emissão, consulta por QR e impressão esteja integrado ou validado; esses pontos precisam de testes ponta a ponta antes da operação.
