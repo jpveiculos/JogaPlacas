@@ -163,3 +163,12 @@ Não houve merge, deploy, migração em produção nem cobrança real.
 - [x] Atualizado o manual para não duplicar consulta na área do jogador: o jogador terá histórico organizado com prêmios confirmados destacados em verde.
 - [ ] Localizar e integrar o componente de recibo na área do cambista, sem criar pesquisa adicional na área do jogador.
 - [ ] Corrigir/expandir os estados da apuração com base no modelo real de liquidação, adicionar testes e validar a CI no HEAD final.
+
+
+### Integração da consulta por recibo com o cambista — 2026-10-25
+
+- [x] Consulta pública limitada ao código do recibo, sem busca por placa.
+- [x] Reutilizado o mesmo componente na área do cambista.
+- [x] Diferenciado status de rodada em andamento, prêmio confirmado, não premiada e apuração pendente conforme os campos persistidos.
+- [ ] Implementar histórico individual de apostas do jogador com destaques verdes para prêmios confirmados; não adicionar consulta por recibo nessa área.
+- [ ] Criar testes automatizados da rota de recibo e executar/validar CI.
