@@ -20,6 +20,8 @@ export function AdminRoundManager() {
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [startsAtInput, setStartsAtInput] = useState("");
+  const [resultAtInput, setResultAtInput] = useState("");
 
   const load = useCallback(async () => {
     setError("");
@@ -37,6 +39,40 @@ export function AdminRoundManager() {
     const timer = window.setTimeout(() => { void load(); }, 0);
     return () => window.clearTimeout(timer);
   }, [load]);
+
+  function saoPauloWallTimeToIso(value: string): string | null {
+    const match = /^(\\d{4})-(\\d{2})-(\\d{2})T(\\d{2}):(\\d{2})$/.exec(value);
+    if (!match) return null;
+    const [, y, mo, d, h, mi] = match;
+    const desired = Date.UTC(Number(y), Number(mo) - 1, Number(d), Number(h), Number(mi));
+    let candidate = desired;
+    for (let index = 0; index < 3; index += 1) {
+      const parts = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23" }).formatToParts(new Date(candidate));
+      const fields = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+      const represented = Date.UTC(Number(fields.year), Number(fields.month) - 1, Number(fields.day), Number(fields.hour), Number(fields.minute), Number(fields.second));
+      candidate += desired - represented;
+    }
+    const check = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(new Date(candidate));
+    const fields = Object.fromEntries(check.map((part) => [part.type, part.value]));
+    return Number(fields.year) === Number(y) && Number(fields.month) === Number(mo) && Number(fields.day) === Number(d) && Number(fields.hour) === Number(h) && Number(fields.minute) === Number(mi)
+      ? new Date(candidate).toISOString() : null;
+  }
+
+  async function createRound(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault(); setError(""); setNotice("");
+    const startsAt = saoPauloWallTimeToIso(startsAtInput);
+    const resultAt = saoPauloWallTimeToIso(resultAtInput);
+    if (!startsAt || !resultAt) { setError("Informe horários válidos no fuso de São Paulo."); return; }
+    setBusy("create");
+    try {
+      const response = await fetch("/api/admin/rounds", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ startsAt, resultAt }) });
+      const body = await response.json();
+      if (!response.ok) throw new Error(body.error ?? "Não foi possível criar a rodada.");
+      setNotice("Rodada " + body.round.code + " criada. As apostas fecham um minuto antes do resultado.");
+      setStartsAtInput(""); setResultAtInput(""); await load();
+    } catch (reason) { setError(reason instanceof Error ? reason.message : "Falha ao criar rodada."); }
+    finally { setBusy(null); }
+  }
 
   async function perform(round: Round, action: "close" | "draw" | "settle") {
     const labels = { close: "fechar as apostas desta rodada", draw: "sortear os dois resultados desta rodada", settle: "apurar os prêmios desta rodada" };
@@ -59,6 +95,13 @@ export function AdminRoundManager() {
     <span className="feature-label">Operação</span>
     <h2 id="admin-rounds-heading">Rodadas e resultados</h2>
     <p>As ações são verificadas novamente no servidor. O sorteio só fica disponível após o fechamento e no horário programado; a apuração exige os dois resultados publicados.</p>
+    <form className="admin-round-create" onSubmit={createRound}>
+      <h3>Criar uma rodada</h3>
+      <p>Informe os horários no fuso <strong>America/Sao_Paulo</strong>. O resultado deve ocorrer 30 minutos após o início; o sistema define o fechamento um minuto antes.</p>
+      <label>Início da rodada <input type="datetime-local" value={startsAtInput} onChange={(event) => setStartsAtInput(event.target.value)} required /></label>
+      <label>Horário do resultado <input type="datetime-local" value={resultAtInput} onChange={(event) => setResultAtInput(event.target.value)} required /></label>
+      <button type="submit" disabled={busy !== null}>{busy === "create" ? "Criando…" : "Criar rodada"}</button>
+    </form>
     {data && <div className="round-options">
       <article className="round-option"><strong>{data.summary.pendingPayments}</strong><br />Compras aguardando pagamento</article>
       <article className="round-option"><strong>{data.summary.confirmedPurchases}</strong><br />Compras confirmadas</article>
