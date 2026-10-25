@@ -173,6 +173,20 @@ export function PlayerPurchaseForm() {
               <small>Unidade: {formatMoney(line.allocationCents.unit)} · Dezena: {formatMoney(line.allocationCents.tens)} · Centena: {formatMoney(line.allocationCents.hundreds)} · Milhar: {formatMoney(line.allocationCents.thousands)} · Letras: {formatMoney(line.allocationCents.letters)} · Placa completa: {formatMoney(line.allocationCents.fullPlate)}</small>
             </div>
           )))}
+          {pixCheckout?.qrCodeBase64 && <div className="pix-checkout">
+            <h4>Escaneie o QR Code Pix</h4>
+            <img src={"data:image/png;base64," + pixCheckout.qrCodeBase64} alt="QR Code para pagar a compra via Pix" width={240} height={240} />
+          </div>}
+          {pixCheckout?.copyPaste && <div className="pix-copy-paste">
+            <label htmlFor="pix-copy-paste">Pix copia e cola</label>
+            <textarea id="pix-copy-paste" readOnly value={pixCheckout.copyPaste} rows={4} onFocus={(event) => event.currentTarget.select()} />
+            <button type="button" onClick={() => {
+              if (pixCheckout.copyPaste && navigator.clipboard) {
+                void navigator.clipboard.writeText(pixCheckout.copyPaste).then(() => setNotice("Código Pix copiado."));
+              }
+            }}>Copiar código Pix</button>
+          </div>}
+          {pixCheckout?.ticketUrl && <p><a href={pixCheckout.ticketUrl} target="_blank" rel="noreferrer">Abrir pagamento no Mercado Pago</a></p>}
           <p>O recibo oficial só será gerado após a confirmação autêntica do pagamento.</p>
         </div>
       )}
