@@ -3,6 +3,7 @@ import { timingSafeEqual } from "node:crypto";
 import { Prisma } from "@/generated/prisma/client";
 import { authPrisma } from "@/lib/auth/session";
 import { closeRound } from "@/modules/rounds/close-round";
+import { openRound } from "@/modules/rounds/open-round";
 import { drawRoundResults } from "@/modules/rounds/draw-round-results";
 
 export const runtime = "nodejs";
@@ -121,6 +122,14 @@ export async function GET(request: NextRequest) {
   });
   for (const round of dueToClose) {
     try { await closeRound(authPrisma, round.id); closed += 1; } catch { failures += 1; }
+  }
+
+  const dueToOpen = await authPrisma.round.findMany({
+    where: { status: "SCHEDULED", startsAt: { lte: now }, cutoffAt: { gt: now } },
+    select: { id: true }, orderBy: { startsAt: "asc" }, take: 100,
+  });
+  for (const round of dueToOpen) {
+    try { await openRound(authPrisma, round.id); } catch { failures += 1; }
   }
 
   const dueToDraw = await authPrisma.round.findMany({
