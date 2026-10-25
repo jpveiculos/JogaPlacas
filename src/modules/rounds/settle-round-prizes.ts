@@ -69,13 +69,20 @@ export function calculateLinePrizeCents(line: SettlementLine, legacyResult: stri
     { category: "letters", matches: bet.slice(0, 3) === drawn.slice(0, 3) },
     { category: "fullPlate", matches: bet === drawn },
   ];
-  let total = 0;
+  // Validate every stored allocation, including categories that did not win.
+  // Otherwise malformed negative/non-integer values in a losing category could
+  // survive settlement and corrupt the financial record.
   for (const item of categories) {
-    if (!item.matches) continue;
     const stake = line[ALLOCATION_FIELD[item.category]];
     if (!Number.isSafeInteger(stake) || stake < 0) {
       throw new RoundSettlementError("Invalid stake allocation", "INCONSISTENT_SETTLEMENT");
     }
+  }
+
+  let total = 0;
+  for (const item of categories) {
+    if (!item.matches) continue;
+    const stake = line[ALLOCATION_FIELD[item.category]];
     const amount = stake * multipliers[item.category];
     if (!Number.isSafeInteger(amount) || amount > 2_147_483_647) {
       throw new RoundSettlementError("Prize exceeds the database integer range", "INCONSISTENT_SETTLEMENT");
