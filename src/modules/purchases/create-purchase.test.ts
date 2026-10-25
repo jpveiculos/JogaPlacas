@@ -127,6 +127,61 @@ describe("createPendingPixPurchase input validation", () => {
   });
 });
 
+describe("createPendingPixPurchase automatic allocation", () => {
+  beforeEach(() => {
+    transaction.mockReset();
+  });
+
+  it("persists the approved six-category split for a R$1.00 plate", async () => {
+    const tx = {
+      purchase: {
+        findUnique: vi.fn().mockResolvedValue(null),
+        create: vi.fn().mockImplementation(async ({ data }: { data: unknown }) => data),
+      },
+      $queryRaw: vi.fn()
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([{ decisionTime: new Date("2026-10-23T20:00:00.000Z") }]),
+      round: {
+        findMany: vi.fn().mockResolvedValue([{
+          id: "round-1",
+          status: "OPEN",
+          cutoffAt: new Date("2026-10-23T21:00:00.000Z"),
+        }]),
+      },
+    };
+    transaction.mockImplementation(async (callback: (client: unknown) => unknown) =>
+      callback(tx),
+    );
+
+    await createPendingPixPurchase(
+      { $transaction: transaction } as unknown as PrismaClient,
+      validInput(),
+      new Date("2026-10-23T20:00:00.000Z"),
+    );
+
+    expect(tx.purchase.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        totalCents: 100,
+        participations: {
+          create: [expect.objectContaining({
+            totalCents: 100,
+            lines: {
+              create: [expect.objectContaining({
+                unitCents: 20,
+                tensCents: 16,
+                hundredsCents: 16,
+                thousandsCents: 16,
+                lettersCents: 16,
+                fullPlateCents: 16,
+              })],
+            },
+          })],
+        },
+      }),
+    }));
+  });
+});
+
 describe("createPendingPixPurchase transaction conflict retries", () => {
   beforeEach(() => {
     transaction.mockReset();
