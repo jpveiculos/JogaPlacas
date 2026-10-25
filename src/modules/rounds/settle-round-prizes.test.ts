@@ -68,6 +68,15 @@ describe("calculateLinePrizeCents", () => {
       .toThrowError("Stored bet does not match its declared plate format");
   });
 
+  it("rejects invalid allocations even when their prize category does not win", () => {
+    const line = base({
+      normalizedPlate: "ABC1234",
+      tensCents: -1,
+    });
+    expect(() => calculateLinePrizeCents(line, "XYZ-9874", "XYZ9K99"))
+      .toThrowError("Invalid stake allocation");
+  });
+
   it("rejects prizes outside the database integer range", () => {
     expect(() => calculateLinePrizeCents(base({ fullPlateCents: 2_147_483_647 }), "ABC-1234", "ABC1K23"))
       .toThrowError("Prize exceeds the database integer range");
