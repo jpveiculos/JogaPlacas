@@ -327,3 +327,74 @@ describe("createPendingPixPurchase idempotency replay", () => {
     expect(transaction).toHaveBeenCalledTimes(1);
   });
 });
+
+
+describe("createPendingPixPurchase financial totals", () => {
+  beforeEach(() => {
+    transaction.mockReset();
+  });
+
+  it("keeps line allocations, per-round totals, purchase total, and pending payment aligned", async () => {
+    const input = validInput();
+    input.repetitions = 2;
+    input.participations = [
+      {
+        roundId: "round-1",
+        lines: [
+          { ...input.participations[0]!.lines[0]!, plateDisplay: "ABC-1234", stakeCents: 100 },
+          { ...input.participations[0]!.lines[0]!, plateDisplay: "XYZ-9876", stakeCents: 250 },
+        ],
+      },
+      {
+        roundId: "round-2",
+        lines: [
+          { ...input.participations[0]!.lines[0]!, plateDisplay: "DEF2G45", stakeCents: 175 },
+        ],
+      },
+    ];
+
+    const tx = {
+      purchase: {
+        findUnique: vi.fn().mockResolvedValue(null),
+        create: vi.fn().mockImplementation(async ({ data }: { data: unknown }) => data),
+      },
+      $queryRaw: vi.fn()
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([{ decisionTime: new Date("2026-10-23T20:00:00.000Z") }]),
+      round: {
+        findMany: vi.fn().mockResolvedValue([
+          { id: "round-1", status: "OPEN", cutoffAt: new Date("2026-10-23T21:00:00.000Z") },
+          { id: "round-2", status: "OPEN", cutoffAt: new Date("2026-10-23T21:00:00.000Z") },
+        ]),
+      },
+    };
+    transaction.mockImplementation(async (callback: (client: unknown) => unknown) => callback(tx));
+
+    await createPendingPixPurchase(
+      { $transaction: transaction } as unknown as PrismaClient,
+      input,
+      new Date("2026-10-23T20:00:00.000Z"),
+    );
+
+    const createCall = tx.purchase.create.mock.calls[0]![0] as {
+      data: {
+        totalCents: number;
+        participations: { create: Array<{ totalCents: number; lines: { create: Array<Record<string, number>> } }> };
+        payment: { create: { amountCents: number } };
+      };
+    };
+    const [firstRound, secondRound] = createCall.data.participations.create;
+    expect(firstRound!.totalCents).toBe(350);
+    expect(firstRound!.lines.create.reduce((sum, line) =>
+      sum + line.unitCents + line.tensCents + line.hundredsCents
+        + line.thousandsCents + line.lettersCents + line.fullPlateCents, 0,
+    )).toBe(350);
+    expect(secondRound!.totalCents).toBe(175);
+    expect(secondRound!.lines.create.reduce((sum, line) =>
+      sum + line.unitCents + line.tensCents + line.hundredsCents
+        + line.thousandsCents + line.lettersCents + line.fullPlateCents, 0,
+    )).toBe(175);
+    expect(createCall.data.totalCents).toBe(525);
+    expect(createCall.data.payment.create.amountCents).toBe(525);
+  });
+});
