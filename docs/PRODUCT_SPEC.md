@@ -286,3 +286,20 @@ A regra ainda não está completa ponta a ponta: falta criar a operação transa
 - [ ] Integrar o componente ao fluxo oficial de confirmação/emissão do recibo e gerar o QR localmente a partir apenas do código do recibo.
 - [ ] Validar impressão real na impressora comprada: densidade/tamanho do QR, margens, corte de papel, escala “100%/tamanho real” e largura útil variam conforme modelo/driver. A marca/modelo exato ainda não está registrado, então 48 mm é o padrão inicial, não uma certificação do dispositivo.
 - [ ] Adicionar testes do estado confirmado/pendente e validar a CI completa.
+
+
+### Arquitetura de impressão independente de marca/protocolo — 2026-10-25
+
+**Decisão de arquitetura:** o JogaPlacas não deve acoplar o modelo de recibo, as regras de negócio ou a interface inteira a ESC/POS, a uma marca ou a um tipo de conexão. O recibo deve ser definido como um documento canônico independente de dispositivo; adaptadores convertem esse documento para os recursos e comandos suportados por cada impressora.
+
+- Perfil inicial prioritário: impressoras térmicas de recibo com compatibilidade ESC/POS, pois é uma linguagem amplamente adotada, mas não universal nem idêntica em todos os modelos.
+- A arquitetura deve permitir adaptadores adicionais, quando necessário, para StarPRNT/StarLine, drivers/fila de impressão do sistema operacional, impressão do navegador/PDF e integrações nativas de fabricante.
+- Separar o conteúdo e o layout do recibo do transporte físico: USB, Bluetooth Classic, Bluetooth LE (BLE), rede e fila do sistema são capacidades diferentes; protocolo de impressão não garante compatibilidade com todas as conexões.
+- O caminho mais universal no navegador é oferecer recibo HTML/PDF para impressão pelo sistema operacional, sem exigir comandos ESC/POS. Impressão direta via browser é opcional: Web Bluetooth/WebUSB têm suporte limitado por navegador e dispositivo; não prometer impressão direta universal, especialmente no Safari/iOS.
+- QR Code deve ser gerado localmente no sistema e inserido no documento canônico; para impressão ESC/POS, o adaptador pode enviar imagem rasterizada do QR como alternativa mais compatível à geração nativa de QR na impressora. O QR contém apenas o código do recibo.
+- Definir perfis de capacidade por impressora (largura útil, DPI, colunas, codificação de caracteres/acentos, QR, corte e conexão), permitir seleção/configuração manual e manter um modo genérico com pré-visualização/teste.
+- Não anunciar compatibilidade universal absoluta: registrar compatibilidade testada por modelo, sistema operacional, navegador/app e tipo de conexão. Nenhum modelo deve ser marcado como validado antes de teste real.
+- Para novas compras, priorizar modelos de recibo com ESC/POS documentado, USB ou rede além de Bluetooth quando apropriado, driver/app compatível com os dispositivos usados e suporte explícito a QR/imagem raster. Confirmar o modelo exato antes de comprar.
+- Nenhuma marca, modelo, protocolo ou conexão será requisito para as regras de compra, confirmação de pagamento, emissão do recibo ou consulta do código.
+
+A implementação desta arquitetura ainda está pendente; o componente térmico atual é um primeiro layout de 58 mm, não uma integração universal de impressão.
