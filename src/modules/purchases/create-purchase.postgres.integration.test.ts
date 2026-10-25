@@ -30,14 +30,9 @@ suite("PostgreSQL purchase concurrency", () => {
       roundId,
       lines: [{
         plateDisplay: "ABC-1234",
-        unitCents: 100,
-        tensCents: 0,
-        hundredsCents: 0,
-        thousandsCents: 0,
-        lettersCents: 0,
-        fullPlateCents: 0,
+        stakeCents: 100,
         ruleVersion: "integration-v1",
-        ruleSnapshot: { version: "integration-v1", multipliers: { unit: 2, tens: 20, hundreds: 200, thousands: 2_000, letters: 2_000, fullPlate: 200_000 } },
+        ruleSnapshot: { version: "integration-v1", multipliers: { unit: 6, tens: 20, hundreds: 200, thousands: 2_000, letters: 2_000, fullPlate: 200_000 } },
       }],
     }],
   });
@@ -151,7 +146,7 @@ suite("PostgreSQL purchase concurrency", () => {
       ...request,
       participations: request.participations.map((participation) => ({
         ...participation,
-        lines: participation.lines.map((line) => ({ ...line, unitCents: line.unitCents + 1 })),
+        lines: participation.lines.map((line) => ({ ...line, stakeCents: line.stakeCents + 1 })),
       })),
     })],
     ["rule snapshot", (request: PixPurchaseInput) => ({
@@ -160,7 +155,7 @@ suite("PostgreSQL purchase concurrency", () => {
         ...participation,
         lines: participation.lines.map((line) => ({
           ...line,
-          ruleSnapshot: { version: "integration-v2", multipliers: { unit: 2, tens: 20, hundreds: 200, thousands: 2_000, letters: 2_000, fullPlate: 200_000 } },
+          ruleSnapshot: { version: "integration-v2", multipliers: { unit: 6, tens: 20, hundreds: 200, thousands: 2_000, letters: 2_000, fullPlate: 200_000 } },
         })),
       })),
     })],
