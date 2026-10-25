@@ -52,8 +52,17 @@ A primeira execução do teste histórico falhou antes da migração por incluir
 
 
 ### Confirmação da CI — 2026-10-25
-O workflow completo do commit `576ec2afb43a5a6fcb9deeb38027a0fdf53efef8` passou, incluindo o novo teste de migração histórica: https://github.com/jpveiculos/JogaPlacas/actions/runs/40147585024. Próxima pendência da sequência: alinhar `next` e `eslint-config-next` em `16.4.3`, regenerar `package-lock.json` com npm e executar novamente a CI completa antes de avançar para implementação funcional.
+O workflow completo do commit `576ec2afb43a5a6fcb9deeb38027a0fdf53efef8` passou, incluindo o novo teste de migração histórica: https://github.com/jpveiculos/JogaPlacas/actions/runs/40147585024. Próxima pendência da sequência: continuar a auditoria de invariantes financeiros e do schema/migrações, sem introduzir regras comerciais que ainda não tenham sido aprovadas.
 
 
 ### Achados de banco/regras antes de implementar checkout — 2026-10-25
 A revisão inicial confirma que PK/FK/uniqueness estão presentes, mas os limites de valores, soma entre compra/participações/linhas e presença conjunta dos resultados da rodada não estão protegidos por constraints do banco. Serviços validam parte desses invariantes; avaliar constraints e testes de migração antes de abrir outros caminhos de escrita. A criação de compra Pix persiste somente um pagamento pendente e não confirma cobrança com provedor. A sequência continua: alinhar e regenerar lockfile, validar CI completa, fechar as invariantes e então implementar fluxos funcionais.
+
+
+### Estado após alinhamento de dependências — 2026-10-25
+
+- [x] next e eslint-config-next alinhados em 16.4.3.
+- [x] package-lock.json regenerado por npm e commitado.
+- [x] CI completa verde no commit add8084f643844a1d193d2dd9e4474b49839a42b.
+- [ ] Auditar e propor constraints para valores não negativos, soma das alocações, mínimo de R$ 1,00 por placa/rodada e consistência dos dois resultados. Separar o que está definido na especificação do que exige decisão de negócio.
+- [ ] Continuar mantendo a interface como pendência: página inicial e áreas de jogador/cambista/administrador ainda não implementadas como fluxos de produto.
