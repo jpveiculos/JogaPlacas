@@ -23,7 +23,7 @@ type Participation = {
 };
 type HistoryPurchase = {
   id: string;
-  receiptCode: string;
+  receiptCode: string | null;
   purchaseStatus: string;
   createdAt: string;
   totalCents: number;
@@ -69,7 +69,7 @@ export function PlayerBetHistory() {
           {history.map((purchase) => (
             <article className="player-history-purchase" key={purchase.id}>
               <div className="player-history-purchase-heading">
-                <div><strong>Recibo {purchase.receiptCode}</strong><span>{date(purchase.createdAt)}</span></div>
+                <div><strong>{purchase.receiptCode ? `Recibo ${purchase.receiptCode}` : "Recibo ainda não emitido"}</strong><span>{date(purchase.createdAt)}</span></div>
                 <strong>{money(purchase.totalCents)}</strong>
               </div>
               {purchase.purchaseStatus !== "CONFIRMED" && <p className="player-history-pending">Compra: {purchase.purchaseStatus === "PENDING_PAYMENT" ? "aguardando pagamento" : purchase.purchaseStatus === "CANCELLED" ? "cancelada" : "estornada"}.</p>}
