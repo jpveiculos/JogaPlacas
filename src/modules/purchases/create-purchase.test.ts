@@ -132,6 +132,18 @@ describe("createPendingPixPurchase automatic allocation", () => {
     transaction.mockReset();
   });
 
+  it("rejects unapproved multipliers for a new purchase", async () => {
+    const tx = { purchase: { findUnique: vi.fn().mockResolvedValue(null) } };
+    transaction.mockImplementation(async (callback: (client: unknown) => unknown) => callback(tx));
+    const input = validInput();
+    input.participations[0]!.lines[0]!.ruleSnapshot = {
+      version: "old-v1",
+      multipliers: { unit: 2, tens: 20, hundreds: 200, thousands: 2_000, letters: 2_000, fullPlate: 200_000 },
+    };
+    input.participations[0]!.lines[0]!.ruleVersion = "old-v1";
+    await expect(createPendingPixPurchase({ $transaction: transaction } as unknown as PrismaClient, input))
+      .rejects.toMatchObject({ code: "INVALID_PURCHASE" });
+  });
   it("persists the approved six-category split for a R$1.00 plate", async () => {
     const tx = {
       purchase: {
