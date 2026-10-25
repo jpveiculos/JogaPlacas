@@ -65,21 +65,20 @@ export async function drawRoundResults(
       },
     });
 
-    if (actorId) {
-      await tx.auditEvent.create({
-        data: {
-          actorId,
-          action: "ROUND_RESULTS_DRAWN",
-          entityType: "Round",
-          entityId: roundId,
-          metadata: {
-            resultLegacyPlate,
-            resultMercosurPlate,
-            method: "independent_secure_random",
-          },
+    await tx.auditEvent.create({
+      data: {
+        ...(actorId ? { actorId } : {}),
+        action: actorId ? "ROUND_RESULTS_DRAWN" : "ROUND_RESULTS_DRAWN_AUTOMATICALLY",
+        entityType: "Round",
+        entityId: roundId,
+        metadata: {
+          resultLegacyPlate,
+          resultMercosurPlate,
+          method: "independent_secure_random",
+          source: actorId ? "admin" : "scheduler",
         },
-      });
-    }
+      },
+    });
     return completed;
   }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
 }
