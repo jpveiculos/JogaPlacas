@@ -6,6 +6,9 @@ on:
       - feature/dual-plate-draw
     paths:
       - package.json
+      - package-lock.json
+      - .github/workflows/refresh-lockfile.yml
+  workflow_dispatch:
 
 permissions:
   contents: write
