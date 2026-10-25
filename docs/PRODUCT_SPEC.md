@@ -223,3 +223,14 @@ A revisão de `prisma/schema.prisma` e das quatro migrações encontrou invarian
 - Não adicionar pesquisa por placa nem consulta duplicada na área do jogador.
 - O histórico individual do jogador deve ser uma lista de suas próprias apostas/rodadas, com prêmios efetivamente confirmados destacados em verde; não deve ser confundido com a lista pública de resultados gerais.
 - Para status individual: compra/participação ainda não concluída ou rodada não concluída deve indicar que está em andamento; prêmio positivo com crédito registrado indica premiada; valor de prêmio igual a zero em rodada concluída indica não premiada; valores ainda não apurados permanecem pendentes.
+
+
+## 20. Histórico individual do jogador — implementação
+
+- A área do jogador mostra o histórico das próprias compras dos últimos 7 dias; não deve conter campo de consulta por recibo, pois essa consulta é pública e também está disponível ao cambista.
+- O histórico é obtido por endpoint autenticado e filtrado no servidor pelo ID do jogador da sessão. Nunca aceitar um ID de jogador fornecido pelo cliente como fonte de autorização.
+- Agrupar por recibo/compra, rodada e placa, mostrando valor total, situação da compra/rodada, placa escolhida e os dois resultados independentes quando a rodada estiver concluída.
+- Estados legíveis por linha: compra ainda não confirmada, aguardando resultado, apuração pendente, não premiada e prêmio confirmado.
+- Somente marcar a linha em verde e exibir o valor do prêmio quando prizeCreditedAt estiver preenchido e prizeCents for positivo. A existência de resultado ou de valor isolado não comprova crédito.
+- O histórico não substitui o livro-razão financeiro nem deve permitir editar apostas antigas.
+- A consulta pública por recibo continua retornando apenas dados necessários para conferir as placas/resultados e nunca revela identificador de conta, telefone, nome real ou o código completo do recibo na resposta.
