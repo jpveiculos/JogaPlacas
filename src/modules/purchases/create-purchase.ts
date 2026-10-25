@@ -226,6 +226,7 @@ export async function createPendingPixPurchase(
         }
         return {
           roundId: round.id,
+          startsAt: round.startsAt,
           cutoffAt: round.cutoffAt,
           lines: participation.lines.map((line) => ({
             plateDisplay: line.plateDisplay,
