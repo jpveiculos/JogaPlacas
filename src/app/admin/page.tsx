@@ -1,9 +1,11 @@
 import { AreaShell } from "@/components/area-shell";
+import { AdminRoundManager } from "@/components/admin/admin-round-manager";
 import { requireRole } from "@/lib/auth/require-role";
 export const dynamic = "force-dynamic";
 export default async function AdminPage() {
   const user = await requireRole("ADMIN");
   return <AreaShell title="Administração" username={user.username} description="Configuração e supervisão da plataforma.">
-    <article className="feature-card"><span className="feature-label">Acesso restrito</span><h2>Painel administrativo</h2><p>Esta área exige uma sessão ativa com papel de administrador, verificada no servidor. As ferramentas de configuração, rodadas, resultados e auditoria serão liberadas individualmente após a implementação de suas permissões e testes.</p><p className="note-inline">O administrador não vende nem realiza apostas nesta área.</p></article>
+    <AdminRoundManager />
+    <article className="feature-card"><span className="feature-label">Controles protegidos</span><h2>Próximas ferramentas administrativas</h2><p>O painel de rodadas já permite consultar o estado atual, fechar apostas após o cutoff, publicar os dois resultados independentes e executar a apuração idempotente. A criação/recorrência de rodadas, configurações financeiras, gestão de contas, saques e relatórios financeiros ainda exigem implementação e testes próprios.</p><p className="note-inline">Pagamentos Pix reais continuam desativados: não existe integração ativa com provedor nem confirmação financeira real nesta versão.</p></article>
   </AreaShell>;
 }
