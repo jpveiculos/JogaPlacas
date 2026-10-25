@@ -11,7 +11,7 @@ import {
 
 export type PixPurchaseInput = {
   idempotencyKey: string;
-  receiptCode: string;
+  receiptCode: string | null;
   playerId?: string;
   cashierId?: string;
   customerId?: string;
@@ -53,7 +53,7 @@ export class PurchaseServiceError extends Error {
 }
 
 /**
- * Persist a pending Pix checkout and its per-round participations atomically.
+ * Persist a pending Pix checkout and its per-round participations atomically, without issuing a receipt.
  * This function does not call Mercado Pago and never marks a payment as paid.
  * The provider adapter must create the external charge after this transaction,
  * using the persisted payment idempotency key, and reconcile failures safely.
@@ -65,9 +65,6 @@ export async function createPendingPixPurchase(
 ) {
   if (!input.idempotencyKey.trim() || input.idempotencyKey.length > 200) {
     throw new PurchaseServiceError("A valid idempotency key is required", "INVALID_IDEMPOTENCY_KEY");
-  }
-  if (!input.receiptCode.trim()) {
-    throw new PurchaseServiceError("A receipt code is required", "INVALID_PURCHASE");
   }
   if (!Number.isInteger(input.repetitions)
     || input.repetitions < MIN_REPETITIONS
