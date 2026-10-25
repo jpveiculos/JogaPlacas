@@ -229,3 +229,14 @@ O usuário executou manualmente no Codespaces, na branch `feature/dual-plate-dra
 - A interface converte horários de parede do fuso São Paulo para ISO antes de enviar, exibe a regra de cutoff e atualiza a lista após a criação. Foram acrescentados testes de rota para origem, papel, intervalo e auditoria transacional.
 - As alterações de criação de rodada e seus testes ainda aguardam a CI dos commits mais recentes; não considerar aprovadas até a conclusão do workflow.
 - Ainda faltam recorrência automática de rodadas, administração financeira e de contas, fluxo completo de cambista, confirmação de pagamento real e revisão final de segurança. O sistema não está pronto para produção nem foi implantado.
+
+
+### Programação recorrente de rodadas — 2026-10-25
+
+- Implementado endpoint interno protegido `GET /api/internal/round-scheduler`, destinado a ser chamado pelo agendador do ambiente de hospedagem a cada minuto com `Authorization: Bearer <ROUND_SCHEDULER_SECRET>`. A ausência de segredo ou um token inválido resulta em 401.
+- O endpoint mantém uma janela móvel de 48 horas de rodadas, com horários de resultado alinhados às marcas de meia hora no fuso `America/Sao_Paulo`. Os códigos de rodada incluem data e minuto local e a restrição única no banco permite repetição segura sem duplicar rodadas.
+- A primeira rodada da sequência inicia 30 minutos antes do resultado; as seguintes iniciam um minuto depois do resultado anterior. O fechamento é sempre marcado para um minuto antes do resultado. Assim, a sequência operacional é abre → fecha → sorteia → abre, com resultados em :00 e :30.
+- O agendador processa fechamentos vencidos antes dos sorteios vencidos e usa os serviços existentes que bloqueiam a linha e protegem contra sorteios duplicados. Cada rodada criada e sua auditoria são gravadas na mesma transação. Falhas individuais são reportadas no resultado para que o provedor possa repetir a chamada.
+- A criação manual agora aceita janelas de 29 ou 30 minutos, compatíveis com a rodada inicial e com as rodadas recorrentes. A criação manual não substitui o agendador.
+- **Não está ativado em produção:** é necessário configurar `ROUND_SCHEDULER_SECRET` no ambiente de hospedagem e criar uma tarefa externa com frequência de um minuto. O repositório não identifica ainda um provedor de hospedagem/agendador de produção confirmado, e nenhuma URL ativa, segredo ou banco produtivo foi alterado. A programação só será efetivamente automática quando essa tarefa for configurada no ambiente correto.
+- Validação de CI pendente para os commits desta implementação. Não considerar sorteios automáticos ativos nem fazer cobranças reais até validar o workflow e configurar o agendador com acesso ao banco correto.
