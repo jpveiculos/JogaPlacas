@@ -180,3 +180,5 @@ h1 {
 .result-plates>div{display:grid;align-content:start;gap:8px}
 .result-plates>div>span{font-size:.9rem;font-weight:700}
 @media(max-width:600px){.plate-format-options,.result-plates{grid-template-columns:1fr}.plate-visual{min-height:92px}}
+
+.plate-format-options input[type=radio]{width:auto;min-height:auto;padding:0;border:0;accent-color:var(--accent)}
