@@ -1,6 +1,6 @@
 # Joga Placas — Manual técnico de implementação
 
-Status: manual operacional vigente, atualizado em 2026-10-24 após auditoria de feature/dual-plate-draw no commit d337082b2d0fa6b24db64a6839d20e24c894fb9e. A especificação funcional em docs/PRODUCT_SPEC.md é a fonte de verdade para comportamento; decisões arquiteturais em docs/ADR-001-FOUNDATION.md e docs/TARGET_DOMAIN_MODEL.md complementam o manual. Não presumir que planning/foundation contém as alterações da branch de feature: as branches divergem.
+Status: manual operacional vigente, atualizado em 2026-10-25 após revisão de feature/dual-plate-draw no commit 1d37b8fc59e0c10717272b96dec1d9bd206a6819. A especificação funcional em docs/PRODUCT_SPEC.md é a fonte de verdade para comportamento; decisões arquiteturais em docs/ADR-001-FOUNDATION.md e docs/TARGET_DOMAIN_MODEL.md complementam o manual. Não presumir que planning/foundation contém as alterações da branch de feature: as branches divergem.
 
 ## Produto e navegação obrigatórios
 
@@ -64,3 +64,12 @@ Pode existir uma área pública auxiliar para login, termos de uso, privacidade 
 ## Critérios de avanço e segurança
 
 Cada etapa precisa produzir código, testes e documentação coerentes. Não alterar `main`, site ativo, domínio/DNS ou banco de produção durante o trabalho de fundação. Não fazer cobranças reais. Não considerar build ou deploy isolado como prova de funcionamento ponta a ponta. Antes da operação comercial, validar os requisitos legais e regulatórios aplicáveis.
+
+
+## Atualização de verificação — 2026-10-25
+
+- CI `Verify` do commit `1d37b8fc59e0c10717272b96dec1d9bd206a6819`: sucesso.
+- A revisão estática da migração `20261024020000_dual_plate_draw` confirmou que ela interrompe a migração se qualquer `ParticipationLine.plateDisplay` não corresponder a um formato conhecido. Preservar esse fail-closed.
+- O teste de migração atual usa PostgreSQL vazio; ele não exercita a classificação de dados históricos. Antes de qualquer uso num banco com dados, criar um teste isolado de backfill LEGACY/MERCOSUR e falha segura para registro inválido/ambíguo.
+- `next@16.4.3` e `eslint-config-next@16.4.2` seguem desalinhados por um patch. Não alterar cegamente; confirmar compatibilidade, regenerar lockfile e validar o pipeline ao resolver.
+- Nenhum teste local/instalação limpa, migração produtiva ou deploy foi executado nesta etapa.
