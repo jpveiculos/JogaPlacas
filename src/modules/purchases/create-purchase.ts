@@ -1,6 +1,7 @@
 import { Prisma, PaymentMethod, RoundStatus, type PrismaClient } from "../../generated/prisma/client";
 import { normalizePlate } from "../plates/normalize-plate";
 import { readPrizeMultipliers } from "../../domain/prize-rule-snapshot";
+import { allocatePlateStake } from "../../domain/allocate-plate-stake";
 import {
   MAX_REPETITIONS,
   MIN_REPETITIONS,
@@ -18,8 +19,9 @@ export type PixPurchaseInput = {
   repetitions: number;
   participations: Array<{
     roundId: string;
-    lines: Array<CategoryAllocation & {
+    lines: Array<{
       plateDisplay: string;
+      stakeCents: number;
       ruleVersion: string;
       ruleSnapshot: Prisma.InputJsonValue;
     }>;
@@ -94,6 +96,7 @@ export async function createPendingPixPurchase(
       }
       for (const line of participation.lines) {
         normalizePlate(line.plateDisplay);
+        allocatePlateStake(line.stakeCents);
         if (!readPrizeMultipliers(line.ruleVersion, line.ruleSnapshot)) {
           throw new PurchaseServiceError(
             "Each line must include a valid multiplier snapshot matching its rule version",
@@ -143,12 +146,7 @@ export async function createPendingPixPurchase(
           return [
             normalized.format,
             normalized.normalized,
-            line.unitCents,
-            line.tensCents,
-            line.hundredsCents,
-            line.thousandsCents,
-            line.lettersCents,
-            line.fullPlateCents,
+            ...Object.values(allocatePlateStake(line.stakeCents)),
             line.ruleVersion,
             stableJsonStringify(line.ruleSnapshot),
           ].join("|");
@@ -223,12 +221,7 @@ export async function createPendingPixPurchase(
           cutoffAt: round.cutoffAt,
           lines: participation.lines.map((line) => ({
             plateDisplay: line.plateDisplay,
-            unitCents: line.unitCents,
-            tensCents: line.tensCents,
-            hundredsCents: line.hundredsCents,
-            thousandsCents: line.thousandsCents,
-            lettersCents: line.lettersCents,
-            fullPlateCents: line.fullPlateCents,
+            ...allocatePlateStake(line.stakeCents),
           })),
         };
       }),
@@ -277,16 +270,12 @@ export async function createPendingPixPurchase(
             lines: {
               create: participation.lines.map((line) => {
                 const normalized = normalizePlate(line.plateDisplay);
+                const allocation = allocatePlateStake(line.stakeCents);
                 return {
                   plateFormat: normalized.format === "legacy" ? "LEGACY" : "MERCOSUR",
                   plateDisplay: normalized.display,
                   normalizedPlate: normalized.normalized,
-                  unitCents: line.unitCents,
-                  tensCents: line.tensCents,
-                  hundredsCents: line.hundredsCents,
-                  thousandsCents: line.thousandsCents,
-                  lettersCents: line.lettersCents,
-                  fullPlateCents: line.fullPlateCents,
+                  ...allocation,
                   ruleVersion: line.ruleVersion,
                   ruleSnapshot: line.ruleSnapshot,
                 };
