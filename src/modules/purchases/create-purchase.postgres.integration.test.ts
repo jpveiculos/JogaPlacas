@@ -45,7 +45,7 @@ suite("PostgreSQL purchase concurrency", () => {
       data: {
         id: roundId,
         code: `IT-${suffix}`,
-        startsAt: new Date("2035-01-01T13:00:00.000Z"),
+        startsAt: new Date("2035-01-01T11:30:00.000Z"),
         cutoffAt: new Date("2035-01-01T12:30:00.000Z"),
         resultAt: new Date("2035-01-01T14:00:00.000Z"),
         status: "OPEN",
