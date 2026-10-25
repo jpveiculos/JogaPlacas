@@ -114,3 +114,7 @@ O teste de migração histórica foi adicionado ao repositório e ao workflow, m
 
 ### Resultado da primeira execução do teste histórico — 2026-10-25
 A CI falhou no seed de dados, não na migração dual-plate: `scripts/test-dual-plate-migration.mjs` referenciava `Purchase.updatedAt`, inexistente na migração inicial. Corrigido no commit `576ec2afb43a5a6fcb9deeb38027a0fdf53efef8`. O teste precisa ser reexecutado na CI; aprovação permanece pendente até o resultado do novo commit.
+
+
+### CI do teste histórico após correção — 2026-10-25
+O workflow completo do commit `576ec2afb43a5a6fcb9deeb38027a0fdf53efef8` terminou com `success`, incluindo `migration-test`, `postgres-concurrency-test` e `verify`: https://github.com/jpveiculos/JogaPlacas/actions/runs/40147585024. A fixture corrigida agora alcança os cenários de backfill válido e bloqueio de dados inválidos. Isso não substitui a validação posterior após resolver a diferença de versão Next.js/ESLint. A versão `eslint-config-next@16.4.3` existe; a revisão recomenda alinhar os pacotes na mesma versão de patch, mas a atualização precisa incluir lockfile gerado de modo reproduzível e nova CI.
