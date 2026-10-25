@@ -166,3 +166,7 @@ Esta alteração foi commitada na branch `feature/dual-plate-draw`; o resultado 
 
 ### Correção do teste histórico — 2026-10-25
 A primeira execução do novo teste falhou antes de alcançar a migração dual-plate: a fixture de `Purchase` tentava inserir `updatedAt`, coluna que não existe na migração inicial. Corrigido em `576ec2afb43a5a6fcb9deeb38027a0fdf53efef8` removendo essa coluna do INSERT de teste. A CI desse commit precisa confirmar a correção; não há aprovação ainda.
+
+
+### Resultado da CI após corrigir a fixture — 2026-10-25
+A execução completa do workflow no commit `576ec2afb43a5a6fcb9deeb38027a0fdf53efef8` terminou com sucesso: teste de migração histórica, validação/build/lint/typecheck/testes e concorrência PostgreSQL passaram. Execução: https://github.com/jpveiculos/JogaPlacas/actions/runs/40147585024. A diferença entre `next@16.4.3` e `eslint-config-next@16.4.2` segue em revisão; não foi alterada neste commit.
