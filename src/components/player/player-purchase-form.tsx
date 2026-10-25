@@ -40,6 +40,7 @@ export function PlayerPurchaseForm() {
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [purchase, setPurchase] = useState<CreatedPurchase | null>(null);
+  const [pixCheckout, setPixCheckout] = useState<PixCheckout | null>(null);
   const idempotencyKey = useRef<string | null>(null);
 
   useEffect(() => {
@@ -89,7 +90,7 @@ export function PlayerPurchaseForm() {
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setError(""); setNotice(""); setPurchase(null);
+    setError(""); setNotice(""); setPurchase(null); setPixCheckout(null);
     if (!plateLooksValid) {
       setError(plateFormat === "LEGACY"
         ? "Placa cinza inválida. Use o formato ABC-1234."
@@ -111,6 +112,7 @@ export function PlayerPurchaseForm() {
       const body = await response.json();
       if (!response.ok) throw new Error(body.error ?? "Não foi possível registrar a compra.");
       setPurchase(body.purchase as CreatedPurchase);
+      setPixCheckout((body.pixCheckout as PixCheckout | null) ?? null);
       idempotencyKey.current = null;
       setNotice(body.message ?? "Compra registrada.");
     } catch (reason) {
@@ -122,7 +124,7 @@ export function PlayerPurchaseForm() {
     <section className="feature-card" aria-labelledby="player-purchase-heading">
       <span className="feature-label">Nova aposta</span>
       <h2 id="player-purchase-heading">Escolha a placa e a sequência de rodadas</h2>
-      <p>Você pode jogar nos dois formatos. Cada aposta concorre somente ao resultado do mesmo formato. O valor é dividido automaticamente entre seis categorias. Ao repetir, as rodadas são consecutivas: a primeira precisa estar aberta e cada próxima fica exatamente 30 minutos depois, sem pular sorteios. A compra ficará pendente; o Pix ainda não está conectado.</p>
+      <p>Você pode jogar nos dois formatos. Cada aposta concorre somente ao resultado do mesmo formato. O valor é dividido automaticamente entre seis categorias. Ao repetir, as rodadas são consecutivas: a primeira precisa estar aberta e cada próxima fica exatamente 30 minutos depois, sem pular sorteios. O recibo só será liberado após a confirmação do pagamento.</p>
       <form onSubmit={submit} className="purchase-form">
         <fieldset className="plate-format-options">
           <legend>Formato da placa</legend>
@@ -157,7 +159,7 @@ export function PlayerPurchaseForm() {
           {selectedRounds.length === 10 && <small>Limite de 10 rodadas por compra atingido.</small>}
         </fieldset>
         {stakeCents !== null && selectedRounds.length > 0 && <p>Total estimado: <strong>{formatMoney(stakeCents * selectedRounds.length)}</strong> ({selectedRounds.length} rodada(s)).</p>}
-        <button type="submit" disabled={submitting || loadingRounds || rounds.length === 0}>{submitting ? "Registrando…" : "Registrar compra pendente"}</button>
+        <button type="submit" disabled={submitting || loadingRounds || rounds.length === 0}>{submitting ? "Registrando…" : "Continuar para Pix"}</button>
       </form>
       {error && <p role="alert" className="note-inline">{error}</p>}
       {notice && <p role="status" className="note-inline">{notice}</p>}
@@ -171,7 +173,7 @@ export function PlayerPurchaseForm() {
               <small>Unidade: {formatMoney(line.allocationCents.unit)} · Dezena: {formatMoney(line.allocationCents.tens)} · Centena: {formatMoney(line.allocationCents.hundreds)} · Milhar: {formatMoney(line.allocationCents.thousands)} · Letras: {formatMoney(line.allocationCents.letters)} · Placa completa: {formatMoney(line.allocationCents.fullPlate)}</small>
             </div>
           )))}
-          <p>O recibo será gerado somente depois que o pagamento for confirmado. Esta compra ainda não está finalizada; não há QR Code nem cobrança Pix nesta etapa.</p>
+          <p>O recibo oficial só será gerado após a confirmação autêntica do pagamento.</p>
         </div>
       )}
     </section>
