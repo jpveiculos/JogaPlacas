@@ -78,6 +78,16 @@ describe("GET /api/admin/rounds", () => {
 
 
 describe("POST /api/admin/rounds", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.getSessionUser.mockResolvedValue({
+      id: "admin-1", username: "admin", role: "ADMIN", status: "ACTIVE", mustChangePassword: false,
+    });
+    mocks.roundCreate.mockResolvedValue({ id: "round-new-123", code: "JP-20350101-1200", startsAt: new Date("2035-01-01T12:00:00Z"), cutoffAt: new Date("2035-01-01T12:29:00Z"), resultAt: new Date("2035-01-01T12:30:00Z"), status: "SCHEDULED" });
+    mocks.auditCreate.mockResolvedValue({});
+    mocks.transaction.mockImplementation(async (callback) => callback({ round: { create: mocks.roundCreate }, auditEvent: { create: mocks.auditCreate } }));
+  });
+
   function createRequest(body: unknown, origin = "https://example.test") {
     return new NextRequest("https://example.test/api/admin/rounds", {
       method: "POST", headers: { origin, "content-type": "application/json", cookie: "jogaplacas_session=session-token" },
