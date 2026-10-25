@@ -272,3 +272,12 @@ O usuário executou manualmente no Codespaces, na branch `feature/dual-plate-dra
 - A CI detectou que a fixture de integração PostgreSQL de compras tinha `startsAt` posterior ao horário de teste, algo que era tolerado antes da nova validação. A fixture foi corrigida para representar uma rodada já aberta no instante da compra.
 - A CI também detectou uma expectativa antiga no teste de criação administrativa que ainda esperava início às 12:00; a expectativa foi alinhada para 12:01, fechamento 12:29 e resultado 12:30.
 - Os jobs anteriores com falhas são anteriores a essas correções. A CI #405 do commit `c5f1119e61bb9f6f067a0b29072f5a9d35a609dd` passou em `verify`, `migration-test` e `postgres-concurrency-test`.
+
+
+### Auditoria da regra de repetição sequencial — 2026-10-25
+
+- Decisão funcional confirmada com o responsável: repetição de 1 a 10 significa rodadas consecutivas, não uma seleção de sorteios aleatórios ou espaçados. Exemplo: uma compra de 4 repetições concorre à rodada atual elegível e às três rodadas seguintes, em intervalos de 30 minutos.
+- Atualizada a fonte de verdade `docs/PRODUCT_SPEC.md`: proíbe pular sorteios, escolher rodadas alternadas ou remapear a repetição silenciosamente. Cada participação mantém seu registro próprio dentro da mesma compra antecipada.
+- A validação de domínio considera a primeira participação como a que precisa estar aberta no instante da compra; as participações seguintes podem estar agendadas, desde que estejam dentro do cutoff de cada rodada.
+- O serviço de compra valida os horários oficiais carregados do banco: cada rodada selecionada precisa ter resultado exatamente 30 minutos depois da anterior, preservando a ordem enviada e impedindo saltos. A sequência é recusada se houver lacuna.
+- Esta implementação permanece na branch `feature/dual-plate-draw`; nenhuma hospedagem, produção, cobrança real ou banco produtivo foi alterado. A conclusão depende da CI e de testes de integração adicionais.
