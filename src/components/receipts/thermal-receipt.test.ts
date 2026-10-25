@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { getReceiptRepetitionNumbers, type ThermalReceiptPlate } from "./thermal-receipt";
+import { getReceiptRepetitionNumbers } from "./receipt-repetition";
+import type { ThermalReceiptPlate } from "./thermal-receipt-types";
 
 const line = (roundCode: string, plateDisplay = "ABC-1234"): ThermalReceiptPlate => ({
   roundCode,
