@@ -348,3 +348,19 @@ A implementação desta arquitetura ainda está pendente; o componente térmico 
 - Registrar a versão da aplicação, a versão do adaptador de impressão e capacidades detectadas para ajudar suporte a diagnosticar incompatibilidades, sem coletar dados pessoais desnecessários.
 
 **Limite técnico:** não existe implementação capaz de garantir que todos os celulares e todas as impressoras Bluetooth, atuais e futuras, funcionem sem adaptação. A arquitetura deve reduzir o custo de adaptação e oferecer fallback; compatibilidade concreta precisa ser testada.
+
+
+### Atualização controlada e restauração da versão estável — 2026-10-25
+
+**Decisão aprovada:** a área administrativa terá uma seção simples de “Atualizações e saúde do sistema”, com verificação sem alterações e uma ação explícita para atualizar o site quando houver uma versão web aprovada e publicada para atualização.
+
+- **Verificar atualizações:** consulta disponibilidade, versão, resumo do impacto e estado dos testes; não modifica o sistema, não inicia publicação e não interrompe compras ou confirmações de pagamento em andamento.
+- **Atualizar site:** só fica disponível para uma versão web aprovada, testada e pronta no processo controlado de publicação do JogaPlacas. Exige ação e confirmação administrativa; não instala código arbitrário nem baixa executáveis de origem desconhecida.
+- **Restaurar versão anterior:** oferecer uma ação administrativa para retornar à última versão estável conhecida, com confirmação explícita, indicação da versão de destino, registro de auditoria e verificação posterior de saúde.
+- **Proteção de operações:** atualizar ou restaurar não pode perder compras, pagamentos, recibos nem lançamentos financeiros. A publicação deve aguardar um momento seguro para novas mudanças de versão e não interromper operações em andamento.
+- **Rollback real:** deve ser feito pelo mecanismo controlado de releases/implantação, mantendo artefatos da versão anterior e verificações de saúde. Não basta trocar um número ou recarregar a página.
+- **Banco de dados:** uma reversão do código não reverte automaticamente migrações nem dados. Mudanças de schema precisam ser compatíveis com a versão anterior ou ter um plano de recuperação testado; migrações destrutivas não podem ser revertidas automaticamente sem estratégia validada.
+- **Segurança e auditoria:** acesso exclusivo a administradores autorizados; registrar autor, versão de origem/destino, horário, resultado e motivo. Se os testes de saúde falharem após publicação, bloquear novas atualizações e recomendar restauração controlada.
+- **Escopo:** este controle governa a versão web. Aplicativos auxiliares nativos, bibliotecas de impressão e firmware têm canais próprios e não são atualizados pelo botão do site.
+
+**Estado:** requisito aprovado e documentado. A interface, detecção de versões, integração com publicação/rollback e testes operacionais ainda precisam ser implementados e validados. Não afirmar que restauração está disponível antes de existir mecanismo conectado e testado.
