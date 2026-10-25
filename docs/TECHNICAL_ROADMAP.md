@@ -119,3 +119,10 @@ O usuário executou manualmente no Codespaces, na branch `feature/dual-plate-dra
 - A migração de formato de placa já falha de modo seguro quando não consegue classificar uma linha histórica; preservar esse comportamento.
 - Próxima ação técnica: adicionar constraints SQL locais e não ambíguas para valores não negativos e formato/estado de resultados, depois ampliar os testes de migração com casos válidos e inválidos. Antes de exigir dois resultados em rodadas COMPLETED, decidir e documentar como tratar rodadas históricas que só têm um resultado; não inventar nem converter um resultado para preencher o outro.
 - Nenhuma alteração de banco ou deploy de produção foi realizada. A auditoria foi somente estática, lendo schema, migrações e testes no branch de trabalho.
+
+### Restrições de integridade SQL adicionadas — 2026-10-25
+
+- Nova migração `20261025010000_integrity_checks` adiciona `CHECK` para valor mínimo de R$ 1,00 em compra e participação, alocações/prêmio não negativos, pagamento e saque estritamente positivos, taxa/comissão dentro do intervalo válido e formatos independentes dos dois resultados.
+- A migração deliberadamente não exige os dois resultados em toda rodada concluída: não há política aprovada para preencher ou classificar rodadas históricas que tenham apenas um resultado.
+- A soma entre as seis alocações de uma linha e o total da participação continua precisando de validação transacional no serviço; um `CHECK` SQL de linha não pode garantir sozinho igualdade entre tabelas. Não foi inventado um total de linha adicional nesta etapa.
+- A mudança está apenas na branch `feature/dual-plate-draw`; aguardar CI para confirmar a migração em PostgreSQL descartável. Nenhuma migração foi aplicada a produção.
