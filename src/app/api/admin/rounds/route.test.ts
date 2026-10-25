@@ -112,12 +112,24 @@ describe("POST /api/admin/rounds", () => {
     expect(mocks.roundCreate).not.toHaveBeenCalled();
   });
 
-  it("requires exactly a 30-minute interval", async () => {
+  it("rejects intervals outside the 29-to-30-minute schedule", async () => {
     const result = await (await import("./route")).POST(createRequest({
-      startsAt: "2035-01-01T12:00:00.000Z", resultAt: "2035-01-01T12:31:00.000Z",
+      startsAt: "2035-01-01T12:00:00.000Z", resultAt: "2035-01-01T12:28:00.000Z",
     }));
     expect(result.status).toBe(400);
     expect(mocks.roundCreate).not.toHaveBeenCalled();
+  });
+
+  it("accepts the 29-minute interval used by recurring rounds", async () => {
+    const result = await (await import("./route")).POST(createRequest({
+      startsAt: "2035-01-01T12:00:00.000Z", resultAt: "2035-01-01T12:29:00.000Z",
+    }));
+    expect(result.status).toBe(201);
+    expect(mocks.roundCreate).toHaveBeenCalledWith({ data: expect.objectContaining({
+      startsAt: new Date("2035-01-01T12:00:00.000Z"),
+      cutoffAt: new Date("2035-01-01T12:28:00.000Z"),
+      resultAt: new Date("2035-01-01T12:29:00.000Z"),
+    }), select: expect.any(Object) });
   });
 
   it("creates and audits a future round transactionally", async () => {
