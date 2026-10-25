@@ -146,14 +146,9 @@ Não houve merge, deploy, migração em produção nem cobrança real.
 - Limite funcional explicitado: a página informa resultados gerais e prêmios confirmados; não identifica o resultado individual de um bilhete sem uma funcionalidade própria de consulta.
 
 
-### Consulta rápida por placa ou recibo — 2026-10-25
+### Consulta rápida — registro histórico supersedido — 2026-10-25
 
-- [x] Criada rota pública que aceita placa ou recibo JP-, valida a entrada e retorna apenas dados necessários.
-- [x] Criado componente reutilizável com campo único, mensagens claras, plaquinhas e estados de prêmio/resultado/apuração.
-- [x] Incluída consulta prioritária na página pública de resultados.
-- [x] Registradas regras de privacidade e confirmação de prêmio no manual mestre.
-- [ ] Integrar nas telas autenticadas do cambista e do jogador após confirmar os caminhos exatos dessas páginas.
-- [ ] Adicionar testes automatizados e validar a CI no HEAD final.
+A decisão posterior substituiu a proposta inicial de pesquisar por placa ou recibo. A implementação vigente aceita somente o código completo do recibo iniciado por JP-. A placa não é chave de pesquisa, pois pode aparecer em várias apostas e rodadas. Ver a seção “Ajuste de escopo da consulta — somente recibo” e as seções 17–20 do manual mestre.
 
 
 ### Ajuste de escopo da consulta — somente recibo — 2026-10-25
