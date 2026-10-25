@@ -54,6 +54,7 @@ suite("PostgreSQL prize settlement idempotency", () => {
   });
 
   afterAll(async () => {
+    await prisma.auditEvent.deleteMany({ where: { entityType: "Round", entityId: roundId } });
     await prisma.ledgerEntry.deleteMany({ where: { idempotencyKey: "prize-credit:" + lineId } });
     await prisma.participationLine.deleteMany({ where: { id: lineId } });
     await prisma.purchaseParticipation.deleteMany({ where: { id: participationId } });
@@ -65,7 +66,7 @@ suite("PostgreSQL prize settlement idempotency", () => {
 
   it("credits the same winning line only once across concurrent and repeated settlement calls", async () => {
     const [first, concurrent] = await Promise.all([
-      settleRoundPrizes(prisma, roundId),
+      settleRoundPrizes(prisma, roundId, playerId),
       settleRoundPrizes(prisma, roundId),
     ]);
     const second = await settleRoundPrizes(prisma, roundId);
@@ -78,5 +79,6 @@ suite("PostgreSQL prize settlement idempotency", () => {
       .toMatchObject({ userId: playerId, amountCents: 200, type: "PRIZE_CREDIT" });
     expect(await prisma.participationLine.findUnique({ where: { id: lineId } }))
       .toMatchObject({ prizeCents: 200 });
+    expect(await prisma.auditEvent.count({ where: { action: "ROUND_PRIZES_SETTLED", entityType: "Round", entityId: roundId } })).toBe(3);
   });
 });
