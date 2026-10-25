@@ -297,3 +297,7 @@ O usuário executou manualmente no Codespaces, na branch `feature/dual-plate-dra
 - Corrigido o cálculo para pular somente horários de resultado que já passaram. Se o scheduler iniciar às 12:29 para o resultado das 12:30, ainda cria a rodada com início às 12:01 e cutoff às 12:29; a rotina fecha a rodada e pode sortear às 12:30.
 - Adicionado teste automatizado com relógio fixo para validar o caso de inicialização às 12:29 no fuso de São Paulo e conferir os horários e o evento de auditoria.
 - A CI deve passar antes de considerar a correção validada. O endpoint permanece protegido por segredo e não foi configurado nem ativado em hospedagem de produção.
+
+
+## Padrão visual de horário — 2026-10-25
+Decisão funcional confirmada: todos os horários apresentados na interface, no recibo e em informações de rodadas devem usar o formato de 24 horas `HH:mm`, com dois pontos e sem sufixos `h` ou `hs`. Exemplos: `00:00`, `12:30`, `23:59`. Aplicar o mesmo padrão às mensagens, cartões de rodada, sequência de repetição e recibo térmico. Isso é somente formatação visual: não muda `America/Sao_Paulo`, os valores de data/hora armazenados nem a lógica do agendador. A aplicação visual em todos os componentes ainda precisa ser verificada e coberta por testes.
