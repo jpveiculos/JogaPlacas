@@ -186,3 +186,13 @@ A revisão de `prisma/schema.prisma` e das quatro migrações encontrou invarian
 - A faixa inferior mostra até 12 ganhadores recentes dos últimos 30 dias apenas quando o prêmio foi efetivamente creditado (prizeCreditedAt), com valor, rodada, data e formato/placa da aposta. Nome de usuário é mascarado publicamente; não expor nome real, telefone, dados da conta ou dados financeiros pessoais. Se não houver ganhadores elegíveis, mostrar uma mensagem neutra.
 - A rota pública de leitura não exige login, mas retorna somente campos explicitamente selecionados e usa Cache-Control: no-store. Erros internos não devem vazar detalhes do banco.
 - A tela não deve conter menu nem permitir apostas/pagamentos; é exclusivamente consulta pública. Nenhuma cobrança real, merge ou deploy está autorizado por esta decisão.
+
+
+## 16. Objetivo de acessibilidade e consulta pública simples — 2026-10-25
+
+- Motivo de negócio: a página pública não é apenas um espelho dos resultados das áreas autenticadas. Ela atende também pessoas sem conta e jogadores que fizeram a aposta presencialmente com um cambista e precisam consultar o resultado depois que o cambista foi embora.
+- Público prioritário de usabilidade: pessoas idosas ou com pouca familiaridade com aplicativos e plataformas digitais. O acesso deve ser direto, sem cadastro, login, senha, menu, navegação complexa ou conteúdo não essencial.
+- Hierarquia visual: a maior parte da tela fica dedicada ao histórico de resultados, em linhas grandes e fáceis de localizar; cada linha exibe data, hora, código da rodada e plaquinhas dos dois formatos. A área menor de ganhadores fica abaixo, com prêmios confirmados e informações resumidas.
+- A interface deve priorizar letras legíveis, contraste, alvos de toque confortáveis, linguagem simples, layout responsivo e redução de animações quando o sistema operacional pedir movimento reduzido.
+- A página é apenas informativa. Deve exibir somente resultados concluídos/publicados e ganhadores com prêmios efetivamente creditados; não pode sugerir que alguém ganhou quando o prêmio ainda não foi confirmado. Identificadores públicos permanecem mascarados.
+- A página não substitui recibo nem oferece confirmação individual de uma aposta. Nesta fase, ela mostra os resultados gerais e os ganhadores publicados, não uma consulta privada que determine se uma pessoa específica ganhou.
