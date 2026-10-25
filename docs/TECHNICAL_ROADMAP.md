@@ -257,18 +257,18 @@ O usuário executou manualmente no Codespaces, na branch `feature/dual-plate-dra
 - A criação manual foi restringida à mesma regra: resultado precisa estar nos minutos :00 ou :30 do fuso de São Paulo e o início exatamente 29 minutos antes. Os testes foram ajustados para esses instantes.
 - Se o scheduler iniciar no minuto anterior ao resultado e a rodada ainda não existir, ele ainda pode criar a rodada vencendo o cutoff e fechá-la imediatamente, para permitir o sorteio no horário programado. Se o instante do sorteio já passou, não cria retrospectivamente uma rodada nova.
 - O serviço de compra valida `startsAt` e `cutoffAt`; portanto, mesmo uma rodada previamente criada não aceita apostas antes da abertura.
-- A execução mais recente da CI ainda precisa concluir para confirmar essas correções.
+- A execução CI #405 confirmou sucesso nos três jobs (`verify`, `migration-test` e `postgres-concurrency-test`) após essas correções.
 
 
 ### Auditoria das transições automáticas
 
 - Fechamentos e sorteios acionados pelo scheduler agora geram eventos de auditoria próprios (`ROUND_CLOSED_AUTOMATICALLY` e `ROUND_RESULTS_DRAWN_AUTOMATICALLY`), dentro da mesma transação que altera o estado ou persiste os resultados.
 - Operações manuais de administrador preservam os eventos de auditoria existentes com o ator associado.
-- CI ainda pendente para as alterações mais recentes.
+- CI #405 passou nos três jobs após as alterações mais recentes.
 
 
 ### Correção de fixtures de testes após exigir abertura — 2026-10-25
 
 - A CI detectou que a fixture de integração PostgreSQL de compras tinha `startsAt` posterior ao horário de teste, algo que era tolerado antes da nova validação. A fixture foi corrigida para representar uma rodada já aberta no instante da compra.
 - A CI também detectou uma expectativa antiga no teste de criação administrativa que ainda esperava início às 12:00; a expectativa foi alinhada para 12:01, fechamento 12:29 e resultado 12:30.
-- Os jobs anteriores com falhas são anteriores a essas correções. A confirmação final depende da CI do commit atual.
+- Os jobs anteriores com falhas são anteriores a essas correções. A CI #405 do commit `c5f1119e61bb9f6f067a0b29072f5a9d35a609dd` passou em `verify`, `migration-test` e `postgres-concurrency-test`.
