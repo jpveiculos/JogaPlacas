@@ -335,3 +335,12 @@ Implementação parcial do recibo — 2026-10-25: o componente térmico agora id
 - O plano `docs/PAYMENTS_MERCADO_PAGO_IMPLEMENTATION_PLAN.md` foi atualizado com esses achados e gates de segurança. Não usar credenciais reais nem emitir recibo até que o pagamento seja confirmado por fonte confiável no servidor.
 - As primeiras execuções da CI do recibo (#428 e #429) falharam porque Vitest tentou importar JSX do componente térmico sem transformação configurada. A regra de numeração e os tipos foram extraídos para módulos TypeScript sem JSX, e o teste passou a importar o módulo puro. A validação desta correção está pendente da CI mais recente.
 - Sem deploy, sem merge para `main`, sem alteração de banco de produção e sem cobrança real.
+
+
+### Endpoint protegido para recibo oficial — 2026-10-25
+
+- Criado `GET /api/player/purchases/[purchaseId]/receipt` para carregar os dados do recibo a partir do banco, em vez de confiar em valores enviados pelo navegador.
+- Exige sessão ativa e propriedade da compra: jogador só acessa a própria compra, cambista só acessa a compra associada a ele e administrador pode consultar para suporte/auditoria. IDs inexistentes e não autorizados retornam a mesma resposta 404 para reduzir enumeração.
+- O recibo só é retornado quando compra e pagamento estão `CONFIRMED`, ambos têm timestamp de confirmação e existe `receiptCode`. Compra pendente ou inconsistente não recebe payload de recibo.
+- Linhas e rodadas são lidas do banco, ordenadas por horário da rodada, e os valores por placa são reconstruídos a partir das seis alocações em centavos. O endpoint não cria cobranças nem altera estados financeiros.
+- Testes cobrem sessão ausente, proprietário, acesso cruzado, pagamento pendente e ordem/total de linhas. A implementação precisa passar a CI; ainda não está ligada ao componente de impressão nem à confirmação real de pagamento.
