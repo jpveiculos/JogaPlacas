@@ -265,3 +265,14 @@ O recibo oficial só pode ser emitido depois que o pagamento da compra estiver c
 A primeira correção foi aplicada na branch de desenvolvimento: `Purchase.receiptCode` agora é anulável, há migração para limpar o código de compras ainda pendentes, o endpoint do jogador não cria mais código antes da confirmação e a interface/histórico não apresentam compra pendente como recibo emitido.
 
 A regra ainda não está completa ponta a ponta: falta criar a operação transacional de confirmação que atribui um código único ao confirmar compra e participações, falta o fluxo autorizado de confirmação de dinheiro pelo cambista e a integração Pix/webhook continua planejada para a última fase. Até essas etapas existirem e passarem nos testes/CI, não considerar emissão de recibo após confirmação concluída.
+
+
+### QR Code no recibo — 2026-10-25
+
+**Decisão de produto:** todo recibo oficial deve exibir um QR Code pequeno imediatamente ao lado do código textual `JP-...`. O QR Code codifica o próprio código completo do recibo, para que um leitor de câmera/QR consiga capturá-lo sem digitação manual. O código textual continua visível como alternativa acessível.
+
+- O QR Code só pode ser apresentado quando existir um recibo oficial emitido após a confirmação do pagamento; compras pendentes não exibem código nem QR.
+- O QR Code não deve conter placa, nome, telefone, dados financeiros ou outros dados pessoais: somente o código do recibo.
+- A consulta continua restrita ao código do recibo; a leitura do QR não pode contornar autorização nem revelar dados privados.
+- A implementação visual deve usar geração de QR confiável no próprio sistema, sem enviar códigos de recibo a serviços públicos de geração de QR de terceiros.
+- Pendência técnica: integrar o QR ao componente/artefato de recibo oficial quando o fluxo transacional de confirmação e emissão estiver implementado. O código atual ainda não possui o fluxo completo de emissão após confirmação; não marcar o QR como implementado até haver interface de recibo e testes.
