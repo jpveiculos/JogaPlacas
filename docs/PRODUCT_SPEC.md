@@ -23,7 +23,7 @@
 - Cada rodada terá dois sorteios independentes: um resultado de placa cinza (`resultLegacyPlate`) e um resultado Mercosul (`resultMercosurPlate`). Cada resultado é sorteado, persistido e apurado separadamente; não afirmar que são conversões um do outro. A interface deve exibir duas plaquinhas identificadas.
 - A aposta em placa cinza só concorre ao resultado cinza; a aposta Mercosul só concorre ao resultado Mercosul. As regras de categoria e multiplicadores precisam ser aplicadas ao formato correspondente.
 - Ambos os resultados devem ser imutáveis depois de publicados, com geração e publicação idempotentes por rodada e por formato.
-- Rodadas a cada 30 minutos, com resultados alinhados aos minutos :00 e :30 no fuso America/Sao_Paulo. A rodada abre em :01 ou :31, fecha em :29 ou :59 e o sorteio ocorre em :00 ou :30, sempre um minuto após o fechamento. Para a primeira rodada do ciclo, ela pode abrir em :00 e fechar em :29. O servidor não aceita apostas antes do início nem no instante ou após o fechamento.
+- Rodadas a cada 30 minutos, com resultados alinhados aos minutos :00 e :30 no fuso America/Sao_Paulo. A rodada abre em :01 ou :31, fecha em :29 ou :59 e o sorteio ocorre em :00 ou :30, sempre um minuto após o fechamento. Cada rodada abre exatamente um minuto após o sorteio anterior; por exemplo, a rodada com resultado às 00:30 abre às 00:01 e fecha às 00:29. O servidor não aceita apostas antes do início nem no instante ou após o fechamento.
 - Corte validado no servidor. Não aceitar nem incluir retroativamente aposta após o fechamento.
 - Repetição de 1 a 10 rodadas com pagamento antecipado e registro individual de cada participação.
 - Valor mínimo total de R$ 1,00 por placa em cada rodada.
