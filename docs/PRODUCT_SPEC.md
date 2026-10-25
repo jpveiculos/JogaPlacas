@@ -23,7 +23,7 @@
 - Cada rodada terá dois sorteios independentes: um resultado de placa cinza (`resultLegacyPlate`) e um resultado Mercosul (`resultMercosurPlate`). Cada resultado é sorteado, persistido e apurado separadamente; não afirmar que são conversões um do outro. A interface deve exibir duas plaquinhas identificadas.
 - A aposta em placa cinza só concorre ao resultado cinza; a aposta Mercosul só concorre ao resultado Mercosul. As regras de categoria e multiplicadores precisam ser aplicadas ao formato correspondente.
 - Ambos os resultados devem ser imutáveis depois de publicados, com geração e publicação idempotentes por rodada e por formato.
-- Rodadas a cada 30 minutos; encerramento das apostas 1 minuto antes do horário do resultado.
+- Rodadas a cada 30 minutos, com resultados alinhados aos minutos :00 e :30 no fuso America/Sao_Paulo. A rodada abre em :01 ou :31, fecha em :29 ou :59 e o sorteio ocorre em :00 ou :30, sempre um minuto após o fechamento. Para a primeira rodada do ciclo, ela pode abrir em :00 e fechar em :29. O servidor não aceita apostas antes do início nem no instante ou após o fechamento.
 - Corte validado no servidor. Não aceitar nem incluir retroativamente aposta após o fechamento.
 - Repetição de 1 a 10 rodadas com pagamento antecipado e registro individual de cada participação.
 - Valor mínimo total de R$ 1,00 por placa em cada rodada.
@@ -396,3 +396,9 @@ A implementação desta arquitetura ainda está pendente; o componente térmico 
 - Implementada validação preventiva das seis alocações em `src/modules/rounds/settle-round-prizes.ts` e teste unitário para alocação negativa em categoria perdedora. Commits: `d1c5c695751b8746942d996d4d3337920a5b2352` e `7f62eac41dcbf29f4bbe862c627ded6430b32142`.
 - Estado de validação: os commits foram enviados à branch `feature/dual-plate-draw`; a aprovação da CI ainda precisa ser confirmada. Não considerar a correção validada até a execução dos testes e da pipeline completa.
 - Próxima auditoria necessária: verificar que a soma das seis alocações por placa corresponde exatamente ao valor cobrado para aquela placa, e que a soma das linhas corresponde ao total da participação/compra, sem assumir isso apenas pela apuração do prêmio.
+
+
+### Nota de implementação — agendamento automático
+- O endpoint interno `POST /api/internal/round-scheduler` cria uma janela móvel de rodadas e processa abertura, fechamento e sorteio, com auditoria e proteção por segredo.
+- O endpoint é código implementado e coberto por CI, mas só executará automaticamente quando uma tarefa externa for configurada no ambiente de hospedagem com chamada a cada minuto e a variável `ROUND_SCHEDULER_SECRET`.
+- A ativação em produção permanece pendente; não há confirmação registrada de hospedagem, domínio e banco de produção corretos. Não afirmar que há rodadas automáticas ativas antes dessa configuração e validação operacional.
