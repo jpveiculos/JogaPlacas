@@ -16,14 +16,9 @@ const validInput = (): PixPurchaseInput => ({
     roundId: "round-1",
     lines: [{
       plateDisplay: "ABC-1234",
-      unitCents: 100,
-      tensCents: 0,
-      hundredsCents: 0,
-      thousandsCents: 0,
-      lettersCents: 0,
-      fullPlateCents: 0,
+      stakeCents: 100,
       ruleVersion: "test-v1",
-      ruleSnapshot: { version: "test-v1", multipliers: { unit: 2, tens: 20, hundreds: 200, thousands: 2_000, letters: 2_000, fullPlate: 200_000 } },
+      ruleSnapshot: { version: "test-v1", multipliers: { unit: 6, tens: 20, hundreds: 200, thousands: 2_000, letters: 2_000, fullPlate: 200_000 } },
     }],
   }],
 });
@@ -218,12 +213,12 @@ describe("createPendingPixPurchase idempotency replay", () => {
       lines: [{
         plateFormat: "LEGACY",
         normalizedPlate: "ABC1234",
-        unitCents: 100,
-        tensCents: 0,
-        hundredsCents: 0,
-        thousandsCents: 0,
-        lettersCents: 0,
-        fullPlateCents: 0,
+        unitCents: 20,
+        tensCents: 16,
+        hundredsCents: 16,
+        thousandsCents: 16,
+        lettersCents: 16,
+        fullPlateCents: 16,
         ruleVersion: "test-v1",
         ruleSnapshot: { version: "test-v1", multipliers: { unit: 2, tens: 20, hundreds: 200, thousands: 2_000, letters: 2_000, fullPlate: 200_000 } },
       }],
@@ -258,7 +253,7 @@ describe("createPendingPixPurchase idempotency replay", () => {
   it("rejects reuse of an idempotency key with different purchase lines", async () => {
     const { prisma } = serviceWithExistingPurchase(existingPurchase());
     const input = validInput();
-    input.participations[0]!.lines[0]!.unitCents = 200;
+    input.participations[0]!.lines[0]!.stakeCents = 200;
 
     await expect(createPendingPixPurchase(prisma, input))
       .rejects.toMatchObject({ code: "IDEMPOTENCY_CONFLICT" });
