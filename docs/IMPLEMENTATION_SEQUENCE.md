@@ -1,19 +1,33 @@
-# Execução do trabalho — prioridade antes do Mercado Pago
+# Sequência de implementação — estado atual
 
-## Decisão
-A integração com o Mercado Pago fica explicitamente para a última fase. Até lá, não criar cobranças reais, não configurar webhooks do provedor e não colocar segredos do Mercado Pago no ambiente.
+Atualizado em 2026-10-24 após auditoria da branch feature/dual-plate-draw, HEAD d337082b2d0fa6b24db64a6839d20e24c894fb9e.
 
-## Ordem de trabalho
-1. **Validar o repositório e o schema Prisma**: conferir o schema no commit atual, executar `prisma validate` e `prisma generate` no ambiente de CI ou ambiente isolado, corrigir incompatibilidades encontradas.
-2. **Revisar o serviço de compras**: conferir contratos reais do schema e das regras de domínio, tipos TypeScript, validação dos campos, cálculo de totais, repetição/idempotência e tratamento de erros.
-3. **Testes automatizados**: acrescentar testes para compra válida, comprador inválido, rodada encerrada, valores inválidos, chave idempotente igual com payload igual/diferente e falhas transacionais.
-4. **Concorrência e fechamento de rodada**: assegurar que confirmação/criação não possa ultrapassar o cutoff por corrida; definir o mecanismo transacional apropriado e testar o caso concorrente.
-5. **Qualidade e segurança**: executar lint, typecheck, testes e build; revisar dependências, migrações necessárias e logs sem dados sensíveis.
-6. **Revisão de migração**: gerar e revisar migração em banco descartável, verificar compatibilidade e plano de reversão. Não executar migração em produção.
-7. **Integração Mercado Pago (última fase)**: somente depois dos gates acima, implementar adaptador, criação de Pix, verificação de webhook, confirmação idempotente e testes de ponta a ponta.
+## Decisão permanente
+A integração com Mercado Pago fica para a última fase. Até a aprovação dos gates anteriores, não criar cobranças reais, não ativar webhooks do provedor e não colocar segredos reais do provedor no ambiente. Não alterar main, banco de produção, domínio/DNS nem serviços ativos sem autorização explícita.
 
-## Critérios para avançar
-Nenhuma fase é considerada concluída apenas por ter código commitado. É necessário resultado verificável dos comandos/testes e revisão dos diffs. A branch de trabalho continua sendo `planning/foundation`; a `main` e o banco de produção permanecem intocados durante esta etapa.
+## Estado observado
 
-## Estado
-O serviço inicial de compra pendente foi commitado, mas ainda não foi comprovado por execução de testes/build. A validação do Prisma e a revisão do serviço são os próximos passos imediatos.
+Já existem lockfile e instalação npm ci na CI, schema Prisma e migrações versionadas, serviços de autenticação, regras de placas, compra pendente com participações, fechamento de rodada, geração dos dois resultados e apuração de prêmios. Existem rotas de autenticação e rotas administrativas para fechar, sortear e apurar rodadas.
+
+As três páginas de perfil ainda são placeholders. Não há prova nesta auditoria de fluxos de produto ponta a ponta, de instalação limpa executada localmente nesta conversa, de banco de produção atualizado ou de integração real com pagamentos.
+
+A branch feature/dual-plate-draw está 61 commits à frente e 1 atrás de planning/foundation, e o PR #1 está aberto em rascunho. As branches divergem; não fazer merge automaticamente.
+
+## Ordem de trabalho revisada
+
+1. **Reproduzir a qualidade do HEAD atual:** checkout limpo, versão de Node/npm registrada, npm ci, Prisma validate/generate, lint, typecheck, testes, build e suites PostgreSQL de integração. Guardar evidência por commit. A CI recente passou, mas repetir é parte da auditoria e ainda não foi feito nesta conversa.
+2. **Resolver compatibilidade de dependências:** revisar next@16.4.3 versus eslint-config-next@16.4.2; corrigir apenas com justificativa, lockfile reproduzível e pipeline verde.
+3. **Auditar schema e migrações:** revisar as quatro migrações e o SQL da migração de duas placas em PostgreSQL descartável; avaliar dados históricos e snapshots. Não executar em produção.
+4. **Consolidar domínio e regras pendentes:** validar formato/resultado LEGACY e MERCOSUR, snapshots de regras, rateio em centavos, cutoff, regras de cancelamento/estorno e fonte/publicação de resultados. Não inventar decisões de negócio ausentes; atualizar docs/PRODUCT_SPEC.md quando aprovadas.
+5. **Completar os serviços financeiros:** ledger append-only, saldo disponível, débitos, prêmios, saques/reservas, estornos, comissões e recebimento em espécie, com invariantes transacionais e testes concorrentes.
+6. **Construir os fluxos do jogador:** compra, seleção de placa/categoria, gerador aleatório, repetição de rodadas, checkout pendente, recibos, histórico, carteira e resultados.
+7. **Construir os fluxos do cambista:** cliente, venda, recebimento, recibo, histórico, comissão e consultas próprias, sem carteira nem saque do cambista.
+8. **Completar a administração:** gestão de usuários, rodadas/recorrências, regras, resultados, financeiro, saques, comissões e auditoria.
+9. **Executar testes de integração e ponta a ponta:** autorização, propriedade de registros, idempotência, concorrência, rollback, cutoff, publicação e apuração.
+10. **Integração Mercado Pago (última fase):** adaptador, criação Pix, verificação de webhooks, confirmação idempotente, eventos fora de ordem, reconciliação e testes em homologação.
+11. **Preparar implantação isolada:** revisar variáveis, segurança, monitoramento, backup/restauração e rollback no novo ambiente; não tocar no site atual sem autorização explícita.
+12. **Gate final:** CI verde no commit exato, revisão de diff, testes e segurança aprovados, documentação atualizada, validação legal/comercial e autorização explícita antes de merge/produção.
+
+## Critérios de avanço
+
+Nenhuma fase é concluída só por código commitado ou por build isolado. Registrar comandos/testes executados, commit exato, resultado e limitações. Cada decisão, mudança de implementação, resultado de teste ou implantação que afete o comportamento deve atualizar o manual mestre e os documentos operacionais pertinentes no mesmo conjunto de trabalho. Se uma regra for ambígua, manter o fluxo afetado bloqueado e pedir decisão; não inferir comportamento financeiro.
