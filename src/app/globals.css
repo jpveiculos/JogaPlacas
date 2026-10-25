@@ -412,3 +412,15 @@ h1 {
   }
   .thermal-receipt-print-button { display: none !important; }
 }
+
+
+/* Painel operacional administrativo */
+.admin-round-list { display: grid; gap: 14px; margin: 18px 0; }
+.admin-round-list > .round-option { display: grid; gap: 10px; align-items: start; }
+.admin-round-list .round-options { align-items: center; }
+.admin-round-list .plate-visual { width: min(100%, 280px); }
+.secondary-button { margin-top: 12px; background: #eef2f6; color: var(--foreground, #17212b); border: 1px solid var(--border); }
+.secondary-button:disabled { opacity: .6; cursor: not-allowed; }
+@media (min-width: 760px) {
+  .admin-round-list > .round-option { grid-template-columns: minmax(0, 1fr); }
+}
