@@ -364,3 +364,28 @@ A implementação desta arquitetura ainda está pendente; o componente térmico 
 - **Escopo:** este controle governa a versão web. Aplicativos auxiliares nativos, bibliotecas de impressão e firmware têm canais próprios e não são atualizados pelo botão do site.
 
 **Estado:** requisito aprovado e documentado. A interface, detecção de versões, integração com publicação/rollback e testes operacionais ainda precisam ser implementados e validados. Não afirmar que restauração está disponível antes de existir mecanismo conectado e testado.
+
+
+## 14. Auditoria de continuidade — 2026-10-25
+
+**Escopo verificado:** branch `feature/dual-plate-draw`, arquivos versionados e estado visível do GitHub Actions; não houve execução local nesta sessão nem acesso a produção.
+
+### Evidências atuais
+- `package.json` e `package-lock.json` declaram `next@16.4.3` e `eslint-config-next@16.4.3`; a divergência de patch registrada anteriormente não aparece mais nos manifestos consultados. Ainda é necessário CI verde no HEAD atual.
+- A execução `Verify` do commit `65c89d599cfdaabf880ae7ce763499798ad75bf9` falhou nos três jobs (`verify`, `migration-test`, `postgres-concurrency-test`). A tentativa de reexecução também falhou em poucos segundos; os logs/etapas não foram disponibilizados pelo conector nesta inspeção. Não presumir que seja falha de código nem declarar CI aprovada: obter detalhes no GitHub Actions e corrigir a causa antes de avançar para release.
+- `src/app/admin/page.tsx` continua sendo um painel informativo/placeholder. Não há painel funcional de configuração, atualização, restauração ou saúde comprovado.
+- `POST /api/player/purchases` cria compra pendente e informa explicitamente que não cria nem confirma cobrança Pix. A rota não constitui checkout Pix operacional.
+- `ThermalReceipt` só renderiza com status confirmado e código válido, mas a geração do QR é fornecida externamente e, sem QR, mostra um placeholder. Não foi localizada nesta checagem uma integração ponta a ponta que confirme pagamento, emita o código, gere QR e ofereça impressão real.
+- `GET /api/player/history` limita o histórico às compras do próprio jogador, usa `no-store` e mascara o código de recibo enquanto a compra não está confirmada. É uma peça parcial, não prova que o fluxo completo de compra esteja concluído.
+- O pipeline configurado contém lint, typecheck, testes, build, migração em PostgreSQL descartável e testes de concorrência; no HEAD atual, todos os jobs visíveis estão falhando e precisam ser investigados antes de confiar nesses gates.
+
+### Bloqueios para implantação
+1. CI do HEAD atual sem aprovação observável.
+2. Fluxo de confirmação de pagamento e emissão transacional do recibo ainda não concluído; nenhum pagamento real deve ser habilitado.
+3. Áreas de jogador/cambista/administrador ainda incompletas, com telas placeholder.
+4. QR Code real e integração física de impressão ainda não concluídos/testados.
+5. Painel de atualização/rollback apenas documentado; não há mecanismo operacional conectado.
+6. Precisam ser validados fluxos de ponta a ponta, autorização/ownership, reconciliação financeira, migrações com dados históricos e recuperação/backup antes de qualquer implantação.
+7. Provedor de hospedagem/implantação e ambiente de staging não foram confirmados nesta auditoria.
+
+**Decisão operacional:** continuar na branch de desenvolvimento, investigar e corrigir a CI antes de novos módulos de produto. Não fazer merge, deploy, migração de produção, configuração de domínio ou ativação de pagamento real sem autorização explícita.
