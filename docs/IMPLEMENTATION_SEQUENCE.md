@@ -94,3 +94,15 @@ Esta alteração continua somente na branch de desenvolvimento. Nenhuma cobranç
 - [ ] A aplicação completa continua pendente: o serviço de compra e a apuração estão implementados, mas a interface/fluxo de jogador e cambista ainda precisam ser conectados e testados de ponta a ponta.
 
 Não houve merge, deploy, migração em produção nem criação de cobrança real.
+### Próxima etapa: endpoint autenticado de compra do jogador — 2026-10-25
+
+- [x] Criado identificador versionado para as regras aprovadas (`approved-v2`) e construtor de snapshot no servidor.
+- [x] Criado `POST /api/player/purchases`, exigindo sessão ativa de jogador, validando origem quando enviada, rejeitando papéis indevidos, payloads extras e rodadas repetidas.
+- [x] O cliente envia placa, valor total em centavos e rodadas; os multiplicadores/snapshot são definidos pelo servidor e o serviço distribui os valores nas seis categorias.
+- [x] O endpoint retorna os valores calculados e mantém a compra como `PENDING_PAYMENT`; informa explicitamente que esta etapa não cria nem confirma cobrança Pix.
+- [x] Código do recibo derivado de forma estável do usuário e da chave de idempotência, para que uma repetição de requisição não produza conflito por novo recibo.
+- [x] Adicionados testes de rota para origem, autenticação, autorização, payload inválido, rateio, snapshot do servidor, falha genérica e estabilidade do recibo em repetição.
+- [ ] Confirmar lint, typecheck, testes e build no GitHub Actions para o commit final desta etapa.
+- [ ] Próxima tarefa de produto: criar consulta segura das rodadas abertas e interface de compra do jogador que consuma este endpoint; depois integrar os recibos/histórico.
+
+Limites mantidos: nenhuma cobrança real, webhook, migração de produção, merge ou deploy foi executado.
