@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createCurrentPrizeRuleSnapshot, CURRENT_PRIZE_RULE_VERSION } from "@/domain/prize-rule-snapshot";
@@ -46,11 +45,9 @@ export async function POST(request: NextRequest) {
   }
 
   const snapshot = createCurrentPrizeRuleSnapshot();
-  const receiptCode = `JP-${createHash("sha256").update(user.id + ":" + parsed.data.idempotencyKey).digest("hex").slice(0, 16).toUpperCase()}`;
   try {
     const purchase = await createPendingPixPurchase(authPrisma, {
       idempotencyKey: parsed.data.idempotencyKey,
-      receiptCode,
       playerId: user.id,
       repetitions: parsed.data.roundIds.length,
       participations: parsed.data.roundIds.map((roundId) => ({
@@ -91,7 +88,7 @@ export async function POST(request: NextRequest) {
         })),
       },
       paymentActionRequired: true,
-      message: "Compra registrada como pendente. Nenhuma cobrança Pix foi criada ou confirmada por esta etapa.",
+      message: "Compra registrada como pendente. Nenhum recibo foi emitido porque o pagamento ainda não foi confirmado. Nenhuma cobrança Pix foi criada ou confirmada por esta etapa.",
     }, { status: 201, headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     if (error instanceof PurchaseServiceError) {
