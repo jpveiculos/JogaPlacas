@@ -79,3 +79,35 @@ A inspeção da branch de desenvolvimento ainda encontra a rota `POST /api/playe
 A integração deve seguir a documentação oficial vigente: criar pagamento Pix via `POST /v1/payments` com `Authorization: Bearer` e `X-Idempotency-Key`; validar a assinatura HMAC do Webhook com `x-signature`, `x-request-id` e `data.id`; depois consultar o pagamento na API do provedor e conferir referência, valor, moeda e estado antes de qualquer confirmação local. Referências: documentação oficial de [Pix](https://www.mercadopago.com.br/developers/pt/docs/checkout-api-payments/integration-configuration/integrate-pix) e [Webhooks](https://www.mercadopago.com.br/developers/pt/docs/checkout-pro/payment-notifications).
 
 **Gate de ativação:** mesmo que as variáveis já existam, não liberar produção até que os testes provem idempotência, assinatura inválida rejeitada, pagamento duplicado sem dupla confirmação, valor divergente rejeitado, pagamento tardio tratado sem participação retroativa e recibo liberado somente após confirmação autêntica. Não registrar nem solicitar tokens reais no chat ou no repositório.
+
+## Auditoria comparativa da integração legada — 2026-10-25
+
+A comparação foi feita sem alterar produção nem copiar código de um sistema para o outro.
+
+### O que pode ser reaproveitado conceitualmente
+
+- Os nomes de credenciais já usados no sistema legado (MERCADOPAGO_ACCESS_TOKEN e MERCADOPAGO_WEBHOOK_SECRET) podem ser mantidos como compatibilidade operacional, desde que sejam os segredos da mesma aplicação Mercado Pago e correspondam ao produto/API escolhidos.
+- O padrão de chave de idempotência, assinatura HMAC-SHA256, consulta do pedido no servidor e conferência de referência/valor é útil como referência técnica.
+- O uso de /v1/orders no legado é uma escolha de API que precisa ser validada contra o checkout Pix pretendido; não implica reutilizar o modelo de dados ou o fluxo de negócio antigo.
+
+### O que não deve ser copiado
+
+- O modelo de persistência e as tabelas do site antigo. O JogaPlacas tem Purchase, PurchaseParticipation, Payment, WebhookEvent e LedgerEntry, com suas próprias garantias e chaves de idempotência.
+- Regras antigas de modalidades, valores, rodadas ou recibos. Elas não correspondem ao produto atual de seis categorias e placas LEGACY/MERCOSUR.
+- A criação de e-mail fictício usada como fallback no site antigo. O modelo User atual não tem campo de e-mail; a implementação nova não deve inventar identidade do pagador. Antes de fechar o payload da API, confirmar se o produto escolhido exige e-mail e, se exigir, definir coleta/validação explícita ou uma alternativa suportada oficialmente.
+- A confirmação de compra baseada apenas em dados recebidos do navegador ou no corpo do webhook. O webhook deve validar HMAC, buscar o pedido pela API e validar referência, total e moeda.
+
+### Decisão de arquitetura
+
+O adaptador do Mercado Pago será uma camada de infraestrutura isolada do domínio, com contrato próprio para criar/consultar cobrança e normalizar estados do provedor. A compra pendente será criada pelo serviço atual; a chamada externa ocorrerá com a chave idempotente já persistida. Falhas ambíguas não devem criar outra cobrança às cegas: devem entrar em reconciliação pela referência externa. A confirmação de pagamento, a elegibilidade por cutoff e os lançamentos de razão devem ser tratados no banco do JogaPlacas, em transação e com idempotência.
+
+### Bloqueios antes da implementação de confirmação
+
+1. Fechar o contrato de criação de cobrança e os campos persistidos para QR Pix (copia-e-cola, base64 e URL de pagamento, se fornecidos).
+2. Implementar e testar uma função de confirmação transacional que atualize Payment, Purchase e participações elegíveis, gere o recibo somente após confirmação e crie lançamentos de razão exigidos pela arquitetura atual.
+3. Definir tratamento auditável para pagamento confirmado após cutoff; não ativar participação retroativa nem emitir recibo de participação elegível automaticamente.
+4. Implementar rota de webhook com validação da assinatura, leitura do recurso na API, deduplicação de evento e resposta HTTP adequada.
+5. Cobrir assinatura inválida, evento duplicado/fora de ordem, valor ou moeda divergente, indisponibilidade do provedor, resposta perdida na criação e corrida com cutoff.
+6. Testar migração e suíte de qualidade em ambiente descartável. Não realizar cobrança real nem implantar nesta fase.
+
+Este registro é uma decisão de compatibilidade e um checklist de engenharia; não declara a integração pronta nem confirma que as variáveis do servidor foram inspecionadas.
