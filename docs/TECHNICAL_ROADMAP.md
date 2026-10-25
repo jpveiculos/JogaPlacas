@@ -192,3 +192,10 @@ O usuário executou manualmente no Codespaces, na branch `feature/dual-plate-dra
 - O serviço agora exige `actorId` e grava obrigatoriamente `ROUND_PRIZES_SETTLED` na mesma transação dos créditos e da apuração. O teste de integração PostgreSQL foi atualizado para fornecer um ator e verificar os eventos de auditoria das chamadas concorrentes/repetidas, além de removê-los na limpeza da fixture.
 - A alteração está na branch `feature/dual-plate-draw`; aguardar CI antes de considerar validada. O teste de integração PostgreSQL depende de `RUN_POSTGRES_INTEGRATION=1` e de `DATABASE_URL`; a CI comum não substitui a execução explícita desse teste contra PostgreSQL.
 - Nenhum deploy, merge para `main` ou alteração de banco de produção foi realizado.
+
+### Correção de tipagem no teste de integração de apuração — 2026-10-25
+
+- As execuções #350, #351 e #352 detectaram falha de TypeScript no teste de integração PostgreSQL: duas chamadas ainda usavam a assinatura antiga de `settleRoundPrizes`, sem o ator obrigatório. Os demais jobs de migração e concorrência PostgreSQL dessas execuções passaram; o job principal falhou no typecheck.
+- Corrigi as chamadas restantes para fornecer o identificador do ator, mantendo a exigência de auditoria no serviço. Commit de correção: `0cc65cfc5d67bd6a9599dc75848740d96994884b`.
+- A execução #353 está na fila para validar a correção. Não considerar o pipeline aprovado novamente até essa execução terminar.
+- Nenhuma alteração de produção ou deploy foi feita.
