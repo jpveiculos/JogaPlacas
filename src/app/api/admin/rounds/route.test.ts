@@ -106,7 +106,7 @@ describe("POST /api/admin/rounds", () => {
   it("requires the admin role", async () => {
     mocks.getSessionUser.mockResolvedValue({ id: "player-1", username: "player", role: "PLAYER", status: "ACTIVE", mustChangePassword: false });
     const result = await (await import("./route")).POST(createRequest({
-      startsAt: "2035-01-01T12:00:00.000Z", resultAt: "2035-01-01T12:30:00.000Z",
+      startsAt: "2035-01-01T12:01:00.000Z", resultAt: "2035-01-01T12:30:00.000Z",
     }));
     expect(result.status).toBe(403);
     expect(mocks.roundCreate).not.toHaveBeenCalled();
