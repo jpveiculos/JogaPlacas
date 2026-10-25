@@ -377,10 +377,10 @@ A implementação desta arquitetura ainda está pendente; o componente térmico 
 - `POST /api/player/purchases` cria compra pendente e informa explicitamente que não cria nem confirma cobrança Pix. A rota não constitui checkout Pix operacional.
 - `ThermalReceipt` só renderiza com status confirmado e código válido, mas a geração do QR é fornecida externamente e, sem QR, mostra um placeholder. Não foi localizada nesta checagem uma integração ponta a ponta que confirme pagamento, emita o código, gere QR e ofereça impressão real.
 - `GET /api/player/history` limita o histórico às compras do próprio jogador, usa `no-store` e mascara o código de recibo enquanto a compra não está confirmada. É uma peça parcial, não prova que o fluxo completo de compra esteja concluído.
-- O pipeline configurado contém lint, typecheck, testes, build, migração em PostgreSQL descartável e testes de concorrência; no HEAD atual, todos os jobs visíveis estão falhando e precisam ser investigados antes de confiar nesses gates.
+- O pipeline configurado contém lint, typecheck, testes, build, migração em PostgreSQL descartável e testes de concorrência. As execuções recentes #445, #446 e #447 terminaram com sucesso para a página pública de consulta e suas atualizações de documentação; isso valida esses commits na CI, mas não comprova prontidão operacional nem testes ponta a ponta.
 
 ### Bloqueios para implantação
-1. CI do HEAD atual sem aprovação observável.
+1. Não há evidência de validação ponta a ponta em ambiente de homologação.
 2. Fluxo de confirmação de pagamento e emissão transacional do recibo ainda não concluído; nenhum pagamento real deve ser habilitado.
 3. Áreas de jogador/cambista/administrador ainda incompletas, com telas placeholder.
 4. QR Code real e integração física de impressão ainda não concluídos/testados.
