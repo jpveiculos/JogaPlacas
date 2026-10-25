@@ -80,13 +80,13 @@ describe("createPendingPixPurchase input validation", () => {
     expect(transaction).not.toHaveBeenCalled();
   });
 
-  it("rejects a blank receipt code", async () => {
+  it("allows a pending purchase input without an issued receipt", async () => {
     const input = validInput();
-    input.receiptCode = " ";
+    input.receiptCode = null;
+    transaction.mockRejectedValue(new Error("transaction reached"));
 
-    await expect(createPendingPixPurchase(service(), input))
-      .rejects.toMatchObject({ code: "INVALID_PURCHASE" });
-    expect(transaction).not.toHaveBeenCalled();
+    await expect(createPendingPixPurchase(service(), input)).rejects.toThrow("transaction reached");
+    expect(transaction).toHaveBeenCalledOnce();
   });
 
   it.each([0, 11, 1.5])("rejects invalid repetition count %s before opening a transaction", async (repetitions) => {
