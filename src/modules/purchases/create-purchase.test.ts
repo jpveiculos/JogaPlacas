@@ -398,3 +398,52 @@ describe("createPendingPixPurchase financial totals", () => {
     expect(createCall.data.payment.create.amountCents).toBe(525);
   });
 });
+
+
+describe("createPendingPixPurchase sequential repetitions", () => {
+  beforeEach(() => {
+    transaction.mockReset();
+  });
+
+  it("rejects a repeated purchase that skips a scheduled draw", async () => {
+    const now = new Date("2026-10-23T20:00:00.000Z");
+    const input = validInput();
+    input.repetitions = 2;
+    input.participations = [
+      { ...input.participations[0]!, roundId: "round-1" },
+      { ...input.participations[0]!, roundId: "round-3" },
+    ];
+    const tx = {
+      purchase: { findUnique: vi.fn().mockResolvedValue(null), create: vi.fn() },
+      $queryRaw: vi.fn()
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([{ decisionTime: now }]),
+      round: {
+        findMany: vi.fn().mockResolvedValue([
+          {
+            id: "round-1",
+            status: "OPEN",
+            startsAt: new Date(now.getTime() - 29 * 60_000),
+            cutoffAt: new Date(now.getTime() + 29 * 60_000),
+            resultAt: new Date("2026-10-23T20:30:00.000Z"),
+          },
+          {
+            id: "round-3",
+            status: "SCHEDULED",
+            startsAt: new Date(now.getTime() + 31 * 60_000),
+            cutoffAt: new Date(now.getTime() + 59 * 60_000),
+            resultAt: new Date("2026-10-23T21:30:00.000Z"),
+          },
+        ]),
+      },
+    };
+    transaction.mockImplementation(async (callback: (client: unknown) => unknown) => callback(tx));
+
+    await expect(createPendingPixPurchase(
+      { $transaction: transaction } as unknown as PrismaClient,
+      input,
+      now,
+    )).rejects.toMatchObject({ code: "INVALID_PURCHASE" });
+    expect(tx.purchase.create).not.toHaveBeenCalled();
+  });
+});
