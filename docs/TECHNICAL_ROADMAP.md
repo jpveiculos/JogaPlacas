@@ -233,7 +233,7 @@ O usuário executou manualmente no Codespaces, na branch `feature/dual-plate-dra
 
 ### Programação recorrente de rodadas — 2026-10-25
 
-- Implementado endpoint interno protegido `GET /api/internal/round-scheduler`, destinado a ser chamado pelo agendador do ambiente de hospedagem a cada minuto com `Authorization: Bearer <ROUND_SCHEDULER_SECRET>`. A ausência de segredo ou um token inválido resulta em 401.
+- Implementado endpoint interno protegido `POST /api/internal/round-scheduler`, destinado a ser chamado pelo agendador do ambiente de hospedagem a cada minuto com `Authorization: Bearer <ROUND_SCHEDULER_SECRET>`. A ausência de segredo ou um token inválido resulta em 401.
 - O endpoint mantém uma janela móvel de 48 horas de rodadas, com horários de resultado alinhados às marcas de meia hora no fuso `America/Sao_Paulo`. Os códigos de rodada incluem data e minuto local e a restrição única no banco permite repetição segura sem duplicar rodadas.
 - A sequência recorrente abre um minuto após o sorteio anterior, fecha um minuto antes do próximo sorteio e mantém resultados em :00 e :30. A rodada com resultado às 00:30 abre às 00:01 e fecha às 00:29.
 - O agendador processa fechamentos vencidos antes dos sorteios vencidos e usa os serviços existentes que bloqueiam a linha e protegem contra sorteios duplicados. Cada rodada criada e sua auditoria são gravadas na mesma transação. Falhas individuais são reportadas no resultado para que o provedor possa repetir a chamada.
@@ -289,3 +289,11 @@ O usuário executou manualmente no Codespaces, na branch `feature/dual-plate-dra
 - A interface do jogador foi ajustada para orientar a seleção sequencial: a primeira rodada só pode ser a que está aberta; só a próxima rodada consecutiva pode ser adicionada; remover uma rodada também remove as posteriores; rodadas não consecutivas ficam desabilitadas. O servidor continua sendo a autoridade final e rejeita qualquer sequência inválida.
 - O teste automatizado de compra que tenta pular uma rodada passou na execução #412; porém a execução geral falhou por causa da fixture financeira, e não deve ser considerada aprovada. A nova execução após a correção precisa terminar com sucesso antes de validar a mudança.
 - Sem deploy, sem merge para `main`, sem banco de produção e sem cobrança real.
+
+
+### Recuperação do agendador no minuto de corte — 2026-10-25
+
+- A auditoria encontrou uma condição de borda: se o scheduler fosse iniciado durante o minuto final antes do sorteio, a geração de slots pulava o sorteio iminente porque o cutoff já havia chegado. Isso contrariava a estratégia de recuperação documentada.
+- Corrigido o cálculo para pular somente horários de resultado que já passaram. Se o scheduler iniciar às 12:29 para o resultado das 12:30, ainda cria a rodada com início às 12:01 e cutoff às 12:29; a rotina fecha a rodada e pode sortear às 12:30.
+- Adicionado teste automatizado com relógio fixo para validar o caso de inicialização às 12:29 no fuso de São Paulo e conferir os horários e o evento de auditoria.
+- A CI deve passar antes de considerar a correção validada. O endpoint permanece protegido por segredo e não foi configurado nem ativado em hospedagem de produção.
