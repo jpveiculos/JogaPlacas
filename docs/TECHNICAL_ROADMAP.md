@@ -199,3 +199,13 @@ O usuário executou manualmente no Codespaces, na branch `feature/dual-plate-dra
 - Corrigi as chamadas restantes para fornecer o identificador do ator, mantendo a exigência de auditoria no serviço. Commit de correção: `0cc65cfc5d67bd6a9599dc75848740d96994884b`.
 - A execução #353 está na fila para validar a correção. Não considerar o pipeline aprovado novamente até essa execução terminar.
 - Nenhuma alteração de produção ou deploy foi feita.
+
+
+### CI restabelecida e ajuste do ator de auditoria — 2026-10-25
+
+- As execuções #353 e #354 terminaram com sucesso nos três jobs do workflow: verificação principal, teste de migração e teste de concorrência PostgreSQL. A correção das chamadas de teste para a assinatura obrigatória de `settleRoundPrizes(prisma, roundId, actorId)` está validada pela CI: https://github.com/jpveiculos/JogaPlacas/actions/runs/40233222350 e https://github.com/jpveiculos/JogaPlacas/actions/runs/40233232170.
+- Na revisão posterior do teste de integração de apuração, foi identificado que o fixture usava o ID de um jogador como ator de auditoria. O teste agora cria um usuário com papel `ADMIN` e usa esse ID nas chamadas de apuração; a limpeza remove os dois usuários de teste. Essa mudança é apenas no teste e aguarda a CI do novo commit.
+- A inspeção do checkout confirma que a criação de compra grava uma compra e pagamento Pix pendentes, com idempotência e validação transacional, mas não chama o Mercado Pago, não cria cobrança real e não confirma pagamento. A interface informa essa limitação ao jogador. A integração de pagamento continua explicitamente fora do estado funcional atual.
+- A área do cambista continua sendo um placeholder protegido por papel, sem fluxo de venda, cliente ou comissão habilitado. Não tratar os fluxos Pix/cambista como prontos.
+- A limitação de tentativas de login permanece por conta e o risco de bloqueio provocado por terceiros continua pendente. Não foi adicionada uma dimensão por IP/origem sem conhecer um sinal de cliente confiável da infraestrutura.
+- Nenhum deploy, merge para `main`, cobrança real ou alteração em banco de produção foi realizado.
