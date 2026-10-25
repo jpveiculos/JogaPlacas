@@ -100,4 +100,26 @@ describe("GET purchase receipt", () => {
     expect(response.status).toBe(404);
     expect(mocks.purchaseFindUnique).not.toHaveBeenCalled();
   });
+
+  it("allows an administrator to read a confirmed receipt", async () => {
+    mocks.getSessionUser.mockResolvedValue({
+      id: "admin-1", username: "admin", role: "ADMIN", status: "ACTIVE", mustChangePassword: false,
+    });
+    const response = await GET(request(), { params: Promise.resolve({ purchaseId: "purchase-12345678" }) });
+    expect(response.status).toBe(200);
+  });
+
+  it("allows a cashier to read only purchases assigned to that cashier", async () => {
+    mocks.getSessionUser.mockResolvedValue({
+      id: "cashier-1", username: "cashier", role: "CASHIER", status: "ACTIVE", mustChangePassword: false,
+    });
+    mocks.purchaseFindUnique.mockResolvedValue({ ...confirmedPurchase(), cashierId: "cashier-1" });
+    const allowed = await GET(request(), { params: Promise.resolve({ purchaseId: "purchase-12345678" }) });
+    expect(allowed.status).toBe(200);
+
+    mocks.purchaseFindUnique.mockResolvedValue({ ...confirmedPurchase(), cashierId: "cashier-2" });
+    const denied = await GET(request(), { params: Promise.resolve({ purchaseId: "purchase-12345678" }) });
+    expect(denied.status).toBe(404);
+  });
+
 });
