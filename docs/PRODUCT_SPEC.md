@@ -15,7 +15,7 @@
 - Não converter letras Mercosul em dígitos durante validação, normalização ou apuração. A quinta posição Mercosul aceita A-Z, preservada literalmente.
 - Cada aposta deve armazenar explicitamente seu formato (`LEGACY` ou `MERCOSUR`) e ser comparada somente com o resultado do mesmo formato. Não reutilizar equivalências entre formatos na apuração. Preservar formato e exibição para auditoria.
 - Rejeitar formatos inválidos no servidor.
-- Multiplicadores aprovados: unidade (último dígito) 2x; dezena (últimos dois) 20x; centena (últimos três) 200x; milhar (últimos quatro) 2.000x; três letras iniciais em ordem exata 2.000x; placa completa 200.000x.
+- Multiplicadores aprovados: unidade (último dígito) 6x; dezena (últimos dois) 20x; centena (últimos três) 200x; milhar (últimos quatro) 2.000x; três letras iniciais em ordem exata 2.000x; placa completa 200.000x.
 - Multiplicador aplica-se ao valor alocado à respectiva categoria. Para Mercosul, unidade/dezena/centena/milhar comparam literalmente os últimos 1/2/3/4 caracteres da placa; a centena pode conter uma letra e dois números, e a milhar pode conter uma letra e três caracteres numéricos no sufixo.
 - Cada linha deve guardar `ruleVersion` e um `ruleSnapshot` com os multiplicadores daquela aposta. A apuração usa o snapshot histórico, nunca os multiplicadores atuais por suposição. Snapshots ausentes/inválidos bloqueiam a apuração para reconciliação.
 
@@ -27,7 +27,7 @@
 - Corte validado no servidor. Não aceitar nem incluir retroativamente aposta após o fechamento.
 - Repetição de 1 a 10 rodadas com pagamento antecipado e registro individual de cada participação.
 - Valor mínimo total de R$ 1,00 por placa em cada rodada.
-- O total por rodada abrange todas as placas e categorias selecionadas; a distribuição deve conservar cada centavo, com regra determinística de rateio e tratamento dos centavos residuais documentada e testada.
+- Valor mínimo total por placa em cada rodada: R$ 1,00. Para cada placa, o sistema divide automaticamente o total em centavos inteiros entre as seis categorias: calcula `base = floor(totalCents / 6)`, atribui `base` às seis categorias e direciona todo o resíduo (`totalCents % 6`) exclusivamente à unidade. A soma das seis alocações deve ser exatamente igual ao total da placa. Exemplo: R$ 1,00 (100 centavos) resulta em unidade 20 centavos e 16 centavos para cada uma das outras cinco categorias. A unidade paga 6x sua alocação; nesse exemplo, o prêmio é R$ 1,20. O cálculo deve usar apenas inteiros, ser determinístico e ter testes.
 - Rodadas devem ter data/hora e fuso explícitos (`America/Sao_Paulo`). Recorrências geram rodadas individuais. Rodadas concluídas/fechadas não podem ser editadas silenciosamente; correções e cancelamentos devem ser auditados.
 
 ## 4. Pagamentos, Pix e carteira do jogador
