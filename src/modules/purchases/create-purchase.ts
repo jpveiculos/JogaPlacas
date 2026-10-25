@@ -6,7 +6,6 @@ import {
   MAX_REPETITIONS,
   MIN_REPETITIONS,
   validatePurchaseDraft,
-  type CategoryAllocation,
   type PurchaseDraft,
 } from "../../domain/purchase-rules";
 
