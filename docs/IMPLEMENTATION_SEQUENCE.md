@@ -53,3 +53,7 @@ A primeira execução do teste histórico falhou antes da migração por incluir
 
 ### Confirmação da CI — 2026-10-25
 O workflow completo do commit `576ec2afb43a5a6fcb9deeb38027a0fdf53efef8` passou, incluindo o novo teste de migração histórica: https://github.com/jpveiculos/JogaPlacas/actions/runs/40147585024. Próxima pendência da sequência: alinhar `next` e `eslint-config-next` em `16.4.3`, regenerar `package-lock.json` com npm e executar novamente a CI completa antes de avançar para implementação funcional.
+
+
+### Achados de banco/regras antes de implementar checkout — 2026-10-25
+A revisão inicial confirma que PK/FK/uniqueness estão presentes, mas os limites de valores, soma entre compra/participações/linhas e presença conjunta dos resultados da rodada não estão protegidos por constraints do banco. Serviços validam parte desses invariantes; avaliar constraints e testes de migração antes de abrir outros caminhos de escrita. A criação de compra Pix persiste somente um pagamento pendente e não confirma cobrança com provedor. A sequência continua: alinhar e regenerar lockfile, validar CI completa, fechar as invariantes e então implementar fluxos funcionais.
