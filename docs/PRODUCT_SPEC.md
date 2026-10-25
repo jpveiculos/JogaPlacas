@@ -389,3 +389,10 @@ A implementação desta arquitetura ainda está pendente; o componente térmico 
 7. Provedor de hospedagem/implantação e ambiente de staging não foram confirmados nesta auditoria.
 
 **Decisão operacional:** continuar na branch de desenvolvimento, investigar e corrigir a CI antes de novos módulos de produto. Não fazer merge, deploy, migração de produção, configuração de domínio ou ativação de pagamento real sem autorização explícita.
+
+
+## 15. Auditoria financeira da apuração — 2026-10-25
+- A função de apuração deve validar as seis alocações em centavos de cada linha antes de calcular qualquer prêmio, inclusive categorias que não venceram. Uma alocação negativa, fracionária ou fora do intervalo seguro bloqueia a apuração; não se deve validar apenas a categoria premiada.
+- Implementada validação preventiva das seis alocações em `src/modules/rounds/settle-round-prizes.ts` e teste unitário para alocação negativa em categoria perdedora. Commits: `d1c5c695751b8746942d996d4d3337920a5b2352` e `7f62eac41dcbf29f4bbe862c627ded6430b32142`.
+- Estado de validação: os commits foram enviados à branch `feature/dual-plate-draw`; a aprovação da CI ainda precisa ser confirmada. Não considerar a correção validada até a execução dos testes e da pipeline completa.
+- Próxima auditoria necessária: verificar que a soma das seis alocações por placa corresponde exatamente ao valor cobrado para aquela placa, e que a soma das linhas corresponde ao total da participação/compra, sem assumir isso apenas pela apuração do prêmio.
