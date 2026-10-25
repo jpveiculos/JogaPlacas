@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { createHash } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createCurrentPrizeRuleSnapshot, CURRENT_PRIZE_RULE_VERSION } from "@/domain/prize-rule-snapshot";
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
   }
 
   const snapshot = createCurrentPrizeRuleSnapshot();
-  const receiptCode = `JP-${randomUUID().replaceAll("-", "").slice(0, 16).toUpperCase()}`;
+  const receiptCode = `JP-${createHash("sha256").update(user.id + ":" + parsed.data.idempotencyKey).digest("hex").slice(0, 16).toUpperCase()}`;
   try {
     const purchase = await createPendingPixPurchase(authPrisma, {
       idempotencyKey: parsed.data.idempotencyKey,
