@@ -49,3 +49,7 @@ Implementado: script `scripts/test-dual-plate-migration.mjs`, comando `npm run t
 
 ### Correção de fixture — 2026-10-25
 A primeira execução do teste histórico falhou antes da migração por incluir `Purchase.updatedAt` no INSERT, embora essa coluna não exista na migração inicial. O INSERT foi corrigido no commit `576ec2afb43a5a6fcb9deeb38027a0fdf53efef8`. Aguardando nova execução da CI para validar os dois cenários de backfill.
+
+
+### Confirmação da CI — 2026-10-25
+O workflow completo do commit `576ec2afb43a5a6fcb9deeb38027a0fdf53efef8` passou, incluindo o novo teste de migração histórica: https://github.com/jpveiculos/JogaPlacas/actions/runs/40147585024. Próxima pendência da sequência: alinhar `next` e `eslint-config-next` em `16.4.3`, regenerar `package-lock.json` com npm e executar novamente a CI completa antes de avançar para implementação funcional.
