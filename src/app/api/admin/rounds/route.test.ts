@@ -97,7 +97,7 @@ describe("POST /api/admin/rounds", () => {
 
   it("rejects cross-origin round creation", async () => {
     const result = await (await import("./route")).POST(createRequest({
-      startsAt: "2035-01-01T12:00:00.000Z", resultAt: "2035-01-01T12:30:00.000Z",
+      startsAt: "2035-01-01T12:01:00.000Z", resultAt: "2035-01-01T12:30:00.000Z",
     }, "https://attacker.test"));
     expect(result.status).toBe(403);
     expect(mocks.roundCreate).not.toHaveBeenCalled();
@@ -112,17 +112,17 @@ describe("POST /api/admin/rounds", () => {
     expect(mocks.roundCreate).not.toHaveBeenCalled();
   });
 
-  it("rejects intervals outside the 29-to-30-minute schedule", async () => {
+  it("rejects intervals outside the exact recurring schedule", async () => {
     const result = await (await import("./route")).POST(createRequest({
-      startsAt: "2035-01-01T12:00:00.000Z", resultAt: "2035-01-01T12:28:00.000Z",
+      startsAt: "2035-01-01T12:01:00.000Z", resultAt: "2035-01-01T12:28:00.000Z",
     }));
     expect(result.status).toBe(400);
     expect(mocks.roundCreate).not.toHaveBeenCalled();
   });
 
-  it("accepts the 29-minute interval used by recurring rounds", async () => {
+  it("accepts the 29-minute interval aligned to a half-hour result", async () => {
     const result = await (await import("./route")).POST(createRequest({
-      startsAt: "2035-01-01T12:00:00.000Z", resultAt: "2035-01-01T12:29:00.000Z",
+      startsAt: "2035-01-01T12:01:00.000Z", resultAt: "2035-01-01T12:30:00.000Z",
     }));
     expect(result.status).toBe(201);
     expect(mocks.roundCreate).toHaveBeenCalledWith({ data: expect.objectContaining({
