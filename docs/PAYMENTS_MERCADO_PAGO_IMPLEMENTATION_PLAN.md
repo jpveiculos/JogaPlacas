@@ -94,7 +94,7 @@ A comparação foi feita sem alterar produção nem copiar código de um sistema
 
 - O modelo de persistência e as tabelas do site antigo. O JogaPlacas tem Purchase, PurchaseParticipation, Payment, WebhookEvent e LedgerEntry, com suas próprias garantias e chaves de idempotência.
 - Regras antigas de modalidades, valores, rodadas ou recibos. Elas não correspondem ao produto atual de seis categorias e placas LEGACY/MERCOSUR.
-- A criação de e-mail fictício usada como fallback no site antigo. O modelo User atual não tem campo de e-mail; a implementação nova não deve inventar identidade do pagador. Antes de fechar o payload da API, confirmar se o produto escolhido exige e-mail e, se exigir, definir coleta/validação explícita ou uma alternativa suportada oficialmente.
+- O checkout não deve coletar e-mail real do jogador. Por decisão operacional do responsável, o adaptador gera um endereço técnico sintético determinístico apenas para preencher payer.email, reproduzindo o padrão legado sem adicionar campo de e-mail ao perfil nem pedir dados ao jogador. A compatibilidade precisa ser testada em ambiente de teste.
 - A confirmação de compra baseada apenas em dados recebidos do navegador ou no corpo do webhook. O webhook deve validar HMAC, buscar o pedido pela API e validar referência, total e moeda.
 
 ### Decisão de arquitetura
