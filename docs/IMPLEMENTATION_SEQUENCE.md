@@ -116,3 +116,12 @@ Limites mantidos: nenhuma cobrança real, webhook, migração de produção, mer
 - [ ] Executar e confirmar CI (lint, typecheck, unit tests, build e testes PostgreSQL/migração) no HEAD final. Statuses de commit consultados até aqui não retornaram checks, então a validação não está comprovada.
 
 Não houve merge, deploy, migração em produção nem cobrança real.
+
+
+### Plaquinhas de entrada e resultados — 2026-10-25
+
+- [x] A entrada do jogador agora exige a escolha explícita entre placa cinza (ABC-1234) e placa Mercosul (ABC1D23), com validação específica para o formato selecionado; a quinta posição Mercosul aceita A–Z e não é convertida em número.
+- [x] Adicionado componente visual reutilizável de plaquinha, com estilos distintos para placa cinza e Mercosul, usado na entrada e no recibo.
+- [x] Adicionada rota autenticada de resultados recentes (GET /api/player/results) e seção na área do jogador que apresenta os dois resultados independentes em plaquinhas, para rodadas concluídas nas últimas 24 horas.
+- [ ] Confirmar lint, typecheck, testes e build da CI no commit final. Esta alteração não foi validada por execução local nesta sessão.
+- Limites mantidos: resultados não são convertidos um no outro; nenhuma cobrança Pix real, migração de produção, merge ou deploy foi executado.
