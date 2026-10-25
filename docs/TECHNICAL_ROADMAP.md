@@ -325,3 +325,13 @@ Implementação parcial do recibo — 2026-10-25: o componente térmico agora id
 ### Correção de teste do recibo — 2026-10-25
 
 - A CI #428/#429 encontrou que o arquivo de teste importava diretamente o componente TSX, mas a configuração Vitest não transformava JSX nessa importação. A regra de numeração foi extraída para `receipt-repetition.ts`, os tipos para `thermal-receipt-types.ts`, e o teste agora importa o módulo puro sem carregar JSX. O componente continua usando e exportando o mesmo helper. A correção aguarda CI; não considerar validada até todos os jobs terminarem.
+
+
+### Revisão complementar de pagamentos e recibo — 2026-10-25
+
+- A auditoria atual confirmou que `POST /api/player/purchases` cria somente compra/participações/pagamento pendentes e informa explicitamente que nenhuma cobrança Pix foi criada. O serviço não chama o Mercado Pago e não marca pagamento como confirmado.
+- A consulta pública por código de recibo já limita o resultado a compras confirmadas e expõe apenas as linhas/resultados necessários; pode servir de destino para o QR do recibo único após validação adicional e geração do QR.
+- O schema contém metadados para provedor e eventos de webhook, mas ainda não existe adaptador, criação de cobrança, verificação de autenticidade de webhook ou reconciliação ponta a ponta.
+- O plano `docs/PAYMENTS_MERCADO_PAGO_IMPLEMENTATION_PLAN.md` foi atualizado com esses achados e gates de segurança. Não usar credenciais reais nem emitir recibo até que o pagamento seja confirmado por fonte confiável no servidor.
+- As primeiras execuções da CI do recibo (#428 e #429) falharam porque Vitest tentou importar JSX do componente térmico sem transformação configurada. A regra de numeração e os tipos foram extraídos para módulos TypeScript sem JSX, e o teste passou a importar o módulo puro. A validação desta correção está pendente da CI mais recente.
+- Sem deploy, sem merge para `main`, sem alteração de banco de produção e sem cobrança real.
