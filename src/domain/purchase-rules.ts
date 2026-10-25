@@ -21,6 +21,7 @@ export type CategoryAllocation = {
 export type ParticipationDraft = {
   roundId: string;
   cutoffAt: Date;
+  startsAt?: Date;
   lines: Array<CategoryAllocation & { plateDisplay: string }>;
 };
 
@@ -87,6 +88,13 @@ export function validatePurchaseDraft(
     if (!(participation.cutoffAt instanceof Date)
       || Number.isNaN(participation.cutoffAt.getTime())) {
       throw new PurchaseRuleError("A valid round cutoff is required");
+    }
+    if (participation.startsAt && (!(participation.startsAt instanceof Date)
+      || Number.isNaN(participation.startsAt.getTime()))) {
+      throw new PurchaseRuleError("A valid round start is required when provided");
+    }
+    if (participation.startsAt && now.getTime() < participation.startsAt.getTime()) {
+      throw new PurchaseRuleError("A participation cannot be purchased before its round opens");
     }
     if (now.getTime() >= participation.cutoffAt.getTime()) {
       throw new PurchaseRuleError("A participation cannot be purchased at or after its round cutoff");
