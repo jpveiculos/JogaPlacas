@@ -224,7 +224,7 @@ O usuário executou manualmente no Codespaces, na branch `feature/dual-plate-dra
 ### Criação administrativa de rodadas — 2026-10-25
 
 - A execução #363 confirmou que o painel operacional anterior passou em lint, typecheck, testes, build, migração e concorrência PostgreSQL após a correção do efeito React.
-- Acrescentada criação manual de rodada na API administrativa: apenas ADMIN com senha inicial já alterada pode criar; requisição de outra origem é recusada quando o cabeçalho Origin está presente; os horários são validados no servidor; o início deve ser futuro e o resultado deve ocorrer exatamente 30 minutos depois; o cutoff é calculado como um minuto antes do resultado.
+- Acrescentada criação manual de rodada na API administrativa: apenas ADMIN com senha inicial já alterada pode criar; requisição de outra origem é recusada quando o cabeçalho Origin está presente; os horários são validados no servidor; o início deve ser futuro e exatamente 29 minutos antes do resultado, que precisa cair nos minutos :00 ou :30 de São Paulo; o cutoff é calculado como um minuto antes do resultado.
 - O código da rodada é derivado do horário de resultado no fuso `America/Sao_Paulo`; criação e evento `ROUND_CREATED` são persistidos na mesma transação. Código duplicado retorna conflito em vez de sobrescrever a rodada.
 - A interface converte horários de parede do fuso São Paulo para ISO antes de enviar, exibe a regra de cutoff e atualiza a lista após a criação. Foram acrescentados testes de rota para origem, papel, intervalo e auditoria transacional.
 - As alterações de criação de rodada e seus testes ainda aguardam a CI dos commits mais recentes; não considerar aprovadas até a conclusão do workflow.
@@ -235,9 +235,9 @@ O usuário executou manualmente no Codespaces, na branch `feature/dual-plate-dra
 
 - Implementado endpoint interno protegido `GET /api/internal/round-scheduler`, destinado a ser chamado pelo agendador do ambiente de hospedagem a cada minuto com `Authorization: Bearer <ROUND_SCHEDULER_SECRET>`. A ausência de segredo ou um token inválido resulta em 401.
 - O endpoint mantém uma janela móvel de 48 horas de rodadas, com horários de resultado alinhados às marcas de meia hora no fuso `America/Sao_Paulo`. Os códigos de rodada incluem data e minuto local e a restrição única no banco permite repetição segura sem duplicar rodadas.
-- A primeira rodada da sequência inicia 30 minutos antes do resultado; as seguintes iniciam um minuto depois do resultado anterior. O fechamento é sempre marcado para um minuto antes do resultado. Assim, a sequência operacional é abre → fecha → sorteia → abre, com resultados em :00 e :30.
+- A sequência recorrente abre um minuto após o sorteio anterior, fecha um minuto antes do próximo sorteio e mantém resultados em :00 e :30. A rodada com resultado às 00:30 abre às 00:01 e fecha às 00:29.
 - O agendador processa fechamentos vencidos antes dos sorteios vencidos e usa os serviços existentes que bloqueiam a linha e protegem contra sorteios duplicados. Cada rodada criada e sua auditoria são gravadas na mesma transação. Falhas individuais são reportadas no resultado para que o provedor possa repetir a chamada.
-- A criação manual agora aceita janelas de 29 ou 30 minutos, compatíveis com a rodada inicial e com as rodadas recorrentes. A criação manual não substitui o agendador.
+- A criação manual segue o mesmo ciclo de 29 minutos entre início e resultado e não substitui o agendador.
 - **Não está ativado em produção:** é necessário configurar `ROUND_SCHEDULER_SECRET` no ambiente de hospedagem e criar uma tarefa externa com frequência de um minuto. O repositório não identifica ainda um provedor de hospedagem/agendador de produção confirmado, e nenhuma URL ativa, segredo ou banco produtivo foi alterado. A programação só será efetivamente automática quando essa tarefa for configurada no ambiente correto.
 - Validação de CI pendente para os commits desta implementação. Não considerar sorteios automáticos ativos nem fazer cobranças reais até validar o workflow e configurar o agendador com acesso ao banco correto.
 
