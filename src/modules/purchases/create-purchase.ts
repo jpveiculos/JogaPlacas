@@ -216,6 +216,27 @@ export async function createPendingPixPurchase(
     const rounds = await tx.round.findMany({ where: { id: { in: roundIds } } });
     const roundsById = new Map(rounds.map((round) => [round.id, round]));
 
+    // Repetitions are a contiguous sequence, not a selection of arbitrary future rounds.
+    // The caller's order is authoritative: every result must be exactly 30 minutes after
+    // the previous one, with no skipped draw. Check database timestamps, not client claims.
+    const selectedRounds = input.participations.map((participation) => {
+      const round = roundsById.get(participation.roundId);
+      if (!round) {
+        throw new PurchaseServiceError("A selected round is not available", "ROUND_UNAVAILABLE");
+      }
+      return round;
+    });
+    for (let index = 1; index < selectedRounds.length; index += 1) {
+      const previous = selectedRounds[index - 1]!;
+      const current = selectedRounds[index]!;
+      if (current.resultAt.getTime() - previous.resultAt.getTime() !== 30 * 60 * 1000) {
+        throw new PurchaseServiceError(
+          "Repeated participations must use consecutive rounds with no skipped draw",
+          "INVALID_PURCHASE",
+        );
+      }
+    }
+
     const draft: PurchaseDraft = {
       repetitions: input.repetitions,
       paymentMethod: "PIX",
