@@ -73,3 +73,8 @@ Cada etapa precisa produzir código, testes e documentação coerentes. Não alt
 - O teste de migração atual usa PostgreSQL vazio; ele não exercita a classificação de dados históricos. Antes de qualquer uso num banco com dados, criar um teste isolado de backfill LEGACY/MERCOSUR e falha segura para registro inválido/ambíguo.
 - `next@16.4.3` e `eslint-config-next@16.4.2` seguem desalinhados por um patch. Não alterar cegamente; confirmar compatibilidade, regenerar lockfile e validar o pipeline ao resolver.
 - Nenhum teste local/instalação limpa, migração produtiva ou deploy foi executado nesta etapa.
+
+
+## Atualização de implementação — teste de migração histórica (2026-10-25)
+
+Foi adicionado um teste automatizado de backfill em PostgreSQL descartável: `scripts/test-dual-plate-migration.mjs`, comando `npm run test:migration-backfill`, integrado ao job `migration-test`. Ele testa classificação de registros LEGACY/MERCOSUR, preservação do resultado Mercosul e bloqueio para placa histórica não classificável. A implementação está commitada, mas a aprovação depende do resultado do workflow do commit atual. Executar somente em PostgreSQL descartável com permissão para criar/remover bancos. Nenhum banco real foi alterado.
