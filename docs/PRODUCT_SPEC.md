@@ -258,3 +258,10 @@ O recibo oficial só pode ser emitido depois que o pagamento da compra estiver c
 - Não basta ocultar o código na interface: a API e o modelo de persistência devem impedir a emissão prematura. Revisar o `receiptCode` atualmente obrigatório na compra pendente e a rota que hoje devolve um código antes da confirmação.
 - Atualizar testes para cobrir compra pendente sem recibo, confirmação Pix final, confirmação de dinheiro pelo cambista, repetição de webhook/clique e consulta de código inexistente ou não emitido.
 - Nenhuma cobrança real, ativação de webhook, migração de produção, merge ou deploy é autorizada por esta decisão.
+
+
+### Estado da implementação da regra de recibo — 2026-10-25
+
+A primeira correção foi aplicada na branch de desenvolvimento: `Purchase.receiptCode` agora é anulável, há migração para limpar o código de compras ainda pendentes, o endpoint do jogador não cria mais código antes da confirmação e a interface/histórico não apresentam compra pendente como recibo emitido.
+
+A regra ainda não está completa ponta a ponta: falta criar a operação transacional de confirmação que atribui um código único ao confirmar compra e participações, falta o fluxo autorizado de confirmação de dinheiro pelo cambista e a integração Pix/webhook continua planejada para a última fase. Até essas etapas existirem e passarem nos testes/CI, não considerar emissão de recibo após confirmação concluída.
