@@ -1,6 +1,6 @@
 import { Prisma, PaymentMethod, RoundStatus, type PrismaClient } from "../../generated/prisma/client";
 import { normalizePlate } from "../plates/normalize-plate";
-import { readPrizeMultipliers } from "../../domain/prize-rule-snapshot";
+import { APPROVED_PRIZE_MULTIPLIERS, PRIZE_CATEGORIES, readPrizeMultipliers } from "../../domain/prize-rule-snapshot";
 import { allocatePlateStake } from "../../domain/allocate-plate-stake";
 import {
   MAX_REPETITIONS,
@@ -178,6 +178,22 @@ export async function createPendingPixPurchase(
         );
       }
       return existing;
+    }
+
+    // Existing idempotent purchases are handled above using their original snapshot.
+    // A genuinely new purchase must use the currently approved server-side multipliers.
+    for (const participation of input.participations) {
+      for (const line of participation.lines) {
+        const multipliers = readPrizeMultipliers(line.ruleVersion, line.ruleSnapshot);
+        if (!multipliers || !PRIZE_CATEGORIES.every(
+          (category) => multipliers[category] === APPROVED_PRIZE_MULTIPLIERS[category],
+        )) {
+          throw new PurchaseServiceError(
+            "New purchases must use the currently approved prize multipliers",
+            "INVALID_PURCHASE",
+          );
+        }
+      }
     }
 
     const roundIds = input.participations.map((p) => p.roundId).sort();
