@@ -160,7 +160,7 @@ model Purchase {
   paymentMethod     PaymentMethod
   totalCents        Int
   currency          String        @default("BRL")
-  receiptCode       String        @unique
+  receiptCode       String?       @unique
   idempotencyKey    String        @unique
   createdAt         DateTime      @default(now())
   confirmedAt       DateTime?
