@@ -1,8 +1,8 @@
 # Plano de construção de pagamentos e integração Pix
 
-Documento de planejamento atualizado: 2026-10-24
+Documento de planejamento atualizado: 2026-10-25
 Branch auditada: feature/dual-plate-draw
-HEAD de código auditado: d337082b2d0fa6b24db64a6839d20e24c894fb9e
+HEAD de código auditado anteriormente: d337082b2d0fa6b24db64a6839d20e24c894fb9e; revisão complementar de pagamentos/recibos realizada em 2026-10-25 na branch feature/dual-plate-draw
 Base funcional: docs/PRODUCT_SPEC.md
 
 ## Estado atual após auditoria — 2026-10-24
@@ -51,3 +51,20 @@ A implementação de pagamentos e a integração com Mercado Pago ainda não for
 ## Limites
 
 Este arquivo é plano de implementação, não uma integração já construída. Nenhum pagamento, webhook, segredo ou migração de produção foi configurado ou executado por este documento.
+
+
+## Revisão complementar de checkout e recibo — 2026-10-25
+
+Revisão de código atual confirmou os seguintes fatos:
+
+- `POST /api/player/purchases` exige sessão de jogador, valida a origem quando o cabeçalho está presente, aceita de 1 a 10 IDs de rodada distintos e linhas com valores em centavos. Chama `createPendingPixPurchase` e retorna explicitamente que não criou nem confirmou cobrança Pix.
+- `createPendingPixPurchase` persiste a compra, as participações e o pagamento pendente em transação, com idempotência. Não chama SDK ou API do Mercado Pago e não confirma compra.
+- `GET /api/public/ticket-check` consulta por `Purchase.receiptCode`, só expõe dados de compra confirmada e retorna resultados de cada linha sem dados de identidade do jogador. A consulta existente é uma base para o QR do recibo único, mas o componente ainda recebe um `qrCodeDataUrl` opcional e mostra espaço reservado quando não fornecido.
+- `ThermalReceipt` só renderiza para status `CONFIRMED` e código no formato esperado; o componente agora identifica repetição e código da rodada. Ainda não existe ligação ponta a ponta entre confirmação autêntica do provedor, dados de recibo carregados do banco, geração segura do QR e impressão pelo cambista.
+- O modelo Prisma já inclui campos de provedor, ID externo, idempotência, eventos de webhook e status de pagamento, mas a presença desses campos não representa integração ativa nem comprova que os estados sejam reconciliados corretamente.
+
+### Gate de segurança para a próxima implementação
+
+Não ativar cobranças reais nem simular confirmação no servidor para liberar recibos. Antes de integrar o provedor, definir o contrato do adaptador, estados permitidos e transições, política para pagamento tardio/expirado/estornado, persistência idempotente de eventos e estratégia de reconciliação. A integração deverá usar credenciais de teste e endpoints oficiais atuais, com testes de assinatura/autenticidade, valor divergente, eventos repetidos/fora de ordem, corrida com cutoff e falha transacional.
+
+Nenhum segredo, webhook, cobrança real, banco de produção ou deploy foi configurado ou alterado nesta revisão.
