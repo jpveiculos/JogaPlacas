@@ -54,8 +54,8 @@ async function seedLegacyRows(url, includeInvalid) {
        VALUES ('round-legacy', 'ROUND-LEGACY', now(), now(), now(), 'COMPLETED', 'ABC1K23', now())`,
     );
     await client.query(
-      `INSERT INTO "Purchase" ("id", "paymentMethod", "totalCents", "receiptCode", "idempotencyKey", "updatedAt")
-       VALUES ('purchase-legacy', 'PIX', 300, 'RECEIPT-LEGACY', 'IDEMPOTENCY-LEGACY', now())`,
+      `INSERT INTO "Purchase" ("id", "paymentMethod", "totalCents", "receiptCode", "idempotencyKey")
+       VALUES ('purchase-legacy', 'PIX', 300, 'RECEIPT-LEGACY', 'IDEMPOTENCY-LEGACY')`,
     );
     await client.query(
       `INSERT INTO "PurchaseParticipation" ("id", "purchaseId", "roundId", "totalCents")
