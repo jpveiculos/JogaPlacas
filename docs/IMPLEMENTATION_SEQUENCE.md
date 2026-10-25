@@ -106,3 +106,13 @@ Não houve merge, deploy, migração em produção nem criação de cobrança re
 - [ ] Próxima tarefa de produto: criar consulta segura das rodadas abertas e interface de compra do jogador que consuma este endpoint; depois integrar os recibos/histórico.
 
 Limites mantidos: nenhuma cobrança real, webhook, migração de produção, merge ou deploy foi executado.
+### Interface inicial de compra do jogador — 2026-10-25
+
+- [x] Criado `GET /api/player/rounds`, restrito a sessão de jogador, listando somente rodadas agendadas/abertas com cutoff futuro e sem cache.
+- [x] Criada a interface inicial da área do jogador: carrega rodadas, permite selecionar até 10, informar placa e valor total por rodada, e envia a compra para o endpoint autenticado.
+- [x] A interface mostra o total estimado, o recibo pendente e a divisão por categoria calculada no servidor; não oferece botão de pagamento nem sugere que Pix foi cobrado.
+- [x] A chave de idempotência fica preservada entre tentativas até uma resposta bem-sucedida, reduzindo duplicação em caso de falha de rede.
+- [ ] A interface ainda suporta uma placa por envio; múltiplas placas, histórico/recibos persistentes e fluxo de pagamento são etapas futuras.
+- [ ] Executar e confirmar CI (lint, typecheck, unit tests, build e testes PostgreSQL/migração) no HEAD final. Statuses de commit consultados até aqui não retornaram checks, então a validação não está comprovada.
+
+Não houve merge, deploy, migração em produção nem cobrança real.
