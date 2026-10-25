@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { PlateVisual } from "@/components/plates/plate-visual";
+import { PlayerPurchaseReceipt } from "@/components/receipts/player-purchase-receipt";
 
 type HistoryLine = {
   id: string;
@@ -72,6 +73,7 @@ export function PlayerBetHistory() {
                 <div><strong>{purchase.receiptCode ? `Recibo ${purchase.receiptCode}` : "Recibo ainda não emitido"}</strong><span>{date(purchase.createdAt)}</span></div>
                 <strong>{money(purchase.totalCents)}</strong>
               </div>
+              {purchase.purchaseStatus === "CONFIRMED" && <PlayerPurchaseReceipt purchaseId={purchase.id} />}
               {purchase.purchaseStatus !== "CONFIRMED" && <p className="player-history-pending">Compra: {purchase.purchaseStatus === "PENDING_PAYMENT" ? "aguardando pagamento" : purchase.purchaseStatus === "CANCELLED" ? "cancelada" : "estornada"}.</p>}
               {purchase.participations.map((participation) => (
                 <section className="player-history-round" key={participation.id}>
