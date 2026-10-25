@@ -68,3 +68,14 @@ Revisão de código atual confirmou os seguintes fatos:
 Não ativar cobranças reais nem simular confirmação no servidor para liberar recibos. Antes de integrar o provedor, definir o contrato do adaptador, estados permitidos e transições, política para pagamento tardio/expirado/estornado, persistência idempotente de eventos e estratégia de reconciliação. A integração deverá usar credenciais de teste e endpoints oficiais atuais, com testes de assinatura/autenticidade, valor divergente, eventos repetidos/fora de ordem, corrida com cutoff e falha transacional.
 
 Nenhum segredo, webhook, cobrança real, banco de produção ou deploy foi configurado ou alterado nesta revisão.
+
+
+## Atualização de prioridade — 2026-10-25
+
+O responsável pelo projeto informou que as variáveis de ambiente do Mercado Pago já estão configuradas no ambiente de hospedagem e que a ativação/deploy deve ocorrer apenas no momento apropriado. Essa informação operacional foi registrada como declaração do responsável; este repositório não lê nem valida valores secretos do provedor.
+
+A inspeção da branch de desenvolvimento ainda encontra a rota `POST /api/player/purchases` chamando apenas `createPendingPixPurchase`, sem criação de cobrança externa, e não encontra rota de webhook Mercado Pago. Portanto, configuração de variáveis e integração no código são etapas distintas. A próxima prioridade é implementar e testar o adaptador e o webhook na branch de desenvolvimento, sem executar deploy ou pagamentos reais durante a construção.
+
+A integração deve seguir a documentação oficial vigente: criar pagamento Pix via `POST /v1/payments` com `Authorization: Bearer` e `X-Idempotency-Key`; validar a assinatura HMAC do Webhook com `x-signature`, `x-request-id` e `data.id`; depois consultar o pagamento na API do provedor e conferir referência, valor, moeda e estado antes de qualquer confirmação local. Referências: documentação oficial de [Pix](https://www.mercadopago.com.br/developers/pt/docs/checkout-api-payments/integration-configuration/integrate-pix) e [Webhooks](https://www.mercadopago.com.br/developers/pt/docs/checkout-pro/payment-notifications).
+
+**Gate de ativação:** mesmo que as variáveis já existam, não liberar produção até que os testes provem idempotência, assinatura inválida rejeitada, pagamento duplicado sem dupla confirmação, valor divergente rejeitado, pagamento tardio tratado sem participação retroativa e recibo liberado somente após confirmação autêntica. Não registrar nem solicitar tokens reais no chat ou no repositório.
