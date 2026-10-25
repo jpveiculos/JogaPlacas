@@ -140,7 +140,7 @@ describe("POST /api/admin/rounds", () => {
     expect(mocks.transaction).toHaveBeenCalledOnce();
     expect(mocks.roundCreate).toHaveBeenCalledWith({ data: expect.objectContaining({
       code: expect.stringMatching(/^JP-20350101-\d{4}$/),
-      startsAt: new Date("2035-01-01T12:00:00.000Z"),
+      startsAt: new Date("2035-01-01T12:01:00.000Z"),
       cutoffAt: new Date("2035-01-01T12:29:00.000Z"),
       resultAt: new Date("2035-01-01T12:30:00.000Z"), status: "SCHEDULED",
     }), select: expect.any(Object) });
