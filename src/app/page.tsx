@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   description: "Conheça o Joga Placas, consulte seu recibo e acompanhe os resultados publicados das placas cinza e Mercosul.",
 };
 
-export default async function HomePage() {
+export default function HomePage() {
   return (
     <div className="home-page">
       <header className="home-header">
