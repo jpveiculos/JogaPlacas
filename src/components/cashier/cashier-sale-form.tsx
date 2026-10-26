@@ -32,7 +32,7 @@ function parseStake(value: string): number | null {
   return Number.isSafeInteger(cents) && cents >= 100 && cents <= 2_000_000_000 ? cents : null;
 }
 
-export function PlayerPurchaseForm() {
+export function CashierSaleForm() {
   const [rounds, setRounds] = useState<AvailableRound[]>([]);
   const [selectedRounds, setSelectedRounds] = useState<string[]>([]);
   const [plateFormat, setPlateFormat] = useState<PlateFormat>("LEGACY");
