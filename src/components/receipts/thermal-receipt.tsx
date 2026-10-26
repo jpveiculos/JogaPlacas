@@ -16,6 +16,7 @@ export type ThermalReceiptProps = {
   customerLabel?: string | null;
   paymentLabel?: string;
   qrCodeDataUrl?: string | null;
+  onClose?: () => void;
 };
 
 /**
@@ -32,6 +33,7 @@ export function ThermalReceipt({
   customerLabel,
   paymentLabel = "Pagamento confirmado",
   qrCodeDataUrl,
+  onClose,
 }: ThermalReceiptProps) {
   if (paymentStatus !== "CONFIRMED" || !/^JP-[A-Z0-9]{8,32}$/.test(receiptCode)) return null;
 
@@ -55,9 +57,24 @@ export function ThermalReceipt({
   const qrStyle: CSSProperties = { width: 76, height: 76, objectFit: "contain" };
   const repetitionNumbers = getReceiptRepetitionNumbers(plates);
 
+  function downloadReceipt() {
+    const article = document.getElementById("thermal-receipt-" + receiptCode);
+    if (!article) return;
+    const styles = " @page{size:58mm auto;margin:2mm}*{box-sizing:border-box}body{margin:0;background:#fff;color:#111;font-family:Arial,Helvetica,sans-serif}.thermal-receipt{width:48mm;max-width:100%;margin:0 auto;padding:2mm 0;font-size:10px;line-height:1.35;overflow-wrap:anywhere}.thermal-receipt-header{display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center}.thermal-receipt-brand{font-size:16px;letter-spacing:.04em}.thermal-receipt-code-row{display:grid;grid-template-columns:minmax(0,1fr) 20mm;align-items:center;gap:1.5mm;margin:3mm 0}.thermal-receipt-code-copy{display:flex;min-width:0;flex-direction:column;gap:2px}.thermal-receipt-label,.thermal-receipt-section-title{font-size:8px;font-weight:700}.thermal-receipt-code{font-size:11px;line-height:1.2;word-break:break-all}.thermal-receipt-payment{font-size:8px}.thermal-receipt-qr,.thermal-receipt-qr-placeholder{width:20mm;height:20mm;object-fit:contain}.thermal-receipt-qr-placeholder{display:grid;place-items:center;border:1px dashed #777}.thermal-receipt-divider{border-top:1px dashed #222;margin:2.5mm 0}.thermal-receipt-items{display:flex;flex-direction:column;gap:2.5mm}.thermal-receipt-item{display:flex;flex-direction:column;gap:1px}.thermal-receipt-item-heading,.thermal-receipt-total{display:flex;justify-content:space-between;gap:2mm}.thermal-receipt-total{font-size:12px}.thermal-receipt-footer{display:flex;flex-direction:column;align-items:center;gap:2px;margin-top:4mm;text-align:center;font-size:8px}.thermal-receipt-footer-code{margin-top:1mm;font-weight:700}.thermal-receipt-customer{margin:2mm 0}";
+    const html = "<!doctype html><html lang=\"pt-BR\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width, initial-scale=1\"><title>Recibo " + receiptCode + "</title><style>" + styles + "</style></head><body>" + article.outerHTML + "</body></html>";
+    const url = URL.createObjectURL(new Blob([html], { type: "text/html;charset=utf-8" }));
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = "recibo-" + receiptCode + ".html";
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
   return (
     <div className="thermal-receipt-print-root">
-      <article className="thermal-receipt" aria-label={`Recibo ${receiptCode}`}>
+      <article id={`thermal-receipt-${receiptCode}`} className="thermal-receipt" aria-label={`Recibo ${receiptCode}`}>
         <header className="thermal-receipt-header">
           <strong className="thermal-receipt-brand">JOGA PLACAS</strong>
           <span>COMPROVANTE DE APOSTA</span>
@@ -108,9 +125,11 @@ export function ThermalReceipt({
           <span className="thermal-receipt-footer-code">{receiptCode}</span>
         </footer>
       </article>
-      <button className="thermal-receipt-print-button" type="button" onClick={() => window.print()}>
-        Imprimir recibo / Salvar como PDF
-      </button>
+      <div className="thermal-receipt-actions" aria-label="Ações do recibo">
+        <button className="thermal-receipt-print-button" type="button" onClick={() => window.print()}>Imprimir recibo</button>
+        <button className="thermal-receipt-download-button" type="button" onClick={downloadReceipt}>Baixar recibo</button>
+        {onClose && <button className="thermal-receipt-exit-button" type="button" onClick={onClose}>Sair / Fechar recibo</button>}
+      </div>
     </div>
   );
 }
