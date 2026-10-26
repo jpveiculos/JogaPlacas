@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import Link from "next/link";
 import { PlateVisual } from "@/components/plates/plate-visual";
 
 type TicketResult = {
@@ -58,7 +59,7 @@ export default function ConsultaPage() {
       <section className="feature-card" aria-labelledby="ticket-check-heading">
         <span className="feature-label">Consulta pública</span>
         <h1 id="ticket-check-heading">Consultar recibo e resultados</h1>
-        <p>Digite o código completo do recibo iniciado por JP-. A consulta mostra somente apostas de compras confirmadas e prêmios efetivamente creditados.</p>
+        <p>Digite o código completo do recibo iniciado por JP-. A consulta fica disponível por 7 dias a partir da compra. Depois desse prazo, o recibo vence e não pode ser consultado nem reimpresso. <Link href="/termos-de-uso">Leia os termos de uso</Link>.</p>
         <form onSubmit={submit} className="purchase-form">
           <label htmlFor="receipt-code">Código do recibo</label>
           <input id="receipt-code" value={code} onChange={(event) => setCode(event.target.value.toUpperCase())} placeholder="JP-12345678" minLength={11} maxLength={35} autoComplete="off" required />
