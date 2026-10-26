@@ -66,7 +66,7 @@ export function verifyMercadoPagoWebhookSignature(input: {
   const timestamp = fields.ts;
   const supplied = fields.v1;
   if (!timestamp || !supplied || !/^[a-f0-9]{64}$/i.test(supplied)) return false;
-  if (!/^\\d+$/.test(timestamp)) return false;
+  if (!/^\d+$/.test(timestamp)) return false;
   const timestampMs = Number(timestamp) * 1000;
   const nowMs = input.nowMs ?? Date.now();
   // Reject stale/future signed requests to limit replay; provider retries can
