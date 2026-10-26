@@ -62,13 +62,25 @@ describe("admin withdrawals API", () => {
     expect(mocks.transaction).not.toHaveBeenCalled();
   });
 
-  it("allows approval after external Pix payment without requiring an in-platform receipt reference", async () => {
+  it("requires an approved withdrawal before recording the external Pix payment", async () => {
     const response = await POST(request({ withdrawalId: "withdrawal-1", action: "mark-paid", note: "Pix externo conferido" }));
+    expect(response.status).toBe(409);
+    expect(mocks.withdrawalUpdate).not.toHaveBeenCalled();
+  });
+
+  it("approves a pending withdrawal without recording a payment or ledger payout", async () => {
+    mocks.withdrawalUpdate.mockResolvedValue({ ...withdrawal, status: "APPROVED" });
+    const response = await POST(request({ withdrawalId: "withdrawal-1", action: "approve", note: "Solicitação conferida" }));
     expect(response.status).toBe(200);
-    expect(mocks.withdrawalUpdate).toHaveBeenCalledWith({ where: { id: "withdrawal-1" }, data: { status: "PAID", reviewedById: "admin-1" } });
+    expect(await response.json()).toMatchObject({ success: true, withdrawal: { id: "withdrawal-1", status: "APPROVED", amountCents: 2500 } });
+    expect(mocks.withdrawalUpdate).toHaveBeenCalledWith({ where: { id: "withdrawal-1" }, data: { status: "APPROVED", reviewedById: "admin-1" } });
+    expect(mocks.ledgerCreate).not.toHaveBeenCalled();
+    expect(mocks.historyCreate).toHaveBeenCalledWith({ data: expect.objectContaining({ fromStatus: "PENDING", toStatus: "APPROVED", actorId: "admin-1" }) });
+    expect(mocks.auditCreate).toHaveBeenCalledWith({ data: expect.objectContaining({ actorId: "admin-1", action: "WITHDRAWAL_APPROVED", metadata: expect.objectContaining({ paymentConfirmed: false }) }) });
   });
 
   it("marks a manually paid Pix withdrawal with an idempotent audit trail", async () => {
+    mocks.withdrawalFindUnique.mockResolvedValue({ ...withdrawal, status: "APPROVED" });
     const response = await POST(request({
       withdrawalId: "withdrawal-1", action: "mark-paid", note: "Transferência conferida no extrato",
       providerRef: "E2E123456789",
@@ -80,7 +92,7 @@ describe("admin withdrawals API", () => {
       userId: "player-1", withdrawalId: "withdrawal-1", type: "WITHDRAWAL_PAID",
       amountCents: 0, idempotencyKey: "withdrawal-paid:withdrawal-1",
     }) });
-    expect(mocks.historyCreate).toHaveBeenCalledWith({ data: expect.objectContaining({ fromStatus: "PENDING", toStatus: "PAID", actorId: "admin-1" }) });
+    expect(mocks.historyCreate).toHaveBeenCalledWith({ data: expect.objectContaining({ fromStatus: "APPROVED", toStatus: "PAID", actorId: "admin-1" }) });
     expect(mocks.auditCreate).toHaveBeenCalledWith({ data: expect.objectContaining({ actorId: "admin-1", action: "WITHDRAWAL_MARKED_PAID" }) });
   });
 
@@ -93,6 +105,14 @@ describe("admin withdrawals API", () => {
       amountCents: 2500, idempotencyKey: "withdrawal-release:withdrawal-1",
     }) });
     expect(mocks.auditCreate).toHaveBeenCalledWith({ data: expect.objectContaining({ action: "WITHDRAWAL_REJECTED" }) });
+  });
+
+  it("does not allow rejection after a withdrawal has been approved", async () => {
+    mocks.withdrawalFindUnique.mockResolvedValue({ ...withdrawal, status: "APPROVED" });
+    const response = await POST(request({ withdrawalId: "withdrawal-1", action: "reject", note: "Rejeição tardia" }));
+    expect(response.status).toBe(409);
+    expect(mocks.withdrawalUpdate).not.toHaveBeenCalled();
+    expect(mocks.ledgerCreate).not.toHaveBeenCalled();
   });
 
   it("does not allow a second action after the withdrawal is closed", async () => {
