@@ -22,7 +22,7 @@ export default async function HomePage() {
   return (
     <div className="home-page">
       <header className="home-header">
-        <Link href="/" className="home-brand" aria-label="Joga Placas — página inicial">Joga<span>Placas</span></Link>
+        <Link href="/" className="home-brand" aria-label="Joga Placa — página inicial"><img src="/images/brand/joga-placa-logo.jpg" alt="Joga Placa" /></Link>
         <nav className="home-nav" aria-label="Navegação principal">
           <a href="#como-funciona">Como funciona</a>
           <a href="#consulta-recibo">Consultar recibo</a>
@@ -87,7 +87,7 @@ export default async function HomePage() {
       </section>
 
       <footer className="home-footer">
-        <Link href="/" className="home-brand">Joga<span>Placas</span></Link>
+        <Link href="/" className="home-brand"><img src="/images/brand/joga-placa-logo.jpg" alt="Joga Placa" /></Link>
         <div><Link href="/termos-de-uso">Termos de uso</Link><Link href="/login">Entrar</Link></div>
         <p>Consulte sempre seu recibo e as informações oficiais publicadas.</p>
       </footer>
