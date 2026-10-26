@@ -13,13 +13,14 @@ type TicketResult = {
   roundStatus: string;
   resultLegacyPlate: string | null;
   resultMercosurPlate: string | null;
-  status: "PREMIADA" | "NAO_PREMIADA" | "AGUARDANDO_RESULTADO" | "AGUARDANDO_APURACAO";
+  status: "PREMIADA" | "NAO_PREMIADA" | "AGUARDANDO_RESULTADO" | "AGUARDANDO_APURACAO" | "PRAZO_EXPIRADO";
   prizeCents: number | null;
 };
 type LookupResponse = { found?: boolean; results?: TicketResult[]; message?: string; error?: string };
 const money = (cents: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
 const resultLabels: Record<TicketResult["status"], string> = {
   PREMIADA: "Prêmio creditado",
+  PRAZO_EXPIRADO: "Prazo de resgate do prêmio expirado",
   NAO_PREMIADA: "Não premiada",
   AGUARDANDO_RESULTADO: "Aguardando resultado",
   AGUARDANDO_APURACAO: "Resultado publicado; apuração pendente",
