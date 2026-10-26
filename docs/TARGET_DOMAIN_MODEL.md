@@ -5,11 +5,11 @@ Status: design proposal derived from docs/PRODUCT_SPEC.md. No database migration
 ## Model boundaries
 
 - **User:** login identity, role (PLAYER/CASHIER/ADMIN), status and password hash. Server enforces role and ownership; admin credentials are provisioned only through server secrets.
-- **Purchase:** one checkout and receipt, one payment method, total amount, buyer/seller context, immutable status and idempotency key.
+- **Purchase:** one checkout and receipt, one payment method, total amount, optional player account owner for player purchases, authenticated cashier as seller for cashier sales, immutable status and idempotency key. A cashier sale must be valid without a customer/contact record.
 - **Round:** one concrete scheduled occurrence. A recurrence definition generates separate round records.
 - **Participation:** one purchase's entry in one round. Repetition 1–10 creates separate participation records, covered by a single upfront checkout/payment.
 - **ParticipationLine:** one plate per participation, preserving display and normalized forms, stake and category allocation in integer cents, plus the rule snapshot applied at purchase time.
-- **Customer:** cashier customer contact record; it does not create a player login automatically.
+- **Customer (legacy/optional):** historical contact record only where old records require it. New player accounts and new cashier sales must not depend on `Customer`; do not create customer contact records for anonymous sales. Retention or deletion of historical rows is a separate reviewed migration.
 - **Payment:** belongs to Purchase, not to a single round. Provider references, confirmed amount, status, fees/refunds where supported and idempotency are retained.
 - **ProviderEvent:** unique provider event identity, digest, event type, receipt/processing state and redacted diagnostics. Browser state is never proof of payment.
 - **LedgerEntry:** append-only financial record with signed integer-cent amount, owner, type, unique idempotency key and optional references to purchase, participation or withdrawal. Any cached balance is secondary and transactionally reconciled.
@@ -55,3 +55,12 @@ Until the relevant rule is resolved, affected workflow remains disabled for publ
 ## Migration safety
 
 Do not migrate the current database while this model is being reviewed. Before any migration, validate the schema, review generated SQL, test on a disposable PostgreSQL database, verify backup/restore and document recovery. Never reset an environment that may contain user or financial data.
+
+
+## Approved identity and receipt rules — 2026-10-26
+
+- Player `User` registration collects only unique username and password (password stored as a secure hash). No required full name, CPF, phone, WhatsApp or email.
+- A player purchase uses the authenticated account context and game inputs; no repeated personal data entry. A cashier sale has `cashierId` and no required `customerId`.
+- A confirmed purchase has one unique digital receipt and a QR code pointing to its public receipt lookup. Download and print are presentation/export actions and must not create another purchase. Keep receipt QR separate from Pix payment QR.
+- ADMIN account search is a privileged maintenance feature over `User` accounts, not a reason to collect personal fields. Enforce role/ownership server-side, paginate and audit administrative actions.
+- This is a target model, not proof of schema/service implementation. Any schema change requires migration review and tests on a disposable PostgreSQL database before any real database change.
