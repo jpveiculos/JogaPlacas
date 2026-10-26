@@ -5,10 +5,11 @@
 > Esta especificação não substitui revisão técnica, testes nem validação jurídica/comercial antes de operar pagamentos e jogos em produção.
 
 ## 1. Áreas e acesso
-- Três áreas: jogador, cambista e administrador.
-- Login compartilhado por usuário/senha; o servidor identifica o papel e direciona para a área autorizada.
+- A plataforma tem quatro áreas de produto: página principal pública, área do jogador, área do cambista e área do administrador.
+- A página principal pública é a porta de entrada do domínio: apresentação do jogo, explicação de como jogar, regras e equivalências oficiais de prêmios, resultados/ganhadores públicos, consulta de recibo e opções visíveis de Entrar/Criar conta. A página inicial não deve ser substituída por uma tela de login.
+- Login compartilhado por usuário/senha; o servidor identifica o papel e direciona para a área autorizada. Jogador autenticado que acessar `/` é encaminhado à área do jogador; após cadastro público concluído, o novo jogador também vai para a área do jogador.
 - Senhas armazenadas somente com hash forte; sessões seguras; autorização validada no servidor.
-- Sem cadastro público de administradores. Contas e credenciais administrativas devem ser provisionadas por configuração segura.
+- Cadastro público é somente para jogador. Não permitir cadastro público de administradores; contas e credenciais administrativas devem ser provisionadas por configuração segura. A implementação do cadastro público ainda é pendente e precisa de validação e proteção contra abuso.
 - Jogador vê apenas os próprios registros; cambista vê somente suas próprias vendas/clientes; administrador tem visão global conforme permissões.
 
 ## 2. Placas e categorias
