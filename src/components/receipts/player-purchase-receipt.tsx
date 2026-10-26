@@ -53,15 +53,21 @@ export function PlayerPurchaseReceipt({ purchaseId }: { purchaseId: string }) {
       )}
       {error && <p className="note-inline" role="alert">{error}</p>}
       {receipt && (
-        <ThermalReceipt
-          receiptCode={receipt.receiptCode}
-          paymentStatus={receipt.paymentStatus}
-          issuedAt={receipt.issuedAt}
-          totalCents={receipt.totalCents}
-          plates={receipt.plates}
-          paymentLabel={paymentLabels[receipt.paymentMethod] ?? "Pagamento confirmado"}
-        />
-      )}
+        <div className="modal-backdrop" role="presentation">
+          <section className="modal-panel receipt-modal" role="dialog" aria-modal="true" aria-labelledby="receipt-heading">
+            <h2 id="receipt-heading">Recibo oficial</h2>
+            <ThermalReceipt
+              receiptCode={receipt.receiptCode}
+              paymentStatus={receipt.paymentStatus}
+              issuedAt={receipt.issuedAt}
+              totalCents={receipt.totalCents}
+              plates={receipt.plates}
+              paymentLabel={paymentLabels[receipt.paymentMethod] ?? "Pagamento confirmado"}
+            />
+            <button type="button" onClick={() => setReceipt(null)}>Fechar recibo</button>
+          </section>
+        </div>
+      )}}
     </div>
   );
 }
