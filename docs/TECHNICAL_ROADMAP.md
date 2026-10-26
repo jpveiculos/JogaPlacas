@@ -469,3 +469,11 @@ A decisão antiga que limitava a experiência a três áreas e rejeitava uma pá
 - O fluxo completo do cambista ainda não está implementado; portanto, não considerar os requisitos atendidos ponta a ponta.
 
 **Testes de aceitação necessários:** saída Pix sem mudança indevida do estado da cobrança; botão sair do recibo após falha de impressão/download; impressão concluída limpa a interface; download iniciado limpa a interface; cancelamento/falha mantém recibo e permite sair/tentar novamente; próxima venda inicia sem dados temporários anteriores; nenhuma ação de interface duplica compra, participação, recibo ou lançamento financeiro.
+
+
+### Implementação parcial — ações de saída e download do recibo (2026-10-26)
+- O componente compartilhado `ThermalReceipt` agora oferece ações separadas de **Imprimir recibo**, **Baixar recibo** e **Sair / Fechar recibo**. Sair e baixar limpam o estado/modal do recibo por meio do callback do componente; o arquivo baixado é HTML independente com estilos e conteúdo do recibo, não um PDF.
+- As ações ficam fora da área impressa e não aparecem no papel. A área do jogador usa o botão do próprio recibo para fechar o modal, removendo a necessidade de depender de um botão externo abaixo do conteúdo.
+- A tela Pix do jogador já tinha “Sair e iniciar outro jogo”; ela continua apenas fechando a tela e limpando os campos locais, sem afirmar que isso cancela o pagamento pendente.
+- **Limite ainda aberto:** o fluxo de impressão não fecha automaticamente o recibo, porque os navegadores não distinguem de forma confiável impressão física concluída de diálogo cancelado; fechar no evento `afterprint` também fecharia quando o usuário cancela. O botão de saída manual permanece como recuperação. Validar se a experiência pode ser melhorada sem perder a opção de tentar novamente após cancelamento.
+- O recibo ainda pode mostrar placeholder no lugar do QR real. O fluxo de cambista (venda anônima, cobrança Pix/confirmar dinheiro, emissão e limpeza de tela) continua não implementado ponta a ponta. CI dos commits recentes está em execução; não considerar validado até os jobs terminarem.
