@@ -23,8 +23,9 @@ type LineResult = {
   };
 };
 
-function getLineStatus(line: Pick<LineResult, "prizeCents" | "prizeCreditedAt">, roundStatus: RoundStatus) {
+function getLineStatus(line: LineResult, roundStatus: RoundStatus) {
   if (line.prizeCents !== null && line.prizeCents > 0 && line.prizeCreditedAt) return "PREMIADA";
+  if ((line.prizeCents ?? 0) > 0 && Date.now() >= line.participation.round.resultAt.getTime() + 7 * 24 * 60 * 60 * 1000) return "PRAZO_EXPIRADO";
   if (roundStatus !== "COMPLETED") return "AGUARDANDO_RESULTADO";
   if (line.prizeCents === 0) return "NAO_PREMIADA";
   return "AGUARDANDO_APURACAO";
