@@ -492,3 +492,13 @@ h1 {
 .receipt-modal .thermal-receipt-print-root {
   margin: 0 auto;
 }
+
+.cashier-purchase-search { display: grid; gap: .6rem; margin: 1rem 0; }
+.cashier-purchase-search label { font-weight: 600; }
+.cashier-purchase-search-row { display: flex; gap: .6rem; align-items: stretch; }
+.cashier-purchase-search-row input { min-width: 0; flex: 1; }
+.cashier-purchase-results { display: grid; gap: .8rem; margin-top: 1rem; }
+.cashier-purchase-result { border: 1px solid var(--border, #d9dee7); border-radius: .75rem; padding: 1rem; }
+.cashier-purchase-result-heading { display: flex; justify-content: space-between; gap: 1rem; align-items: flex-start; }
+.cashier-purchase-result-heading p, .cashier-purchase-meta { margin: .35rem 0; overflow-wrap: anywhere; }
+@media (max-width: 560px) { .cashier-purchase-search-row { flex-direction: column; } }
