@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
 
 const actionSchema = z.object({
   withdrawalId: z.string().min(1).max(128),
-  action: z.enum(["approve", "mark-paid", "reject"]),
+  action: z.enum(["mark-paid", "reject"]),
   note: z.string().trim().min(4).max(500),
   providerRef: z.string().trim().min(3).max(200).optional(),
 }).strict();
@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
       const withdrawal = await tx.withdrawal.findUnique({ where: { id: parsed.data.withdrawalId }, include: { user: { select: { username: true } } } });
       if (!withdrawal) throw new Error("NOT_FOUND");
       if (parsed.data.action === "mark-paid") {
-        if (withdrawal.status !== "APPROVED") throw new Error("INVALID_STATE");
+        if (withdrawal.status !== "PENDING") throw new Error("INVALID_STATE");
         const reference = parsed.data.providerRef?.trim() || null;
         const paid = await tx.withdrawal.update({ where: { id: withdrawal.id }, data: { status: "PAID", reviewedById: auth.user.id, ...(reference ? { providerRef: reference } : {}) } });
         await tx.ledgerEntry.create({ data: {
@@ -85,8 +85,8 @@ export async function POST(request: NextRequest) {
           description: "Registro auditável de pagamento Pix externo do saque " + withdrawal.id + (reference ? "; referência " + reference : ""),
         } });
         await tx.withdrawalStatusHistory.create({ data: {
-          withdrawalId: withdrawal.id, fromStatus: "APPROVED", toStatus: "PAID", actorId: auth.user.id,
-          note: parsed.data.note.trim() + (reference ? " | Referência Pix externa: " + reference : " | Pagamento Pix externo conferido"),
+          withdrawalId: withdrawal.id, fromStatus: "PENDING", toStatus: "PAID", actorId: auth.user.id,
+          note: parsed.data.note.trim() + (reference ? " | Referência Pix externa: " + reference : " | Pix realizado manualmente e conferido"),
         } });
         await tx.auditEvent.create({ data: {
           actorId: auth.user.id, action: "WITHDRAWAL_MARKED_PAID", entityType: "Withdrawal", entityId: withdrawal.id,
@@ -95,18 +95,6 @@ export async function POST(request: NextRequest) {
         return { id: paid.id, status: paid.status, username: withdrawal.user.username, amountCents: withdrawal.amountCents };
       }
       if (withdrawal.status !== "PENDING") throw new Error("INVALID_STATE");
-      if (parsed.data.action === "approve") {
-        const approved = await tx.withdrawal.update({ where: { id: withdrawal.id }, data: { status: "APPROVED", reviewedById: auth.user.id } });
-        await tx.withdrawalStatusHistory.create({ data: {
-          withdrawalId: withdrawal.id, fromStatus: "PENDING", toStatus: "APPROVED", actorId: auth.user.id,
-          note: parsed.data.note.trim() + " | Aprovação administrativa; pagamento Pix realizado externamente, fora da plataforma.",
-        } });
-        await tx.auditEvent.create({ data: {
-          actorId: auth.user.id, action: "WITHDRAWAL_APPROVED", entityType: "Withdrawal", entityId: withdrawal.id,
-          metadata: { userId: withdrawal.userId, username: withdrawal.user.username, amountCents: withdrawal.amountCents, note: parsed.data.note.trim(), payoutHandledOutsidePlatform: true, paymentConfirmed: false },
-        } });
-        return { id: approved.id, status: approved.status, username: withdrawal.user.username, amountCents: withdrawal.amountCents };
-      }
       await tx.withdrawal.update({ where: { id: withdrawal.id }, data: { status: "REJECTED", reviewedById: auth.user.id } });
       await tx.ledgerEntry.create({ data: {
         userId: withdrawal.userId, withdrawalId: withdrawal.id, type: "WITHDRAWAL_RELEASE",
