@@ -127,3 +127,19 @@ O workflow completo do commit `576ec2afb43a5a6fcb9deeb38027a0fdf53efef8` termino
 - A confirmação de Pix e a reconciliação com provedor continuam fora do serviço de criação de compra pendente. A participação só pode ser confirmada por um fluxo de pagamento que valide confirmação até o cutoff; esse fluxo não deve ser inferido como existente por causa do modelo `Payment`.
 
 Esses são achados de revisão, não decisões de negócio nem alterações de schema. Antes de novos fluxos financeiros, especificar e testar os invariantes e os estados de cancelamento/expiração/reembolso.
+
+
+## Complemento de auditoria — fluxo de saques e estados legados — 2026-10-26
+
+### Alterações documentadas na branch de desenvolvimento
+
+- O fluxo administrativo novo oferece apenas as ações **Pagar** e **Rejeitar** para saques PENDING. Pagar registra o pagamento Pix manual realizado fora da plataforma e encerra em PAID; rejeitar encerra em REJECTED e lança uma entrada compensatória WITHDRAWAL_RELEASE para devolver o valor reservado.
+- A API bloqueia ações em estados encerrados e usa transação serializável com bloqueio da linha de saque. Os lançamentos de pagamento (auditoria de valor zero) e liberação usam chaves de idempotência por saque.
+- A revisão da interface encontrou um problema de visibilidade: os estados antigos APPROVED/PROCESSING eram excluídos tanto da lista pendente quanto do histórico administrativo. A interface administrativa foi ajustada para mantê-los visíveis no histórico como registros legados que precisam de conferência; a carteira do jogador também os identifica como estados antigos e orienta contato com o administrador.
+- Os estados APPROVED/PROCESSING permanecem no enum Prisma e na migração inicial por compatibilidade com dados persistidos. Não remover esses estados sem inventariar os registros existentes e planejar migração segura. A regra funcional está registrada em docs/PRODUCT_SPEC.md.
+
+### Limites da validação
+
+- Os commits da revisão de interface e documentação estão na branch feature/dual-plate-draw; main não foi alterada.
+- A consulta ao GitHub Actions para os commits recentes não retornou execuções de workflow nem status de CI. Portanto, essas alterações ainda não têm validação automatizada confirmada nesta revisão.
+- Próximas verificações: inspecionar testes e mocks do endpoint de saques; verificar transições e histórico; confirmar a aritmética de saldo derivada do livro-razão e idempotência; executar lint, typecheck, testes e build no pipeline; só então decidir se os estados legados podem ser removidos em uma migração futura.
