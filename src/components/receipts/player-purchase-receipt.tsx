@@ -20,7 +20,7 @@ const paymentLabels: Record<string, string> = {
   CARD: "Cartão confirmado",
 };
 
-export function PlayerPurchaseReceipt({ purchaseId, autoOpen = false }: { purchaseId: string; autoOpen?: boolean }) {
+export function PlayerPurchaseReceipt({ purchaseId, autoOpen = false, onClose }: { purchaseId: string; autoOpen?: boolean; onClose?: () => void }) {
   const [receipt, setReceipt] = useState<ReceiptData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -52,7 +52,7 @@ export function PlayerPurchaseReceipt({ purchaseId, autoOpen = false }: { purcha
 
   return (
     <div className="player-purchase-receipt">
-      {!receipt && (
+      {!receipt && !autoOpen && (
         <button type="button" onClick={loadReceipt} disabled={loading}>
           {loading ? "Carregando recibo…" : "Consultar / imprimir recibo oficial"}
         </button>
@@ -70,7 +70,7 @@ export function PlayerPurchaseReceipt({ purchaseId, autoOpen = false }: { purcha
               plates={receipt.plates}
               paymentLabel={paymentLabels[receipt.paymentMethod] ?? "Pagamento confirmado"}
             />
-            <button type="button" onClick={() => setReceipt(null)}>Fechar recibo</button>
+            <button type="button" onClick={() => { setReceipt(null); onClose?.(); }}>Fechar recibo</button>
           </section>
         </div>
       )}
