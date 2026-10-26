@@ -1,6 +1,7 @@
-# Joga Placas — Especificação funcional inicial
+# Joga Placas — Especificação funcional vigente
 
-> Fonte de verdade funcional do projeto. Decisões novas devem ser registradas aqui antes de alterar comportamentos já aprovados.
+> Fonte de verdade funcional do projeto. Decisões novas devem ser registradas aqui antes de alterar comportamentos já aprovados. Quando uma melhoria aprovada substituir uma ideia inicial, atualizar a regra principal e marcar o texto anterior como histórico/superado, em vez de manter instruções contraditórias.
+> Este documento também contém retratos e auditorias datados: eles descrevem o estado na data indicada e não devem ser lidos como fotografia atual se houver uma reconciliação posterior. Para estado de código, testes e pendências, consulte a seção final de reconciliação e `docs/TECHNICAL_ROADMAP.md`.
 > Esta especificação não substitui revisão técnica, testes nem validação jurídica/comercial antes de operar pagamentos e jogos em produção.
 
 ## 1. Áreas e acesso
@@ -34,7 +35,7 @@
 - Uma transação é paga integralmente pela carteira ou integralmente por Pix; não combinar saldo e Pix na mesma transação.
 - Pix deve ser confirmado pelo provedor/webhook validado, nunca apenas pela interface do cliente. A confirmação precisa ocorrer até o fechamento para que a aposta participe daquela rodada.
 - Fechar/ocultar a tela do QR não cancela a cobrança; o estado continua sendo acompanhado.
-- Pagamentos atrasados não geram participação retroativa. Regras de expiração, estorno ou devolução precisam ser definidas no desenho técnico antes de produção.
+- Pagamentos confirmados após o cutoff ou quando a rodada já não está elegível não geram participação nem recibo retroativos; o caso permanece pendente e auditado para reconciliação manual. A política operacional final de estorno/devolução desses pagamentos tardios continua pendente de decisão e teste antes de produção.
 - Prêmios confirmados creditados automaticamente na carteira, com idempotência contra crédito duplicado.
 - Livro-razão financeiro rastreável para créditos, prêmios, débitos de apostas, depósitos, estornos e saques.
 - Saques somente do saldo disponível integral, com chave Pix e reserva do valor para evitar gasto duplo. Enquanto pendente, a área administrativa oferece somente duas ações: Pagar ou Rejeitar. Ao pagar, sai da lista de pendentes e aparece no histórico como pago. Ao rejeitar, o valor reservado retorna ao saldo disponível.
@@ -465,3 +466,30 @@ A página pública de termos está em `/termos-de-uso`. A validade é aplicada p
 ### Tratamento de saques em estados legados — 2026-10-26
 
 O fluxo atual não cria novas transições para APPROVED ou PROCESSING: novas solicitações seguem PENDING → PAID ou PENDING → REJECTED. Entretanto, os estados APPROVED/PROCESSING continuam no enum persistido para compatibilidade histórica. Registros encontrados nesses estados devem continuar visíveis para reconciliação administrativa e ser identificados como legados; não devem desaparecer das listas nem ser convertidos automaticamente, pagos ou rejeitados sem conferência do histórico financeiro. A remoção desses estados do schema só poderá ocorrer após inventário dos dados, decisão de tratamento dos registros existentes e migração segura validada. Esta compatibilidade é uma exceção de leitura para dados antigos, não uma etapa do novo fluxo operacional.
+
+
+## 22. Reconciliação funcional com a implementação — 2026-10-26
+
+Esta seção atualiza a fotografia antiga da seção 12, que foi escrita antes da implementação de várias páginas, rotas e fluxos. Ela não transforma código existente em funcionalidade aprovada para produção; separa o comportamento já refletido no código dos módulos ainda parciais.
+
+### Comportamentos atuais refletidos no código
+- Existem páginas e APIs para autenticação, jogador, cambista, administrador, compras, histórico/recibo, resultados, rodadas e saques. A autorização continua sendo validada no servidor; a existência das páginas não significa que todos os processos de negócio estejam completos.
+- A compra é estruturada como `Purchase` com participações e linhas individuais; a repetição de 1 a 10 rodadas é contínua, sem pular sorteios, e o pagamento é único por compra.
+- Cada rodada mantém resultados independentes para placa cinza (`resultLegacyPlate`) e Mercosul (`resultMercosurPlate`). A classificação histórica falha de modo seguro quando não consegue determinar o formato; não inventar o segundo resultado de rodadas antigas.
+- O checkout Mercado Pago/Pix, adaptador Orders API, webhook assinado, consulta de status e serviço transacional de confirmação já têm implementação nesta branch. Ainda não há evidência de validação ponta a ponta com credenciais de teste no contrato/notificações reais do provedor; código presente não autoriza cobranças reais.
+- A confirmação após cutoff ou para rodada indisponível não cria participação retroativa nem recibo; fica para reconciliação manual. A regra de reembolso/devolução desse caso ainda precisa ser decidida e testada.
+- O recibo oficial depende de compra e pagamento confirmados no servidor. A consulta pública por recibo não deve expor dados pessoais. A integração física de impressão, a geração/validação ponta a ponta do QR e compatibilidade com impressoras reais ainda não estão comprovadas.
+- A carteira deriva do livro-razão. Solicitar saque reserva o saldo em transação; a administração tem apenas **Pagar** ou **Rejeitar**. **Pagar** registra que o Pix já foi feito manualmente fora da plataforma; **Rejeitar** libera a reserva por lançamento compensatório idempotente. Não há payout Pix automático.
+- `APPROVED` e `PROCESSING` são estados legados de saque: manter visíveis para reconciliação, sem conversão automática nem remoção até inventário e migração segura.
+- Falha técnica de crédito de prêmio online não expira após sete dias; deve continuar auditável e ser reconciliada com crédito idempotente. O prazo de sete dias para resgate manual de prêmio de venda do cambista é uma regra separada.
+
+### Estado incompleto / gates de validação
+- Venda e recebimento em espécie pelo cambista e fluxo operacional de prêmios das vendas do cambista ainda não estão completos.
+- Gestão administrativa completa de usuários, regras, comissões e relatórios financeiros ainda está parcial.
+- Scheduler automático exige agendador externo, segredo e banco correto configurados; uma rota existente não comprova operação recorrente ativa.
+- Permanecem pendentes a reconciliação de eventos de pagamento fora de ordem, política de pagamentos aprovados após cutoff, estornos/reembolsos, testes do webhook com credenciais de teste e observabilidade operacional.
+- O estado de CI do HEAD atual não foi confirmado nesta reconciliação; o commit `84938086a2d50fd91de71b572372ab122416dcc9` não retornou checks/status na consulta ao GitHub. Não afirmar que a versão atual está aprovada só porque commits anteriores passaram.
+- Antes de considerar o fluxo de saques validado, executar testes PostgreSQL de saldo derivado, reserva/liberação, concorrência, reprocessamento idempotente e falhas de transação.
+
+### Regra de atualização
+Quando o comportamento implementado e validado melhorar uma instrução antiga, atualizar a regra normativa nesta especificação e o manual técnico na mesma mudança. Se a mudança alterar regra de negócio, não inferi-la apenas a partir do código: registrar a decisão aprovada. Preservar notas antigas como histórico, mas nunca deixá-las competir com a regra vigente.
