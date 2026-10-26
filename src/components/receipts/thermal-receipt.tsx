@@ -69,6 +69,7 @@ export function ThermalReceipt({
     document.body.appendChild(anchor);
     anchor.click();
     anchor.remove();
+    onClose?.();
     window.setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
