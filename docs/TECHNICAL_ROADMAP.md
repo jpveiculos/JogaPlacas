@@ -15,6 +15,16 @@ A página principal é a porta de entrada para pessoas que recebem o link em gru
 
 **Redirecionamento e acesso:** visitante sem sessão acessando `/` vê a apresentação pública. Após login, o servidor identifica o papel e encaminha à área permitida; jogador autenticado que voltar a `/` deve ser encaminhado à área do jogador, sem fluxo de navegação que o leve de volta à página de apresentação. O cadastro público, quando implementado, deve terminar com a conta criada e encaminhar o novo jogador à área do jogador. A página principal não concede privilégios nem substitui autorização no servidor. Não criar cadastro público de administrador; contas administrativas são provisionadas de forma segura. Regras de cadastro, validação, prevenção de abuso e ativação de conta precisam ser implementadas e testadas antes de abrir o cadastro ao público.
 
+## Nova decisão funcional — venda rápida do cambista sem dados do cliente (2026-10-26)
+
+O modelo operacional do cambista passa a ser semelhante ao de uma venda por bilhete: não pedir nome, telefone, WhatsApp nem selecionar/cadastrar um cliente. O cambista informa a placa e os dados estritamente necessários da aposta, registra a venda e entrega um recibo identificável por código único e QR Code. O QR Code do recibo é para localizar/consultar o bilhete; não é automaticamente o QR Code de cobrança Pix.
+
+A busca de compras por nome, telefone ou placa deve sair da interface do cambista e ser removida como fluxo de produto. A segunda via, se mantida, deve ser localizada pelo código do recibo e protegida por autorização. O backend de compras deve aceitar venda com `cashierId` e sem `customerId`; não criar clientes artificiais. A compra, o pagamento/recebimento, a rodada, as linhas, a emissão do recibo, o código único e a auditoria continuam sujeitos às validações existentes.
+
+**Gap identificado na inspeção:** `src/app/cashier/page.tsx` atualmente mostra consulta rápida de recibo e `CashierPurchaseHistory`; este último oferece busca por código, nome, telefone e placa. `src/modules/purchases/create-purchase.ts` rejeita venda de cambista sem `customerId`. Portanto, remover apenas o componente de pesquisa deixaria o cambista sem o fluxo de venda pedido. É necessário implementar e testar o fluxo de venda rápida e seu endpoint, com geração do QR Code do recibo, antes de considerar a área concluída.
+
+Não apagar registros históricos de `Customer` nem modificar a base de dados de produção como parte desta limpeza sem plano de migração, avaliação de retenção e autorização explícita.
+
 ## Decisões técnicas aprovadas
 
 - Aplicação modular única com Next.js App Router, React e TypeScript estrito.
