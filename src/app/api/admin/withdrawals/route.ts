@@ -54,8 +54,9 @@ export async function GET(request: NextRequest) {
 
 const actionSchema = z.object({
   withdrawalId: z.string().min(1).max(128),
-  action: z.enum(["approve", "reject"]),
+  action: z.enum(["approve", "mark-paid", "reject"]),
   note: z.string().trim().min(4).max(500),
+  providerRef: z.string().trim().min(3).max(200).optional(),
 }).strict();
 
 export async function POST(request: NextRequest) {
@@ -74,6 +75,25 @@ export async function POST(request: NextRequest) {
       if (!rows.length) throw new Error("NOT_FOUND");
       const withdrawal = await tx.withdrawal.findUnique({ where: { id: parsed.data.withdrawalId }, include: { user: { select: { username: true } } } });
       if (!withdrawal) throw new Error("NOT_FOUND");
+      if (parsed.data.action === "mark-paid") {
+        if (withdrawal.status !== "APPROVED") throw new Error("INVALID_STATE");
+        const reference = parsed.data.providerRef?.trim() || null;
+        const paid = await tx.withdrawal.update({ where: { id: withdrawal.id }, data: { status: "PAID", reviewedById: auth.user.id, ...(reference ? { providerRef: reference } : {}) } });
+        await tx.ledgerEntry.create({ data: {
+          userId: withdrawal.userId, withdrawalId: withdrawal.id, type: "WITHDRAWAL_PAID",
+          amountCents: 0, currency: "BRL", idempotencyKey: "withdrawal-paid:" + withdrawal.id,
+          description: "Registro auditável de pagamento Pix externo do saque " + withdrawal.id + (reference ? "; referência " + reference : ""),
+        } });
+        await tx.withdrawalStatusHistory.create({ data: {
+          withdrawalId: withdrawal.id, fromStatus: "APPROVED", toStatus: "PAID", actorId: auth.user.id,
+          note: parsed.data.note.trim() + (reference ? " | Referência Pix externa: " + reference : " | Pagamento Pix externo conferido"),
+        } });
+        await tx.auditEvent.create({ data: {
+          actorId: auth.user.id, action: "WITHDRAWAL_MARKED_PAID", entityType: "Withdrawal", entityId: withdrawal.id,
+          metadata: { userId: withdrawal.userId, username: withdrawal.user.username, amountCents: withdrawal.amountCents, providerRef: reference, note: parsed.data.note.trim(), pixKeyMasked: maskPixKey(decryptPixKey(withdrawal.pixKeyEncrypted)), paidAt: new Date().toISOString(), manualProviderConfirmation: true, payoutHandledOutsidePlatform: true },
+        } });
+        return { id: paid.id, status: paid.status, username: withdrawal.user.username, amountCents: withdrawal.amountCents };
+      }
       if (withdrawal.status !== "PENDING") throw new Error("INVALID_STATE");
       if (parsed.data.action === "approve") {
         const approved = await tx.withdrawal.update({ where: { id: withdrawal.id }, data: { status: "APPROVED", reviewedById: auth.user.id } });
@@ -106,7 +126,7 @@ export async function POST(request: NextRequest) {
     const code = error instanceof Error ? error.message : "";
     if (code === "NOT_FOUND") return NextResponse.json({ error: "Solicitação de saque não encontrada." }, { status: 404, headers });
     if (code === "INVALID_STATE") return NextResponse.json({ error: "Este saque não está pendente. Atualize a lista antes de tentar novamente." }, { status: 409, headers });
-    if (code === "WALLET_PIX_ENCRYPTION_KEY_MISSING" || code === "WALLET_PIX_ENCRYPTION_KEY_INVALID") return NextResponse.json({ error: "Configure a chave de criptografia de chaves Pix antes de consultar ou operar saques." }, { status: 503, headers });
+    if (code === "WALLET_PIX_ENCRYPTION_KEY_MISSING" || code === "WALLET_PIX_ENCRYPTION_KEY_INVALID") return NextResponse.json({ error: "Configure a chave de criptografia de chaves Pix antes de consultar ou registrar pagamentos de saques." }, { status: 503, headers });
     return NextResponse.json({ error: "Não foi possível concluir a operação do saque." }, { status: 500, headers });
   }
 }
