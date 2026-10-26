@@ -20,7 +20,7 @@
 - Login compartilhado por usuário/senha; o servidor identifica o papel e direciona para a área autorizada. Jogador autenticado que acessar `/` é encaminhado à área do jogador; após cadastro público concluído, o novo jogador também vai para a área do jogador.
 - Senhas armazenadas somente com hash forte; sessões seguras; autorização validada no servidor.
 - Cadastro público é somente para jogador. Não permitir cadastro público de administradores; contas e credenciais administrativas devem ser provisionadas por configuração segura. A implementação do cadastro público ainda é pendente e precisa de validação e proteção contra abuso.
-- Jogador vê apenas os próprios registros; cambista vê somente suas próprias vendas/clientes; administrador tem visão global conforme permissões.
+- Jogador vê apenas os próprios registros; cambista vê somente suas próprias vendas sem cadastro de comprador; ADMIN pode pesquisar contas de jogadores para manutenção e acessar os registros globais estritamente conforme permissões e auditoria.
 
 ## 2. Placas e categorias
 - Formatos aceitos: padrão antigo `ABC-1234` e Mercosul `ABC1D23`, com A-Z na quinta posição Mercosul.
@@ -53,25 +53,25 @@
 - Notificações para confirmação/pendência de pagamento, fechamento e resultado da rodada, crédito de prêmio e mudanças no saque.
 
 ## 5. Jogador
-- Cadastro/login com usuário e senha, sem exigir nome real ou documento como regra geral.
-- Modal de jogo para adicionar/revisar/remover placas, valor, repetição, método de pagamento e confirmação.
+- **Cadastro mínimo de jogador:** somente nome de usuário e senha. Não exigir nome completo, CPF, telefone, WhatsApp, e-mail ou outros dados pessoais para criar a conta, entrar ou jogar. Guardar a senha apenas em hash forte; nome de usuário normalizado e único. Não solicitar dados pessoais dentro do fluxo da aposta.
+- Dentro da área autenticada, o jogador monta o jogo informando a placa, valor, repetição/rodadas e método de pagamento permitido; não preencher cadastro de cliente nem pedir dados pessoais a cada compra. A venda só é confirmada quando o pagamento estiver validamente confirmado pelo método aplicável.
 - **Gerador aleatório de placas:** oferecer, na área do jogador, uma opção para gerar uma placa válida aleatória quando a pessoa estiver indecisa. A placa gerada é apenas uma sugestão visual; não é palpite preditivo nem oferece vantagem ou garantia de prêmio.
 - A pessoa pode gerar outra placa quantas vezes desejar antes de escolher. Cada nova geração substitui somente a sugestão exibida; não cria aposta, não reserva placa e não movimenta saldo.
 - Exibir uma ação explícita **“Adicionar ao jogo”** para incluir a placa escolhida no modal de aposta. Até essa confirmação, a placa permanece apenas como sugestão e pode ser descartada sem efeitos.
 - O gerador deve respeitar os formatos de placa aceitos pela especificação e produzir uma representação válida e normalizável pelo servidor. A geração pode ocorrer no cliente, mas toda validação necessária à aposta continua sendo feita no servidor.
-- WhatsApp solicitado para recibo, pré-preenchido quando disponível e editável.
+- **Recibo digital:** depois da confirmação válida, exibir recibo digital com código único e QR Code que abre a consulta pública do próprio recibo. Oferecer ações para baixar e imprimir. O QR Code do recibo identifica a consulta do bilhete e não deve ser confundido com o QR Code Pix usado para pagar. Não exigir WhatsApp para emitir, consultar, baixar ou imprimir o recibo.
 - Resultados recentes exibidos por até 24 horas; histórico próprio de apostas dos últimos 7 dias na interface. Registros financeiros completos permanecem disponíveis para auditoria administrativa.
-- Recuperação de acesso orientada ao contato do administrador via WhatsApp; não usar link de redefinição por e-mail como fluxo definido.
+- A recuperação de acesso deve funcionar sem exigir e-mail ou WhatsApp como dado cadastral obrigatório; definir e testar um fluxo seguro de recuperação antes de produção, sem revelar se um usuário existe.
 
 ## 6. Cambista
 - Recursos de aposta e consulta equivalentes aos necessários para vender a clientes, sem carteira própria nem saques.
 - Disponibilizar também o gerador aleatório de placas na área do cambista, para ajudar quando o cliente não tiver um palpite. O cambista pode gerar novas sugestões até o cliente escolher uma e, então, usar **“Adicionar ao jogo”** para incluí-la na venda em andamento.
 - Gerar ou trocar sugestões não pode criar nem duplicar uma venda, confirmar pagamento, alterar valores ou registrar participação. A venda só segue o fluxo normal após a escolha explícita e a confirmação da operação.
-- Registrar cliente, placas, valor por rodada, repetição, forma de pagamento e WhatsApp; emitir/recuperar recibo sem duplicar venda.
+- **Venda rápida anônima:** o cambista informa somente a placa (ou escolhe uma sugestão do gerador), os detalhes indispensáveis da aposta/rodada e o valor, confirma a operação conforme o meio de pagamento habilitado e entrega o recibo digital/impresso com código único e QR Code de consulta. Não pedir nem gravar nome, nome de usuário, CPF, telefone ou WhatsApp do comprador; não exigir `customerId` nem criar um registro artificial de `Customer`. A venda deve permanecer ligada ao cambista autenticado, pagamento, participações, recibo e auditoria.
 - Dinheiro em espécie: cambista confirma recebimento e assume responsabilidade pelo registro. Pix: confirmar via provedor.
 - Histórico limitado às próprias operações, com situação do pagamento, resultado/prêmio e dados da rodada.
 - Painel informativo com total de vendas e comissão acumulada. Percentual configurado pelo administrador; não permitir ao cambista editar nem sacar a comissão pela interface definida.
-- Menus secundários recolhidos para clientes recorrentes, resumo diário, busca avançada e livro de recebimentos em dinheiro.
+- Remover da área do cambista as ferramentas de busca/seleção de clientes e pesquisa de vendas por nome, telefone, WhatsApp ou placa. Se a segunda via for necessária, localizar pelo código único do recibo, com autorização e sem criar outra venda. O histórico de operações próprias pode permanecer se não exigir cadastro de cliente.
 
 ## 7. Administração
 - Painel financeiro por período, distinguindo vendas diretas, vendas de cambistas, pagamentos confirmados, pendências, cancelamentos, estornos, comissões, prêmios, saques, tarifas e resultado líquido. Não confundir vendas com valores líquidos recebidos.
@@ -243,6 +243,7 @@ A revisão de `prisma/schema.prisma` e das quatro migrações encontrou invarian
 
 - O componente público de consulta exclusivamente por código de recibo também fica disponível dentro da área autenticada do cambista para conferência presencial.
 - Não adicionar pesquisa por placa nem consulta duplicada na área do jogador.
+- **Busca administrativa de contas:** disponibilizar ao ADMIN uma janela de pesquisa para localizar contas de jogadores e realizar manutenção operacional. Pesquisar por nome de usuário e identificadores internos necessários; mostrar apenas os dados mínimos da conta (papel, estado, datas e registros necessários à manutenção). Não criar campos de nome completo, CPF, telefone ou WhatsApp, pois não são dados de cadastro. A busca deve exigir sessão ADMIN válida, autorização no servidor, paginação/limites e auditoria das ações de manutenção. Não confundir busca de contas administrativas com o antigo buscador de clientes do cambista.
 - O histórico individual do jogador deve ser uma lista de suas próprias apostas/rodadas, com prêmios efetivamente confirmados destacados em verde; não deve ser confundido com a lista pública de resultados gerais.
 - Para status individual: compra/participação ainda não concluída ou rodada não concluída deve indicar que está em andamento; prêmio positivo com crédito registrado indica premiada; valor de prêmio igual a zero em rodada concluída indica não premiada; valores ainda não apurados permanecem pendentes.
 
@@ -544,3 +545,21 @@ A página principal é uma camada de apresentação/consulta pública, não prov
 ### Estado de implementação
 
 A primeira implementação da página principal foi adicionada à branch `feature/dual-plate-draw`: `src/app/page.tsx` agora apresenta a página pública e redireciona sessões válidas à área correspondente por papel (incluindo troca obrigatória de senha). A home integra o componente de consulta pública do recibo e o painel de resultados/ganhadores existentes, preserva `/resultados` e usa estilos responsivos. Esta alteração ainda precisa passar por lint, typecheck, testes e build; a página não foi validada em execução real. O cadastro público de jogador, a apresentação de valores oficiais de prêmio a partir da configuração vigente e a revisão de acessibilidade visual continuam pendentes; não apresentar esses itens como implementados.
+
+
+## Decisão vigente — cadastro mínimo, recibo digital e busca administrativa (2026-10-26)
+
+### Identidade do jogador
+O único cadastro de jogador exigido pela plataforma é nome de usuário e senha. Não coletar nome completo, CPF, telefone, WhatsApp ou e-mail como campos obrigatórios. O jogador autenticado cria a aposta digitando a placa e selecionando apenas os parâmetros necessários do jogo e do pagamento; não deve ser solicitado a repetir dados pessoais.
+
+### Recibo digital do jogador
+Após confirmação válida da compra/pagamento, emitir um recibo digital com código único e QR Code para consultar aquele recibo publicamente. Disponibilizar baixar e imprimir. O recibo e o QR de consulta não substituem o QR/código de pagamento Pix. Compra pendente não deve ser apresentada como paga nem gerar recibo oficial de participação confirmada.
+
+### Cambista
+O cambista usa o mesmo princípio de venda sem cadastro do comprador: placa, parâmetros essenciais da aposta, valor e fluxo de pagamento permitido. Entrega recibo com código e QR de consulta; não coleta dados pessoais do comprador. Remover o buscador de clientes e as pesquisas por nome/telefone/WhatsApp/placa da sua área; segunda via, se necessária, deve usar código de recibo e nunca duplicar a venda.
+
+### Administração
+A área ADMIN deve ter um buscador próprio de contas de jogadores para manutenção, com pesquisa por nome de usuário e apresentação dos dados mínimos necessários. Exigir autenticação/autorização no servidor, limitar resultados, auditar ações e não introduzir dados pessoais que a plataforma decidiu não coletar.
+
+### Estado de implementação
+Estas regras substituem instruções anteriores conflitantes nesta especificação, incluindo coleta de WhatsApp no fluxo do jogador e registro de cliente/WhatsApp no fluxo do cambista. **Decisão documentada; não significa que cadastro público, recibo com QR/baixar/imprimir, venda anônima, remoção do buscador antigo ou busca administrativa já estejam implementados e validados.** As pendências técnicas estão descritas no roadmap.
