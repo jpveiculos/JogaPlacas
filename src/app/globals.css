@@ -379,10 +379,35 @@ h1 {
   font-size: 8px;
 }
 .thermal-receipt-footer-code { margin-top: 1mm; font-weight: 700; }
-.thermal-receipt-print-button {
-  display: block;
+.thermal-receipt-actions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
   margin: 12px auto;
+  width: min(100%, 320px);
+}
+.thermal-receipt-actions button {
+  min-height: 44px;
   padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.thermal-receipt-actions button:focus-visible {
+  outline: 3px solid #8ab9a0;
+  outline-offset: 2px;
+}
+.thermal-receipt-print-button {
+  background: var(--accent) !important;
+  border-color: var(--accent) !important;
+  color: #fff !important;
+}
+.thermal-receipt-exit-button {
+  border-color: #b8c2cc !important;
 }
 @page {
   size: 58mm auto;
@@ -410,7 +435,7 @@ h1 {
     border: 0 !important;
     font-size: 10px !important;
   }
-  .thermal-receipt-print-button { display: none !important; }
+  .thermal-receipt-actions { display: none !important; }
 }
 
 
