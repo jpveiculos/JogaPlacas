@@ -20,9 +20,9 @@ function response(body: unknown, status: number) {
 }
 
 /**
- * Authenticates the notification and reconciles provider state from Mercado Pago.
- * This endpoint deliberately does not confirm purchases yet: receipt/participation
- * confirmation must go through the domain's cutoff-aware transaction service.
+ * Authenticates the notification, reconciles canonical provider state, and sends
+ * approved payments through the domain's cutoff-aware confirmation transaction.
+ * The webhook payload itself is never treated as proof of payment.
  */
 export async function POST(request: NextRequest) {
   const secret = process.env.MERCADOPAGO_WEBHOOK_SECRET?.trim();
