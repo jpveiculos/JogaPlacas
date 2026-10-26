@@ -32,6 +32,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
         paymentMethod: true,
         totalCents: true,
         currency: true,
+        customer: { select: { name: true } },
         receiptCode: true,
         confirmedAt: true,
         payment: { select: { status: true, confirmedAt: true } },
@@ -94,6 +95,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
         paymentMethod: purchase.paymentMethod,
         totalCents: purchase.totalCents,
         currency: purchase.currency,
+        customerLabel: purchase.customer?.name ?? null,
         plates,
       },
     }, { headers });
