@@ -9,7 +9,7 @@ type Withdrawal = {
 };
 const money = (cents: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
 const dateTime = (value: string) => new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short", timeZone: "America/Sao_Paulo", hourCycle: "h23" }).format(new Date(value));
-const labels: Record<Withdrawal["status"], string> = { PENDING: "Aguardando aprovação", APPROVED: "Aprovado — aguardando pagamento Pix", PROCESSING: "Em processamento", PAID: "Pago", REJECTED: "Recusado — saldo liberado" };
+const labels: Record<Withdrawal["status"], string> = { PENDING: "Pendente", APPROVED: "Aprovado — aguardando pagamento Pix", PROCESSING: "Em processamento", PAID: "Pago", REJECTED: "Recusado — saldo liberado" };
 
 export function PlayerWalletWithdrawals() {
   const [availableCents, setAvailableCents] = useState(0);
@@ -46,7 +46,7 @@ export function PlayerWalletWithdrawals() {
       const response = await fetch("/api/player/withdrawals", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ amountCents: Math.round(value * 100), pixKey: pixKey.trim() }) });
       const body = await response.json();
       if (!response.ok) throw new Error(body.error ?? "Não foi possível solicitar o saque.");
-      setNotice("Solicitação registrada. O valor foi reservado e não poderá ser usado em novas apostas enquanto o saque estiver em análise.");
+      setNotice("Solicitação registrada. O valor foi reservado e não poderá ser usado em novas apostas enquanto o saque estiver pendente. Se o saque for rejeitado, o valor volta ao saldo disponível.");
       setAmount(""); setPixKey(""); await load();
     } catch (reason) { setError(reason instanceof Error ? reason.message : "Falha ao solicitar o saque."); }
     finally { setBusy(false); }
