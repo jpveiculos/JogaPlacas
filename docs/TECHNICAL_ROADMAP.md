@@ -2,14 +2,18 @@
 
 Status: manual operacional vigente; reconciliação do estado da branch feature/dual-plate-draw em 2026-10-26. A especificação funcional em docs/PRODUCT_SPEC.md é a fonte de verdade para comportamento; decisões arquiteturais em docs/ADR-001-FOUNDATION.md e docs/TARGET_DOMAIN_MODEL.md complementam o manual. Este documento contém registros cronológicos de inspeções: quando um registro antigo divergir da seção “Estado consolidado da implementação”, prevalece a seção consolidada, sem apagar o histórico. O retrato de código refere-se somente à branch feature/dual-plate-draw; não presumir que planning/foundation ou main contém as mesmas alterações.
 
-## Produto e navegação obrigatórios
+## Produto e navegação obrigatórios — decisão vigente em 2026-10-26
 
-A plataforma não deve ser concebida como um site cuja página inicial seja o produto principal. O produto consiste em três ambientes autenticados e separados:
-- **Área do jogador**: apostas, pagamentos, recibos, resultados, histórico e carteira conforme a especificação.
-- **Área do cambista**: vendas para clientes, recebimentos, recibos, histórico e comissões; sem carteira própria nem saques.
-- **Área do administrador**: gestão de usuários, rodadas, regras, resultados, financeiro, comissões, saques e auditoria.
+A plataforma tem **quatro áreas de produto**, não apenas três. A decisão inicial de não criar uma página principal pública foi substituída pela nova direção de produto registrada na especificação funcional. Não reconstruir a navegação antiga como se ainda fosse válida.
 
-Pode existir uma área pública auxiliar para login, termos de uso, privacidade e outras páginas institucionais necessárias. Ela não substitui nem deve competir com os três ambientes principais. Após login compartilhado, o servidor identifica o papel e encaminha para a área permitida; toda autorização é verificada no servidor, não apenas escondida na interface.
+1. **Página principal pública (`/`)**: página de apresentação do Joga Placas, explicação objetiva de como jogar e das regras, banner/elemento visual explicativo de placas e equivalências de prêmios, destaques de prêmios efetivamente confirmados, resultados públicos recentes, ganhadores elegíveis, consulta de recibo/código e acesso visível a **Entrar** e **Criar conta**.
+2. **Área do jogador**: apostas, pagamentos, recibos, resultados pessoais, histórico e carteira conforme a especificação. Depois de entrar ou concluir o cadastro, o jogador é encaminhado diretamente para essa área.
+3. **Área do cambista**: vendas para clientes, recebimentos, recibos, histórico e comissões; sem carteira própria nem saques.
+4. **Área do administrador**: gestão de usuários, rodadas, regras, resultados, financeiro, comissões, saques e auditoria.
+
+A página principal é a porta de entrada para pessoas que recebem o link em grupos ou outros locais da internet; não deve apresentar uma tela de login como primeira impressão. Os resultados e ganhadores antes descritos como página pública isolada devem ser incorporados à experiência da página principal. Pode-se preservar `/resultados` como endereço compatível/atalho para a seção pública de resultados, mas o conteúdo de resultados também deve estar acessível na página principal sem login.
+
+**Redirecionamento e acesso:** visitante sem sessão acessando `/` vê a apresentação pública. Após login, o servidor identifica o papel e encaminha à área permitida; jogador autenticado que voltar a `/` deve ser encaminhado à área do jogador, sem fluxo de navegação que o leve de volta à página de apresentação. O cadastro público, quando implementado, deve terminar com a conta criada e encaminhar o novo jogador à área do jogador. A página principal não concede privilégios nem substitui autorização no servidor. Não criar cadastro público de administrador; contas administrativas são provisionadas de forma segura. Regras de cadastro, validação, prevenção de abuso e ativação de conta precisam ser implementadas e testadas antes de abrir o cadastro ao público.
 
 ## Decisões técnicas aprovadas
 
@@ -47,7 +51,7 @@ Pode existir uma área pública auxiliar para login, termos de uso, privacidade 
 4. Implementar autenticação, sessões seguras, papéis, propriedade dos registros, limites de tentativa e auditoria.
 5. Implementar compra e participações com cutoff no servidor, idempotência e concorrência real no PostgreSQL.
 6. Implementar carteira/livro-razão, prêmios, saques, vendas em espécie e comissões com invariantes transacionais.
-7. Implementar os três ambientes de interface e as páginas públicas auxiliares conforme a especificação.
+7. Implementar as quatro áreas de produto, incluindo página principal pública com apresentação, cadastro/login, resultados/ganhadores e consulta de recibo, além das áreas autenticadas de jogador, cambista e administrador.
 8. Implementar e validar a integração Pix/Mercado Pago em ambiente de desenvolvimento/homologação; **a habilitação operacional, credenciais de produção e qualquer cobrança real ficam bloqueadas até a fase final e autorização explícita**. Código de integração já existe nesta branch, mas isso não equivale a validação ponta a ponta nem autorização de produção.
 9. Testar ponta a ponta, segurança, concorrência, reconciliação, backup/restauração e recuperação.
 10. Revisar configuração do novo servidor e variáveis de ambiente; preparar implantação e rollback sem tocar no site atual.
@@ -58,7 +62,7 @@ Pode existir uma área pública auxiliar para login, termos de uso, privacidade 
 Este quadro substitui as descrições de estado anteriores que diziam que a interface era apenas um placeholder ou que APIs/pagamentos ainda não existiam. Esses textos antigos são registros históricos da etapa em que foram escritos, não retrato do HEAD atual.
 
 ### Implementado no código desta branch
-- Aplicação Next.js com páginas de login, troca de senha, jogador, cambista, administrador, resultados, termos e consulta pública; APIs de autenticação, compras, histórico/recibo, resultados, rodadas e saques.
+- Aplicação Next.js com páginas de login, troca de senha, jogador, cambista, administrador, resultados, termos e consulta pública; atualmente `/` redireciona para `/login`. A página principal pública de apresentação/cadastro/login/resultados combinados é uma nova funcionalidade aprovada e ainda precisa ser implementada. APIs de autenticação, compras, histórico/recibo, resultados, rodadas e saques já existem em diferentes graus de conclusão.
 - Autenticação por sessão, verificação de papel no servidor e fluxos de troca obrigatória de senha, com testes de rotas de autenticação.
 - Modelo `Purchase` → `PurchaseParticipation` → `ParticipationLine`, rateio de valores inteiros em centavos, snapshots de regra, criação transacional/idempotente de compra pendente e validações de sequência contínua de rodadas.
 - Dois resultados independentes por rodada (`resultLegacyPlate` e `resultMercosurPlate`), preservação do resultado histórico como Mercosul, gerador independente, migração de classificação histórica e serviços/rotas de fechar, sortear e apurar.
@@ -403,3 +407,8 @@ Implementação parcial do recibo — 2026-10-25: o componente térmico agora id
 ## Regra de manutenção do estado documental — 2026-10-26
 
 Ao atualizar este manual, comparar primeiro o HEAD da branch de trabalho com cada documento e código relevante. Registrar cada item como **implementado**, **parcial**, **pendente**, **bloqueado por decisão** ou **validado por evidência**, separando claramente existência de código de validação de CI e de operação real. Quando a implementação vigente representa uma melhoria aprovada em relação à ideia inicial, atualizar a regra principal e marcar a descrição antiga como histórica/superada; não manter duas instruções conflitantes como se ambas fossem atuais. Não apagar decisões históricas que expliquem migrações ou compatibilidade, mas não as apresentar como estado atual. Atualizar `docs/PRODUCT_SPEC.md` para decisões de produto e manter os documentos técnicos alinhados no mesmo conjunto de mudanças.
+
+
+## Nova direção de produto: página principal pública — 2026-10-26
+
+A decisão antiga que limitava a experiência a três áreas e rejeitava uma página principal foi substituída. A página inicial do domínio deve explicar o produto antes de pedir que a pessoa entre ou crie conta. Requisitos e critérios estão em `docs/PRODUCT_SPEC.md`, seção “Página principal pública e entrada no produto”. Não tratar esta decisão como implementação concluída: o código atual em `src/app/page.tsx` redireciona para `/login`, portanto a mudança de navegação ainda está pendente.
