@@ -48,6 +48,7 @@ describe("Mercado Pago order parsing", () => {
       status: "processed",
       status_detail: "accredited",
       total_amount: "12.50",
+      currency: "BRL",
       external_reference: "jogaplacas_purchase_purchase123",
       transactions: {
         payments: [{
@@ -68,6 +69,7 @@ describe("Mercado Pago order parsing", () => {
       qrCode: "000201pix-copy-paste",
       qrCodeBase64: "aGVsbG8=",
       externalReference: "jogaplacas_purchase_purchase123",
+      currency: "BRL",
       amountCents: 1250,
       paymentStatus: "approved",
       paymentAmountCents: 1250,
