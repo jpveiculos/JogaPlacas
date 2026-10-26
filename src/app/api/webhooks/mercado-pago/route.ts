@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { authPrisma } from "@/lib/auth/session";
 import { getVerifiedPixOrder, verifyMercadoPagoWebhookSignature } from "@/modules/payments/mercado-pago";
+import { confirmPixPayment } from "@/modules/payments/confirm-payment";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -104,6 +105,20 @@ export async function POST(request: NextRequest) {
         data: { processedAt: new Date() },
       });
     });
+
+    const normalizedStatus = (order.paymentStatus ?? order.status).toLowerCase();
+    if (["approved", "processed"].includes(normalizedStatus)) {
+      const confirmation = await confirmPixPayment(authPrisma, {
+        paymentId: payment.id,
+        providerStatus: order.paymentStatus ?? order.status,
+        providerStatusDetail: order.statusDetail,
+      });
+      if (confirmation.outcome === "late_or_unavailable") {
+        // Acknowledge the provider event but leave purchase/receipt pending for
+        // an explicit refund/reconciliation decision; never confirm retroactively.
+        return response({ received: true, reconciliationRequired: true }, 200);
+      }
+    }
 
     return response({ received: true }, 200);
   } catch {
