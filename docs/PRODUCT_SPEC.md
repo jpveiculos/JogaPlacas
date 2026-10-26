@@ -123,7 +123,10 @@
 - Uma tarefa não é considerada concluída enquanto a especificação não tiver sido atualizada quando necessário e a divergência entre documento, implementação e testes não tiver sido avaliada.
 
 
-## 12. Retrato de implementação verificado — 2026-10-24
+## 12. Retrato histórico de implementação — 2026-10-24 (superado)
+
+> As afirmações desta seção sobre placeholders, inexistência de checkout/webhook e estado das branches refletem a inspeção de 2026-10-24 e foram superadas por implementações posteriores. Para estado vigente, usar a seção 22 ao final deste documento e o manual técnico consolidado. As seções 13 e 14 também são registros datados, não uma fotografia atual.
+
 
 Este retrato descreve a branch feature/dual-plate-draw no commit d337082b2d0fa6b24db64a6839d20e24c894fb9e. É um registro de auditoria do código versionado, não uma declaração de prontidão para produção. A auditoria detalhada e os limites de evidência estão em docs/FOUNDATION_AUDIT.md.
 
@@ -156,7 +159,7 @@ Este retrato descreve a branch feature/dual-plate-draw no commit d337082b2d0fa6b
 Toda decisão aprovada, mudança de código, resultado de teste, mudança de infraestrutura ou implantação que altere este retrato deve atualizar esta seção e/ou a documentação operacional pertinente no mesmo conjunto de trabalho. Registrar claramente o que foi executado e a evidência; nunca transformar intenção em status concluído.
 
 
-## 13. Verificação técnica complementar — 2026-10-25
+## 13. Registro histórico de verificação técnica — 2026-10-25
 
 - O GitHub Actions `Verify` do commit `1d37b8fc59e0c10717272b96dec1d9bd206a6819` concluiu com sucesso. Isso não equivale a uma instalação limpa executada nesta sessão nem a uma validação de produção.
 - Foi confirmado que a migração `20261024020000_dual_plate_draw` classifica dados históricos pelo valor exibido em `plateDisplay` e aborta se qualquer linha não puder ser classificada. Esse comportamento é uma proteção intencional e não deve ser removido para fazer uma migração passar.
@@ -165,7 +168,7 @@ Toda decisão aprovada, mudança de código, resultado de teste, mudança de inf
 - Evidência e limites: revisão dos arquivos versionados na branch `feature/dual-plate-draw`; nenhuma instalação/teste local ou acesso a banco foi executado nesta sessão. Nenhuma alteração de código, migração, implantação ou produção foi realizada.
 
 
-## 14. Alteração de código e teste de migração histórica — 2026-10-25
+## 14. Registro histórico de alteração de código e teste de migração — 2026-10-25
 
 Foi adicionado `scripts/test-dual-plate-migration.mjs`, o comando `npm run test:migration-backfill` e uma etapa correspondente no job `migration-test` de `.github/workflows/verify.yml`. O teste cria bancos descartáveis temporários, parte do SQL da migração inicial, marca essa migração como baseline e insere linhas históricas LEGACY/MERCOSUR; verifica o backfill e a preservação do resultado Mercosul. Em um segundo banco, inclui uma placa não classificável e exige que `prisma migrate deploy` falhe com o erro de segurança esperado.
 
