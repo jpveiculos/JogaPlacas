@@ -1,5 +1,7 @@
 # Plano de construção de pagamentos e integração Pix
 
+> **Nota de reconciliação — 2026-10-26:** as seções iniciais abaixo são registros históricos de quando o adaptador/webhook ainda não existiam. A seção “Estado real após implementação incremental — 2026-10-26” registra a evolução posterior, mas também deve ser lida junto ao estado consolidado em `docs/TECHNICAL_ROADMAP.md`. O código de integração já existe na branch; a integração não está liberada para produção e ainda precisa dos testes/gates explicitados neste documento.
+
 Documento de planejamento atualizado: 2026-10-25
 Branch auditada: feature/dual-plate-draw
 HEAD de código auditado anteriormente: d337082b2d0fa6b24db64a6839d20e24c894fb9e; revisão complementar de pagamentos/recibos realizada em 2026-10-25 na branch feature/dual-plate-draw
