@@ -3,6 +3,8 @@
 Registro de planejamento iniciado em 2026-10-25. **A fotografia de estado e o plano abaixo são históricos e foram superados pela reconciliação de 2026-10-26 em `docs/TECHNICAL_ROADMAP.md`.** Consulte o quadro consolidado antes de tomar decisões ou executar tarefas.
 
 ## Decisão permanente
+
+A decisão anterior de manter somente três áreas e não criar uma página principal pública foi superada em 2026-10-26. A plataforma passa a ter quatro áreas de produto; a página principal pública e seu fluxo de cadastro estão aprovados, mas ainda precisam ser implementados. Consulte a seção 23 de `docs/PRODUCT_SPEC.md`.
 A integração com Mercado Pago fica para a última fase. Até a aprovação dos gates anteriores, não criar cobranças reais, não ativar webhooks do provedor e não colocar segredos reais do provedor no ambiente. Não alterar main, banco de produção, domínio/DNS nem serviços ativos sem autorização explícita.
 
 ## Estado observado
@@ -65,7 +67,8 @@ A revisão inicial confirma que PK/FK/uniqueness estão presentes, mas os limite
 - [x] package-lock.json regenerado por npm e commitado.
 - [x] CI completa verde no commit add8084f643844a1d193d2dd9e4474b49839a42b.
 - [ ] Auditar e propor constraints para valores não negativos, soma das alocações, mínimo de R$ 1,00 por placa/rodada e consistência dos dois resultados. Separar o que está definido na especificação do que exige decisão de negócio.
-- [ ] Continuar mantendo a interface como pendência: página inicial e áreas de jogador/cambista/administrador ainda não implementadas como fluxos de produto.
+- [ ] Implementar a página principal pública (`/`) com apresentação, explicação do jogo, equivalências oficiais de prêmios, resultados/ganhadores e consulta por código de recibo; incluir Entrar/Criar conta. Atualmente `/` redireciona para `/login`.
+- [ ] Implementar cadastro público seguro apenas para jogador e encaminhamento pós-cadastro para a área do jogador; login existente deve encaminhar pelo papel. Não permitir cadastro público de administrador.
 
 
 ### Regra de rateio e multiplicador da unidade — 2026-10-25
@@ -358,3 +361,12 @@ A alteração permanece pendente de implementação e validação. Não houve me
 - [ ] Completar gestão de usuários, configurações de comissão/regras, relatórios financeiros e testes ponta a ponta das três áreas.
 
 Sem deploy, merge para `main`, alteração de produção ou pagamentos reais nesta etapa.
+
+
+### Nova direção de produto: home pública — 2026-10-26
+
+- [ ] Substituir o redirecionamento atual de `/` para `/login` por uma página principal pública de apresentação.
+- [ ] Incorporar resultados públicos, ganhadores com prêmio efetivamente creditado e consulta pública por código `JP-`, reaproveitando APIs existentes e sem expor dados pessoais.
+- [ ] Implementar cadastro público seguro para jogador; após cadastro concluído, encaminhar à área do jogador. Login existente segue o redirecionamento baseado no papel.
+- [ ] Manter `/resultados` compatível com links existentes, redirecionando ou apontando para a seção correspondente da home sem remover a consulta pública direta.
+- [ ] Criar testes para visitantes sem sessão, jogador autenticado acessando `/`, redirecionamento por papel, cadastro duplicado/inválido, autorização e exposição mínima de dados públicos.
