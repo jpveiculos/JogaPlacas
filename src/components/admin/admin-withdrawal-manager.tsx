@@ -15,8 +15,6 @@ const labels: Record<Item["status"], string> = { PENDING: "Pendente — conferir
 
 export function AdminWithdrawalManager() {
   const [items, setItems] = useState<Item[]>([]);
-  const [notes, setNotes] = useState<Record<string, string>>({});
-  const [references, setReferences] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState("");
@@ -35,23 +33,19 @@ export function AdminWithdrawalManager() {
   useEffect(() => { const timer = window.setTimeout(() => { void load(); }, 0); return () => window.clearTimeout(timer); }, [load]);
 
   async function act(item: Item, action: "mark-paid" | "reject") {
-    const note = (notes[item.id] ?? "").trim();
-    const providerRef = (references[item.id] ?? "").trim();
-    if (note.length < 4) { setError("Registre uma observação para auditar a operação."); return; }
+    const note = action === "mark-paid" ? "Pagamento Pix confirmado manualmente" : "Saque rejeitado pelo administrador";
     const prompt = action === "mark-paid"
       ? `Confirma que você realizou e conferiu o Pix de ${money(item.amountCents)} para ${item.username}? Esta ação marcará o saque como pago.`
       : `Confirma recusar o saque de ${money(item.amountCents)} de ${item.username} e liberar o valor reservado na carteira?`;
     if (!window.confirm(prompt)) return;
     setBusy(item.id); setError(""); setNotice("");
     try {
-      const response = await fetch("/api/admin/withdrawals", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ withdrawalId: item.id, action, note, ...(action === "mark-paid" && providerRef.length >= 3 ? { providerRef } : {}) }) });
+      const response = await fetch("/api/admin/withdrawals", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ withdrawalId: item.id, action, note }) });
       const body = await response.json();
       if (!response.ok) throw new Error(body.error ?? "Não foi possível atualizar o saque.");
       setNotice(action === "mark-paid"
         ? `Saque de ${money(body.withdrawal.amountCents)} de ${body.withdrawal.username} marcado como pago após confirmação do Pix.`
         : `Saque recusado. A reserva de ${money(body.withdrawal.amountCents)} foi liberada na carteira do jogador.`);
-      setNotes((current) => ({ ...current, [item.id]: "" }));
-      setReferences((current) => ({ ...current, [item.id]: "" }));
       await load();
     } catch (reason) { setError(reason instanceof Error ? reason.message : "Falha ao atualizar o saque."); }
     finally { setBusy(null); }
@@ -63,20 +57,17 @@ export function AdminWithdrawalManager() {
   return <section className="feature-card" aria-labelledby="admin-withdrawals-heading">
     <span className="feature-label">Financeiro</span>
     <h2 id="admin-withdrawals-heading">Saques das carteiras digitais</h2>
-    <p>Confira os dados e a chave Pix. Depois de realizar a transferência manualmente no banco, clique em “Marcar como pago” para encerrar a solicitação. O sistema não envia Pix automaticamente. Se houver algo incorreto, recuse a solicitação pendente para liberar a reserva.</p>
+    <p>Confira os dados e a chave Pix. Depois de realizar a transferência manualmente no banco, clique em “Pagar”. Se houver algo incorreto, clique em “Rejeitar” para devolver o valor reservado ao saldo disponível. O sistema não envia Pix automaticamente.</p>
     {error && <p role="alert" className="note-inline">{error}</p>}
     {notice && <p role="status" className="note-inline">{notice}</p>}
-    {loading ? <p>Carregando solicitações…</p> : pending.length === 0 ? <p>Não há saques aguardando aprovação.</p> : <div className="admin-round-list">
+    {loading ? <p>Carregando solicitações…</p> : pending.length === 0 ? <p>Não há saques pendentes.</p> : <div className="admin-round-list">
       {pending.map((item) => <article className="round-option" key={item.id}>
         <div><strong>{item.username}</strong> · {money(item.amountCents)} · {labels[item.status]}</div>
         <p>Solicitado em {dateTime(item.createdAt)}</p>
         <p>Chave Pix para pagamento: <strong>{item.pixKey ?? item.pixKeyMasked}</strong></p>
-        <label>Observação de auditoria
-          <textarea rows={2} maxLength={500} value={notes[item.id] ?? ""} onChange={(event) => setNotes((current) => ({ ...current, [item.id]: event.target.value }))} placeholder="Ex.: solicitação conferida e aprovada." />
-        </label>
         <div className="round-options">
-          <button type="button" disabled={busy !== null} onClick={() => void act(item, "mark-paid")}>{busy === item.id ? "Registrando…" : "Marcar como pago"}</button>
-          <button type="button" className="secondary-button" disabled={busy !== null} onClick={() => void act(item, "reject")}>Recusar e liberar saldo</button>
+          <button type="button" disabled={busy !== null} onClick={() => void act(item, "mark-paid")}>{busy === item.id ? "Registrando…" : "Pagar"}</button>
+          <button type="button" className="secondary-button" disabled={busy !== null} onClick={() => void act(item, "reject")}>Rejeitar</button>
         </div>
       </article>)}
     </div>}
