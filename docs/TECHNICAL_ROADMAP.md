@@ -1,6 +1,6 @@
 # Joga Placas — Manual técnico de implementação
 
-Status: manual operacional vigente, atualizado em 2026-10-25 após revisão de feature/dual-plate-draw no commit 1d37b8fc59e0c10717272b96dec1d9bd206a6819. A especificação funcional em docs/PRODUCT_SPEC.md é a fonte de verdade para comportamento; decisões arquiteturais em docs/ADR-001-FOUNDATION.md e docs/TARGET_DOMAIN_MODEL.md complementam o manual. Não presumir que planning/foundation contém as alterações da branch de feature: as branches divergem.
+Status: manual operacional vigente; reconciliação do estado da branch feature/dual-plate-draw em 2026-10-26. A especificação funcional em docs/PRODUCT_SPEC.md é a fonte de verdade para comportamento; decisões arquiteturais em docs/ADR-001-FOUNDATION.md e docs/TARGET_DOMAIN_MODEL.md complementam o manual. Este documento contém registros cronológicos de inspeções: quando um registro antigo divergir da seção “Estado consolidado da implementação”, prevalece a seção consolidada, sem apagar o histórico. O retrato de código refere-se somente à branch feature/dual-plate-draw; não presumir que planning/foundation ou main contém as mesmas alterações.
 
 ## Produto e navegação obrigatórios
 
@@ -48,18 +48,45 @@ Pode existir uma área pública auxiliar para login, termos de uso, privacidade 
 5. Implementar compra e participações com cutoff no servidor, idempotência e concorrência real no PostgreSQL.
 6. Implementar carteira/livro-razão, prêmios, saques, vendas em espécie e comissões com invariantes transacionais.
 7. Implementar os três ambientes de interface e as páginas públicas auxiliares conforme a especificação.
-8. **Somente na fase final**, integrar o provedor Pix/Mercado Pago, credenciais, webhooks e reconciliação. Até essa fase, não criar cobranças nem usar credenciais reais.
+8. Implementar e validar a integração Pix/Mercado Pago em ambiente de desenvolvimento/homologação; **a habilitação operacional, credenciais de produção e qualquer cobrança real ficam bloqueadas até a fase final e autorização explícita**. Código de integração já existe nesta branch, mas isso não equivale a validação ponta a ponta nem autorização de produção.
 9. Testar ponta a ponta, segurança, concorrência, reconciliação, backup/restauração e recuperação.
 10. Revisar configuração do novo servidor e variáveis de ambiente; preparar implantação e rollback sem tocar no site atual.
 11. Exigir CI verde, revisão final e autorização explícita antes de qualquer mudança de produção.
 
-## Situação atual da branch
+## Estado consolidado da implementação — 2026-10-26
 
-- Existe schema Prisma refatorado para Purchase/Participation, além de módulos de domínio e serviço de criação de compra pendente.
-- Existe migração inicial versionada em `prisma/migrations/20261023000000_init/migration.sql`; a CI a aplicou a um PostgreSQL descartável e verificou o status. Isso **não** significa que foi aplicada à produção ou que o domínio esteja completo.
-- A CI inclui instalação reproduzível com `npm ci`, validação/geração Prisma, lint, typecheck, testes, build e teste de migração.
-- A interface ainda é apenas um placeholder em `src/app/page.tsx`; as três áreas e autenticação ainda precisam ser implementadas. Não apresentar a plataforma como funcional enquanto os fluxos não existirem e passarem nos testes.
-- Mercado Pago permanece deliberadamente adiado para a fase final.
+Este quadro substitui as descrições de estado anteriores que diziam que a interface era apenas um placeholder ou que APIs/pagamentos ainda não existiam. Esses textos antigos são registros históricos da etapa em que foram escritos, não retrato do HEAD atual.
+
+### Implementado no código desta branch
+- Aplicação Next.js com páginas de login, troca de senha, jogador, cambista, administrador, resultados, termos e consulta pública; APIs de autenticação, compras, histórico/recibo, resultados, rodadas e saques.
+- Autenticação por sessão, verificação de papel no servidor e fluxos de troca obrigatória de senha, com testes de rotas de autenticação.
+- Modelo `Purchase` → `PurchaseParticipation` → `ParticipationLine`, rateio de valores inteiros em centavos, snapshots de regra, criação transacional/idempotente de compra pendente e validações de sequência contínua de rodadas.
+- Dois resultados independentes por rodada (`resultLegacyPlate` e `resultMercosurPlate`), preservação do resultado histórico como Mercosul, gerador independente, migração de classificação histórica e serviços/rotas de fechar, sortear e apurar.
+- Scheduler interno protegido por segredo para abrir/fechar/sortear rodadas; sua execução automática depende de agendamento externo e configuração de ambiente, não apenas da existência da rota.
+- Integração de código com Mercado Pago Orders API, criação de cobrança Pix, persistência dos dados de checkout, webhook HMAC e idempotência, serviço de confirmação transacional e consulta de status. O contrato real do provedor e o fluxo ponta a ponta ainda precisam ser testados com credenciais de teste.
+- Recibo autenticado e consulta pública de recibo/resultados, crédito idempotente de prêmios de jogador e endpoint de reconciliação de crédito de prêmio.
+- Carteira derivada do livro-razão, solicitação de saque com reserva transacional e chave Pix criptografada, histórico e fila administrativa com ações **Pagar**/**Rejeitar**. O Pix do saque é feito manualmente fora da plataforma; não há transferência automática.
+
+### Parcial ou não concluído
+- Fluxo completo de venda/recebimento em espécie pelo cambista e tratamento operacional de prêmios de vendas do cambista.
+- Gestão administrativa completa de usuários, regras, comissões, relatórios e operações financeiras; as telas existentes não significam que todos os módulos administrativos estejam completos.
+- Impressão térmica validada em dispositivo real e QR Code ligado ponta a ponta ao recibo; há componentes e endpoints parciais, mas isso não comprova compatibilidade física universal.
+- Execução automática recorrente de rodadas em ambiente hospedado: exige scheduler externo, segredo e banco correto configurados e verificados.
+- Reconciliação operacional de pagamento aprovado após cutoff, eventos do provedor fora de ordem, estornos/reembolsos e alertas/observabilidade.
+- Estados legados de saque `APPROVED`/`PROCESSING`: preservar para histórico/reconciliação, sem conversão automática.
+- Validação financeira concorrente e ponta a ponta específica dos saques e do fluxo de pagamento na versão exata do HEAD.
+
+### Evidência de validação e limites
+- A branch contém workflow CI com `verify`, `migration-test` e `postgres-concurrency-test`, além de testes unitários, de rota e integração PostgreSQL.
+- No HEAD consultado nesta reconciliação (`ab3a24fa9ed07e02b11f8601d13b7210a13614f9`), a API de status do commit não retornou checks/status. Portanto, **não declarar o HEAD atual aprovado por CI** só porque commits anteriores passaram.
+- Código, testes existentes ou uma migração aprovada em PostgreSQL descartável não provam operação em produção. Nenhum merge para `main`, deploy, migração produtiva ou pagamento real é autorizado por este documento.
+
+### Próximos gates
+1. Obter CI verde para o HEAD exato e revisar lint, typecheck, testes, build, migrações e concorrência PostgreSQL.
+2. Testar o contrato e as notificações reais do Mercado Pago em ambiente de teste, incluindo assinatura, duplicidade, ordem dos eventos, valores divergentes e falhas transacionais.
+3. Testar a aritmética do livro-razão de saques, idempotência e concorrência com PostgreSQL descartável; confirmar que pagamentos/rejeições não duplicam efeitos.
+4. Concluir o fluxo de cambista, a reconciliação de pagamentos tardios/estornos e os testes de impressão/QR que forem parte do escopo aprovado.
+5. Só então preparar uma proposta de implantação, sem executá-la sem autorização explícita.
 
 ## Critérios de avanço e segurança
 
@@ -371,3 +398,8 @@ Implementação parcial do recibo — 2026-10-25: o componente térmico agora id
 - Testes adicionados para criptografia/mascaramento, formatos de chave Pix, reserva de saldo, saldo insuficiente, origem cruzada, autenticação administrativa, baixa de pagamento e liberação após recusa. Os fluxos permanecem apenas na branch `feature/dual-plate-draw`.
 - **Validação pendente nesta atualização:** os workflows dos commits de teste de chave Pix ainda estão em execução no GitHub Actions; não declarar a pipeline mais recente verde até que os três jobs (`verify`, `migration-test`, `postgres-concurrency-test`) concluam. A CI dos commits anteriores de implementação dos painéis e dos testes iniciais de saque concluiu com sucesso.
 - **Limites importantes:** não houve deploy, migração em produção, pagamento real nem configuração de segredo real. Antes de habilitar o fluxo em ambiente utilizável, executar testes ponta a ponta com banco descartável, testar concorrência e falhas de chave, e provisionar `WALLET_PIX_ENCRYPTION_KEY` de forma segura. A plataforma ainda não está finalizada: o fluxo completo de vendas do cambista em espécie, gestão administrativa completa, configuração de comissões/financeiro e testes ponta a ponta globais continuam pendentes.
+
+
+## Regra de manutenção do estado documental — 2026-10-26
+
+Ao atualizar este manual, comparar primeiro o HEAD da branch de trabalho com cada documento e código relevante. Registrar cada item como **implementado**, **parcial**, **pendente**, **bloqueado por decisão** ou **validado por evidência**, separando claramente existência de código de validação de CI e de operação real. Quando a implementação vigente representa uma melhoria aprovada em relação à ideia inicial, atualizar a regra principal e marcar a descrição antiga como histórica/superada; não manter duas instruções conflitantes como se ambas fossem atuais. Não apagar decisões históricas que expliquem migrações ou compatibilidade, mas não as apresentar como estado atual. Atualizar `docs/PRODUCT_SPEC.md` para decisões de produto e manter os documentos técnicos alinhados no mesmo conjunto de mudanças.
