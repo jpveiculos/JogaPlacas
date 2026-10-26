@@ -1,10 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
 import { QuickTicketCheck } from "@/components/results/quick-ticket-check";
 import { PublicResultsBoard } from "@/components/results/public-results-board";
-import { getSessionUser, SESSION_COOKIE } from "@/lib/auth/session";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
@@ -12,13 +9,7 @@ export const metadata: Metadata = {
   description: "Conheça o Joga Placas, consulte seu recibo e acompanhe os resultados publicados das placas cinza e Mercosul.",
 };
 
-const destinationByRole = { PLAYER: "/player", CASHIER: "/cashier", ADMIN: "/admin" } as const;
-
 export default async function HomePage() {
-  const cookieStore = await cookies();
-  const user = await getSessionUser(cookieStore.get(SESSION_COOKIE)?.value);
-  if (user) redirect(user.mustChangePassword ? "/change-password" : destinationByRole[user.role]);
-
   return (
     <div className="home-page">
       <header className="home-header">
