@@ -69,13 +69,30 @@ export function PlayerPurchaseForm() {
       try {
         const response = await fetch(`/api/player/purchases/${encodeURIComponent(purchase.id)}/status`, { cache: "no-store" });
         if (!response.ok) return;
-        const body = await response.json() as { receiptReady?: boolean };
-        if (active && body.receiptReady) {
+        const body = await response.json() as {
+          receiptReady?: boolean;
+          paymentStatus?: string;
+          purchaseStatus?: string;
+          providerStatus?: string | null;
+        };
+        if (!active) return;
+        if (body.receiptReady) {
           setReceiptPurchaseId(purchase.id);
           setPixModalOpen(false);
           setPurchase(null);
           setPixCheckout(null);
           setNotice("Pagamento confirmado. Seu recibo oficial está na tela.");
+          return;
+        }
+        if (["FAILED", "CANCELLED", "EXPIRED", "REFUNDED"].includes(body.paymentStatus ?? "")
+          || ["CANCELLED", "REFUNDED"].includes(body.purchaseStatus ?? "")) {
+          setPixModalOpen(false);
+          setPurchase(null);
+          setPixCheckout(null);
+          setPlate("");
+          setSelectedRounds([]);
+          setStake("1,00");
+          setNotice("O pagamento Pix não foi aprovado ou foi encerrado. Nenhum recibo foi emitido. Você já pode iniciar outro jogo.");
         }
       } catch {
         // Polling is best-effort; a temporary network issue must not change payment state.
