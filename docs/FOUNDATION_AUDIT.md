@@ -143,3 +143,11 @@ Esses são achados de revisão, não decisões de negócio nem alterações de s
 - Os commits da revisão de interface e documentação estão na branch feature/dual-plate-draw; main não foi alterada.
 - A consulta ao GitHub Actions para os commits recentes não retornou execuções de workflow nem status de CI. Portanto, essas alterações ainda não têm validação automatizada confirmada nesta revisão.
 - Próximas verificações: inspecionar testes e mocks do endpoint de saques; verificar transições e histórico; confirmar a aritmética de saldo derivada do livro-razão e idempotência; executar lint, typecheck, testes e build no pipeline; só então decidir se os estados legados podem ser removidos em uma migração futura.
+
+
+### Testes adicionais do fluxo de saques — 2026-10-26
+
+- Os testes unitários do endpoint administrativo foram fortalecidos para verificar explicitamente que a rejeição grava o estado REJECTED, registra a transição PENDING → REJECTED no histórico e lança WITHDRAWAL_RELEASE com o valor integral e chave idempotente esperada.
+- Foi adicionado teste para confirmar que a consulta administrativa continua incluindo APPROVED/PROCESSING no conjunto de estados retornados para reconciliação histórica.
+- A interface do jogador também foi ajustada para explicar os dois resultados possíveis: pagamento confirmado ou rejeição com devolução do valor reservado.
+- O PR #2 continua aberto como rascunho e sem merge. A verificação mais recente ainda não retornou status ou execuções do GitHub Actions para o HEAD consultado; os testes foram editados, mas sua execução não está comprovada. A API e os testes devem ser validados por CI antes de qualquer merge.
