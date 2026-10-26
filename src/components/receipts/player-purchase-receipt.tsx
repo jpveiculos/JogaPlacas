@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ThermalReceipt } from "@/components/receipts/thermal-receipt";
 import type { ThermalReceiptPlate } from "@/components/receipts/thermal-receipt-types";
 
@@ -20,7 +20,7 @@ const paymentLabels: Record<string, string> = {
   CARD: "Cartão confirmado",
 };
 
-export function PlayerPurchaseReceipt({ purchaseId }: { purchaseId: string }) {
+export function PlayerPurchaseReceipt({ purchaseId, autoOpen = false }: { purchaseId: string; autoOpen?: boolean }) {
   const [receipt, setReceipt] = useState<ReceiptData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -43,6 +43,12 @@ export function PlayerPurchaseReceipt({ purchaseId }: { purchaseId: string }) {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    if (autoOpen) void loadReceipt();
+    // The purchase ID is stable for this mounted receipt component.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoOpen, purchaseId]);
 
   return (
     <div className="player-purchase-receipt">
