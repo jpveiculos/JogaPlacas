@@ -89,6 +89,18 @@ describe("admin withdrawals API", () => {
     expect(mocks.auditCreate).toHaveBeenCalledWith({ data: expect.objectContaining({ action: "WITHDRAWAL_REJECTED" }) });
   });
 
+  it("does not allow a second action after the withdrawal is closed", async () => {
+    mocks.withdrawalFindUnique.mockResolvedValue({ ...withdrawal, status: "PAID" });
+    const response = await POST(request({
+      withdrawalId: "withdrawal-1", action: "mark-paid", note: "Pagamento conferido",
+      providerRef: "E2E123456789",
+    }));
+    expect(response.status).toBe(409);
+    expect(mocks.withdrawalUpdate).not.toHaveBeenCalled();
+    expect(mocks.ledgerCreate).not.toHaveBeenCalled();
+    expect(mocks.auditCreate).not.toHaveBeenCalled();
+  });
+
   it("rejects cross-origin actions", async () => {
     const response = await POST(request({ withdrawalId: "withdrawal-1", action: "reject", note: "Motivo suficiente" }, "https://attacker.test"));
     expect(response.status).toBe(403);
