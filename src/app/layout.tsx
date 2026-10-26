@@ -5,7 +5,6 @@ const appIcon = "https://raw.githubusercontent.com/jpveiculos/Joga-Placa/main/pu
 const logo = "/images/brand/joga-placa-logo.jpg";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://joga-placas.com.br"),
   title: {
     default: "Joga Placas",
     template: "%s | Joga Placas",
