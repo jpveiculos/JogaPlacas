@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
 import { Prisma } from "@/generated/prisma/client";
 import { authPrisma, getSessionUser, SESSION_COOKIE } from "@/lib/auth/session";
-import { encryptPixKey, maskPixKey } from "@/lib/wallet/pix-key-crypto";
+import { encryptPixKey, isPlausiblePixKey, maskPixKey } from "@/lib/wallet/pix-key-crypto";
 import { z } from "zod";
 
 export const runtime = "nodejs";
@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
 
 const requestSchema = z.object({
   amountCents: z.number().int().positive().max(100_000_000),
-  pixKey: z.string().trim().min(3).max(200),
+  pixKey: z.string().trim().min(3).max(200).refine(isPlausiblePixKey, "Informe uma chave Pix em formato de e-mail, telefone, CPF/CNPJ ou chave aleatória UUID."),
 }).strict();
 
 export async function POST(request: NextRequest) {
