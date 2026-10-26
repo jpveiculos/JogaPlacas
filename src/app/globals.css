@@ -748,12 +748,13 @@ p, .intro, .auth-description, .area-description, .feature-card p,
 }
 
 
-/* Plate artwork is a real public image; characters stay proportionally anchored to its blank center. */
+/* Plate artwork is a real public image; characters scale with the plate itself. */
 .plate-visual.plate-image{
   position:relative;
   display:block;
   width:min(100%,360px);
   aspect-ratio:8/3;
+  container-type:inline-size;
   min-height:0!important;
   height:auto;
   padding:0!important;
@@ -768,7 +769,7 @@ p, .intro, .auth-description, .area-description, .feature-card p,
   display:block;
   width:100%;
   height:100%;
-  object-fit:contain;
+  object-fit:fill;
 }
 .plate-image .plate-characters{
   position:absolute;
@@ -776,24 +777,20 @@ p, .intro, .auth-description, .area-description, .feature-card p,
   left:50%;
   transform:translate(-50%,-50%);
   display:block;
-  width:82%;
+  width:84%;
   min-height:0;
   text-align:center;
   white-space:nowrap;
   color:#111820;
   font-family:Arial,Helvetica,sans-serif;
-  font-size:clamp(1.15rem,5.6vw,2.25rem);
+  font-size:clamp(1rem,8.3cqi,2.25rem);
   font-weight:900;
-  letter-spacing:.045em;
+  letter-spacing:.025em;
   line-height:1;
   overflow:hidden;
 }
 .plate-image.plate-mercosur .plate-characters{top:55%}
 .plate-image.plate-legacy .plate-characters{top:52%}
-@media(max-width:600px){
-  .plate-visual.plate-image{width:min(100%,360px)}
-  .plate-image .plate-characters{font-size:clamp(1rem,6vw,1.8rem);letter-spacing:.025em}
-}
 
 .home-brand img{display:block;width:auto;height:44px;max-width:min(230px,42vw);object-fit:contain}
 .home-footer .home-brand img{height:38px}
