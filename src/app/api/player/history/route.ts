@@ -48,10 +48,9 @@ export async function GET(request: NextRequest) {
         resultMercosurPlate: participation.round.resultMercosurPlate,
         lines: participation.lines.map((line) => {
           const credited = line.prizeCreditedAt !== null && (line.prizeCents ?? 0) > 0;
-          let resultStatus: "PREMIADA" | "NAO_PREMIADA" | "AGUARDANDO_RESULTADO" | "AGUARDANDO_APURACAO" | "COMPRA_PENDENTE" | "PRAZO_EXPIRADO";
+          let resultStatus: "PREMIADA" | "NAO_PREMIADA" | "AGUARDANDO_RESULTADO" | "AGUARDANDO_APURACAO" | "COMPRA_PENDENTE";
           if (purchase.status !== "CONFIRMED" || participation.status !== "CONFIRMED") resultStatus = "COMPRA_PENDENTE";
           else if (credited) resultStatus = "PREMIADA";
-          else if ((line.prizeCents ?? 0) > 0 && Date.now() >= participation.round.resultAt.getTime() + 7 * 24 * 60 * 60 * 1000) resultStatus = "PRAZO_EXPIRADO";
           else if (participation.round.status !== "COMPLETED") resultStatus = "AGUARDANDO_RESULTADO";
           else if (line.prizeCents === 0) resultStatus = "NAO_PREMIADA";
           else resultStatus = "AGUARDANDO_APURACAO";
