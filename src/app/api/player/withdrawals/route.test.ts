@@ -9,7 +9,7 @@ vi.mock("@/lib/auth/session", () => ({
   authPrisma: { ledgerEntry: { aggregate: mocks.aggregate }, withdrawal: { findMany: mocks.findMany }, $transaction: mocks.transaction },
   getSessionUser: mocks.getSessionUser, SESSION_COOKIE: "jogaplacas_session",
 }));
-vi.mock("@/lib/wallet/pix-key-crypto", () => ({ encryptPixKey: vi.fn(() => "encrypted-key"), maskPixKey: vi.fn(() => "••••4000") }));
+vi.mock("@/lib/wallet/pix-key-crypto", () => ({ encryptPixKey: vi.fn(() => "encrypted-key"), isPlausiblePixKey: vi.fn(() => true), maskPixKey: vi.fn(() => "••••4000") }));
 import { GET, POST } from "./route";
 
 function request(path = "/api/player/withdrawals", body?: unknown, origin = "https://example.test") {
