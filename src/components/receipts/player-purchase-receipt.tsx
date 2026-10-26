@@ -45,7 +45,11 @@ export function PlayerPurchaseReceipt({ purchaseId, autoOpen = false, onClose }:
   }
 
   useEffect(() => {
-    if (autoOpen) void loadReceipt();
+    if (!autoOpen) return;
+    // Defer the initial fetch until after the effect commits so loading state
+    // is updated from the async callback rather than synchronously in the effect.
+    const timer = window.setTimeout(() => { void loadReceipt(); }, 0);
+    return () => window.clearTimeout(timer);
     // The purchase ID is stable for this mounted receipt component.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoOpen, purchaseId]);
