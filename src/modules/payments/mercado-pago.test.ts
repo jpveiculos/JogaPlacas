@@ -1,6 +1,6 @@
 import { createHmac } from "node:crypto";
 import { describe, expect, it } from "vitest";
-import { parseVerifiedPixOrder, syntheticPayerEmail, verifyMercadoPagoWebhookSignature } from "./mercado-pago";
+import { classifyPixOrderStatus, parseVerifiedPixOrder, syntheticPayerEmail, verifyMercadoPagoWebhookSignature } from "./mercado-pago";
 
 describe("Mercado Pago webhook signature", () => {
   const secret = "test-webhook-secret";
@@ -99,5 +99,26 @@ describe("Mercado Pago order parsing", () => {
       if (originalDomain === undefined) delete process.env.MERCADOPAGO_PAYER_EMAIL_DOMAIN;
       else process.env.MERCADOPAGO_PAYER_EMAIL_DOMAIN = originalDomain;
     }
+  });
+});
+
+
+describe("Mercado Pago order status classification", () => {
+  it("requires both a processed order and an approved Pix transaction", () => {
+    expect(classifyPixOrderStatus({ status: "processed", paymentStatus: "approved" })).toMatchObject({
+      providerStatus: "approved",
+      normalizedStatus: "approved",
+      approved: true,
+    });
+    expect(classifyPixOrderStatus({ status: "created", paymentStatus: "approved" }).approved).toBe(false);
+    expect(classifyPixOrderStatus({ status: "processed", paymentStatus: "pending" }).approved).toBe(false);
+  });
+
+  it("does not mistake a refunded order for an approved payment", () => {
+    expect(classifyPixOrderStatus({ status: "refunded", paymentStatus: "approved" })).toMatchObject({
+      providerStatus: "refunded",
+      normalizedStatus: "refunded",
+      approved: false,
+    });
   });
 });
