@@ -9,7 +9,7 @@ type Withdrawal = {
 };
 const money = (cents: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
 const dateTime = (value: string) => new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short", timeZone: "America/Sao_Paulo", hourCycle: "h23" }).format(new Date(value));
-const labels: Record<Withdrawal["status"], string> = { PENDING: "Aguardando pagamento", APPROVED: "Aprovado", PROCESSING: "Em processamento", PAID: "Pago", REJECTED: "Recusado — saldo liberado" };
+const labels: Record<Withdrawal["status"], string> = { PENDING: "Aguardando aprovação", APPROVED: "Aprovado", PROCESSING: "Em processamento", PAID: "Pago", REJECTED: "Recusado — saldo liberado" };
 
 export function PlayerWalletWithdrawals() {
   const [availableCents, setAvailableCents] = useState(0);
@@ -56,7 +56,7 @@ export function PlayerWalletWithdrawals() {
     <span className="feature-label">Carteira digital</span>
     <h2 id="player-wallet-withdrawals-heading">Saldo e saques</h2>
     <p className="wallet-balance">{loading ? "Consultando saldo…" : money(availableCents)} <small>disponível</small></p>
-    <p>Informe sua chave Pix e o valor do saque. Ao solicitar, o valor fica reservado até o administrador confirmar o pagamento ou recusar a solicitação. A chave é armazenada criptografada.</p>
+    <p>Informe sua chave Pix e o valor do saque. Ao solicitar, o valor fica reservado até o administrador aprovar ou recusar a solicitação. A aprovação não realiza a transferência Pix; o pagamento é manual e externo à plataforma. A chave é armazenada criptografada.</p>
     <form className="admin-round-create" onSubmit={requestWithdrawal}>
       <label>Valor do saque (R$)<input inputMode="decimal" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="0,00" required /></label>
       <label>Chave Pix<input value={pixKey} onChange={(event) => setPixKey(event.target.value)} maxLength={200} autoComplete="off" required /></label>
