@@ -38,9 +38,9 @@ export function AdminWithdrawalManager() {
     const note = (notes[item.id] ?? "").trim();
     const providerRef = (references[item.id] ?? "").trim();
     if (note.length < 4) { setError("Registre uma observação para auditar a operação."); return; }
-    if (action === "mark-paid" && providerRef.length < 3) { setError("Informe a referência ou identificação do comprovante Pix após realizar o pagamento."); return; }
+    if (action === "mark-paid" && !window.confirm) return;
     const prompt = action === "mark-paid"
-      ? `Confirma que o Pix de ${money(item.amountCents)} para ${item.username} já foi efetivamente pago? Só confirme depois de conferir o comprovante.`
+      ? `Confirma que o Pix de ${money(item.amountCents)} para ${item.username} foi pago fora da plataforma e conferido? A aprovação só registra a baixa no sistema.`
       : `Confirma recusar o saque de ${money(item.amountCents)} de ${item.username} e liberar o valor reservado na carteira?`;
     if (!window.confirm(prompt)) return;
     setBusy(item.id); setError(""); setNotice("");
@@ -64,7 +64,7 @@ export function AdminWithdrawalManager() {
   return <section className="feature-card" aria-labelledby="admin-withdrawals-heading">
     <span className="feature-label">Financeiro</span>
     <h2 id="admin-withdrawals-heading">Saques das carteiras digitais</h2>
-    <p>Confira a chave Pix, faça a transferência no canal bancário autorizado e só então use “Confirmar pagamento e dar baixa”. Essa ação registra a referência do pagamento e o responsável; não envia Pix automaticamente. Em caso de recusa, a reserva é liberada por lançamento compensatório auditável.</p>
+    <p>O pagamento Pix e seu comprovante são externos à plataforma. Depois de conferir que a transferência foi realizada, clique em “Aprovar saque e dar baixa” para atualizar a carteira do jogador e registrar a auditoria. O botão não envia Pix. Em caso de recusa, a reserva é liberada por lançamento compensatório auditável.</p>
     {error && <p role="alert" className="note-inline">{error}</p>}
     {notice && <p role="status" className="note-inline">{notice}</p>}
     {loading ? <p>Carregando solicitações…</p> : pending.length === 0 ? <p>Não há saques aguardando pagamento.</p> : <div className="admin-round-list">
@@ -72,14 +72,14 @@ export function AdminWithdrawalManager() {
         <div><strong>{item.username}</strong> · {money(item.amountCents)} · {labels[item.status]}</div>
         <p>Solicitado em {dateTime(item.createdAt)}</p>
         <p>Chave Pix para pagamento: <strong>{item.pixKey ?? item.pixKeyMasked}</strong></p>
-        <label>Referência do Pix / identificador do comprovante
-          <input value={references[item.id] ?? ""} onChange={(event) => setReferences((current) => ({ ...current, [item.id]: event.target.value }))} maxLength={200} placeholder="Identificador da transação" />
+        <label>Referência externa do Pix (opcional)
+          <input value={references[item.id] ?? ""} onChange={(event) => setReferences((current) => ({ ...current, [item.id]: event.target.value }))} maxLength={200} placeholder="Opcional — referência do comprovante externo" />
         </label>
         <label>Observação de auditoria
           <textarea rows={2} maxLength={500} value={notes[item.id] ?? ""} onChange={(event) => setNotes((current) => ({ ...current, [item.id]: event.target.value }))} placeholder="Ex.: transferência conferida no extrato bancário." />
         </label>
         <div className="round-options">
-          <button type="button" disabled={busy !== null} onClick={() => void act(item, "mark-paid")}>{busy === item.id ? "Registrando…" : "Confirmar pagamento e dar baixa"}</button>
+          <button type="button" disabled={busy !== null} onClick={() => void act(item, "mark-paid")}>{busy === item.id ? "Registrando…" : "Aprovar saque e dar baixa"}</button>
           <button type="button" className="secondary-button" disabled={busy !== null} onClick={() => void act(item, "reject")}>Recusar e liberar saldo</button>
         </div>
       </article>)}
