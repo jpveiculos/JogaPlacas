@@ -1,6 +1,6 @@
 import { createHmac } from "node:crypto";
 import { describe, expect, it } from "vitest";
-import { verifyMercadoPagoWebhookSignature } from "./mercado-pago";
+import { parseVerifiedPixOrder, syntheticPayerEmail, verifyMercadoPagoWebhookSignature } from "./mercado-pago";
 
 describe("Mercado Pago webhook signature", () => {
   const secret = "test-webhook-secret";
@@ -37,5 +37,65 @@ describe("Mercado Pago webhook signature", () => {
     expect(verifyMercadoPagoWebhookSignature({
       dataId, requestId, signatureHeader, secret, nowMs: nowMs + 6 * 60 * 1000,
     })).toBe(false);
+  });
+});
+
+
+describe("Mercado Pago order parsing", () => {
+  it("parses the order, Pix copy-and-paste and amounts into integer cents", () => {
+    expect(parseVerifiedPixOrder({
+      id: "order-123",
+      status: "processed",
+      status_detail: "accredited",
+      total_amount: "12.50",
+      external_reference: "jogaplacas_purchase_purchase123",
+      transactions: {
+        payments: [{
+          amount: "12.50",
+          status: "approved",
+          payment_method: {
+            id: "pix",
+            qr_code: "000201pix-copy-paste",
+            qr_code_base64: "aGVsbG8=",
+            ticket_url: "https://example.invalid/ticket",
+          } as never,
+        }],
+      },
+    })).toMatchObject({
+      orderId: "order-123",
+      status: "processed",
+      statusDetail: "accredited",
+      qrCode: "000201pix-copy-paste",
+      qrCodeBase64: "aGVsbG8=",
+      externalReference: "jogaplacas_purchase_purchase123",
+      amountCents: 1250,
+      paymentStatus: "approved",
+      paymentAmountCents: 1250,
+    });
+  });
+
+  it("uses a deterministic synthetic payer email without asking for a real address", () => {
+    const originalDomain = process.env.MERCADOPAGO_PAYER_EMAIL_DOMAIN;
+    delete process.env.MERCADOPAGO_PAYER_EMAIL_DOMAIN;
+    try {
+      const first = syntheticPayerEmail("player-123");
+      expect(first).toBe(syntheticPayerEmail("player-123"));
+      expect(first).toMatch(/^jogador-[a-f0-9]{20}@jogaplaca\.com\.br$/);
+      expect(first).not.toContain("player-123");
+    } finally {
+      if (originalDomain === undefined) delete process.env.MERCADOPAGO_PAYER_EMAIL_DOMAIN;
+      else process.env.MERCADOPAGO_PAYER_EMAIL_DOMAIN = originalDomain;
+    }
+  });
+
+  it("rejects an invalid synthetic payer email domain", () => {
+    const originalDomain = process.env.MERCADOPAGO_PAYER_EMAIL_DOMAIN;
+    process.env.MERCADOPAGO_PAYER_EMAIL_DOMAIN = "not a domain";
+    try {
+      expect(() => syntheticPayerEmail("player-123")).toThrow("MERCADOPAGO_PAYER_EMAIL_DOMAIN is invalid");
+    } finally {
+      if (originalDomain === undefined) delete process.env.MERCADOPAGO_PAYER_EMAIL_DOMAIN;
+      else process.env.MERCADOPAGO_PAYER_EMAIL_DOMAIN = originalDomain;
+    }
   });
 });
