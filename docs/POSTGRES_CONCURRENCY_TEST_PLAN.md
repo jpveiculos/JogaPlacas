@@ -1,6 +1,6 @@
 # Plano de testes PostgreSQL: concorrência e idempotência
 
-Status: plano de verificação da branch `feature/dual-plate-draw`, atualizado em 2026-10-24 após auditoria do HEAD de código `d337082b2d0fa6b24db64a6839d20e24c894fb9e`. A execução de CI desse HEAD terminou com sucesso. As atualizações documentais posteriores acionaram novas execuções, ainda pendentes no momento desta edição. O commit antigo `8ec470dd8c5e0a76be4083d6854dabaac84d3932` citado abaixo é evidência histórica, não o HEAD atual.
+Status: plano de testes de concorrência, criado/revisado em 2026-10-24. Os resultados de CI e a descrição do HEAD abaixo são históricos, não evidência de aprovação do HEAD atual. O commit `8ec470dd8c5e0a76be4083d6854dabaac84d3932` é apenas evidência histórica. Consulte `docs/TECHNICAL_ROADMAP.md` para gates e estado atual.
 
 ## Estado verificado
 
