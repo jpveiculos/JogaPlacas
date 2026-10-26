@@ -43,7 +43,7 @@ describe("admin withdrawals API", () => {
     mocks.transaction.mockImplementation(async (callback) => callback(tx()));
     mocks.queryRaw.mockResolvedValue([{ id: "withdrawal-1" }]);
     mocks.withdrawalFindUnique.mockResolvedValue(withdrawal);
-    mocks.withdrawalUpdate.mockResolvedValue({ ...withdrawal, status: "PAID" });
+    mocks.withdrawalUpdate.mockImplementation(async ({ data }: { data: { status: string } }) => ({ ...withdrawal, status: data.status }));
     mocks.ledgerCreate.mockResolvedValue({});
     mocks.historyCreate.mockResolvedValue({});
     mocks.auditCreate.mockResolvedValue({});
@@ -54,6 +54,13 @@ describe("admin withdrawals API", () => {
     expect((await GET(request())).status).toBe(401);
     mocks.getSessionUser.mockResolvedValue({ id: "player-1", role: "PLAYER", mustChangePassword: false });
     expect((await GET(request())).status).toBe(403);
+  });
+
+  it("keeps legacy withdrawal states included in the administrative history query", async () => {
+    await GET(request());
+    expect(mocks.findMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: { status: { in: ["PENDING", "APPROVED", "PROCESSING", "PAID", "REJECTED"] } },
+    }));
   });
 
   it("pays a pending withdrawal directly and records an idempotent audit trail", async () => {
@@ -75,10 +82,12 @@ describe("admin withdrawals API", () => {
     const response = await POST(request({ withdrawalId: "withdrawal-1", action: "reject", note: "Chave Pix divergente" }));
     expect(response.status).toBe(200);
     expect(await response.json()).toMatchObject({ success: true, withdrawal: { status: "REJECTED", amountCents: 2500 } });
+    expect(mocks.withdrawalUpdate).toHaveBeenCalledWith({ where: { id: "withdrawal-1" }, data: { status: "REJECTED", reviewedById: "admin-1" } });
     expect(mocks.ledgerCreate).toHaveBeenCalledWith({ data: expect.objectContaining({
       userId: "player-1", withdrawalId: "withdrawal-1", type: "WITHDRAWAL_RELEASE",
       amountCents: 2500, idempotencyKey: "withdrawal-release:withdrawal-1",
     }) });
+    expect(mocks.historyCreate).toHaveBeenCalledWith({ data: expect.objectContaining({ fromStatus: "PENDING", toStatus: "REJECTED", actorId: "admin-1" }) });
     expect(mocks.auditCreate).toHaveBeenCalledWith({ data: expect.objectContaining({ action: "WITHDRAWAL_REJECTED" }) });
   });
 
