@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
-const appIcon = "https://raw.githubusercontent.com/jpveiculos/Joga-Placa/main/public/images/brand/joga-placa-app-icon.PNG";
 const logo = "/images/brand/joga-placa-logo.jpg";
 
 export const metadata: Metadata = {
@@ -17,9 +16,9 @@ export const metadata: Metadata = {
     title: "Joga Placa",
   },
   icons: {
-    icon: [{ url: appIcon, sizes: "512x512", type: "image/png" }],
-    apple: [{ url: appIcon, sizes: "180x180", type: "image/png" }],
-    shortcut: [appIcon],
+    icon: [{ url: logo, type: "image/jpeg" }],
+    apple: [{ url: logo, type: "image/jpeg" }],
+    shortcut: [{ url: logo, type: "image/jpeg" }],
   },
   openGraph: {
     type: "website",
