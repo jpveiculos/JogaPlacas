@@ -345,3 +345,16 @@ A alteração permanece pendente de implementação e validação. Não houve me
 - [ ] Confirmar CI completa após os commits `d1c5c695751b8746942d996d4d3337920a5b2352` e `7f62eac41dcbf29f4bbe862c627ded6430b32142`.
 - [ ] Auditar invariantes entre alocação total por placa, total da participação e total da compra; só alterar regras após confirmar a estrutura dos dados e acrescentar testes.
 - [ ] Manter deploy de desenvolvimento/produção e ativação de pagamentos fora do escopo até CI aprovada e integração financeira implementada/testada.
+
+### Atualização de execução — 2026-10-26: carteira e saques
+
+- [x] Ferramenta administrativa para reconciliar prêmios online não creditados, com recalculação histórica, idempotência e auditoria; sem prazo de sete dias para falhas técnicas.
+- [x] Solicitação de saque pelo jogador com chave Pix criptografada, reserva de saldo no livro-razão e histórico de saques.
+- [x] Fila administrativa para conferir chave Pix, registrar referência de transferência já realizada e dar baixa auditável; recusa libera a reserva com lançamento compensatório.
+- [x] Testes automatizados iniciais de criptografia, reserva, saldo insuficiente, autenticação, origem cruzada, baixa e liberação.
+- [ ] Aguardar CI completa dos commits mais recentes de validação de formato de chave Pix antes de confirmar os testes finais.
+- [ ] Provisionar `WALLET_PIX_ENCRYPTION_KEY` somente em desenvolvimento/homologação e executar teste ponta a ponta; a chave não deve ser commitada nem compartilhada em chat.
+- [ ] Implementar e testar a venda de cambista em espécie e a criação/confirmacão de compra/recibo de forma transacional, idempotente e compatível com as regras de comissão. Não usar um botão de cambista para confirmar Pix de provedor.
+- [ ] Completar gestão de usuários, configurações de comissão/regras, relatórios financeiros e testes ponta a ponta das três áreas.
+
+Sem deploy, merge para `main`, alteração de produção ou pagamentos reais nesta etapa.
