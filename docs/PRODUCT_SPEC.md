@@ -496,3 +496,38 @@ Esta seção atualiza a fotografia antiga da seção 12, que foi escrita antes d
 
 ### Regra de atualização
 Quando o comportamento implementado e validado melhorar uma instrução antiga, atualizar a regra normativa nesta especificação e o manual técnico na mesma mudança. Se a mudança alterar regra de negócio, não inferi-la apenas a partir do código: registrar a decisão aprovada. Preservar notas antigas como histórico, mas nunca deixá-las competir com a regra vigente.
+
+
+## 23. Página principal pública e entrada no produto — 2026-10-26
+
+### Decisão de produto vigente
+
+A decisão inicial de não criar uma página principal foi substituída. O domínio público deve abrir uma página de apresentação do Joga Placas, não a tela de login. Esta página é a primeira experiência para pessoas que clicam em links compartilhados em grupos ou em outros lugares da internet e também permite que jogadores que apostaram presencialmente com cambistas acompanhem os resultados.
+
+### Conteúdo obrigatório da página principal
+
+- **Apresentação clara do jogo:** o que é o Joga Placas, como funciona a participação e como conferir resultados, em linguagem direta para quem nunca usou a plataforma.
+- **Banner/elemento visual explicativo:** representar os formatos de placa cinza e Mercosul, como se registra a placa e as equivalências/categorias e valores de prêmio aprovados. Os valores exibidos devem vir das regras oficiais vigentes, sem inventar multiplicadores, garantias ou prêmios não configurados.
+- **Como jogar e regras essenciais:** explicar o preenchimento da placa, as categorias, as rodadas e a forma de conferir o resultado; diferenciar claramente os dois formatos de placa.
+- **Acesso à conta:** botões/áreas visíveis de “Entrar” e “Criar conta”. O cadastro público cria conta de jogador, nunca de administrador. Ao concluir cadastro, o novo jogador vai para a área do jogador; login existente também direciona o jogador à sua área. Contas de cambista e administrador são encaminhadas conforme seu papel e suas permissões.
+- **Resultados públicos:** incluir na própria página os resultados publicados da placa cinza e da placa Mercosul, em linhas claras, com rodada e data/hora de São Paulo. Preservar paginação/histórico e atualização dos resultados conforme a especificação da consulta pública.
+- **Ganhadores e prêmios:** apresentar os prêmios efetivamente creditados e os ganhadores públicos elegíveis, com identificação mascarada e sem expor telefone, nome real, dados de conta ou dados financeiros pessoais. Não anunciar como prêmio pago o que ainda não foi creditado.
+- **Consulta de recibo:** disponibilizar campo para inserir o código completo do recibo `JP-` e consultar o estado permitido pela rota pública existente. Não oferecer pesquisa por placa, pois a placa pode aparecer em várias apostas/rodadas; a consulta pública não pode revelar dados pessoais.
+- **Experiência mobile e acessibilidade:** conteúdo objetivo, fonte legível, alvos de toque adequados, carregamento simples e navegação clara para pessoas idosas ou pouco familiarizadas com plataformas digitais.
+
+### Regras de navegação
+
+- Visitante sem sessão em `/`: exibir a página principal pública.
+- Jogador que concluir cadastro: iniciar sessão de forma segura conforme a política de autenticação e encaminhar à área do jogador; se a política de ativação exigir etapa adicional, explicar o estado sem fingir que a conta já está ativa.
+- Jogador com login bem-sucedido: encaminhar à área do jogador. Se acessar `/` já autenticado, redirecionar para a área do jogador; não mostrar um atalho promocional que o devolva à página principal.
+- Cambista e administrador: encaminhar à área correspondente conforme papel, mantendo controles de autorização no servidor.
+- Manter `/resultados` como endereço público compatível para links já compartilhados, podendo apontar para a seção de resultados da página principal; resultados e ganhadores devem, de qualquer modo, estar incorporados e acessíveis na home sem login.
+- O campo de consulta de recibo na página principal continua público e restrito aos campos permitidos pela API. Não deve oferecer acesso à conta nem a histórico privado.
+
+### Segurança e limites
+
+A página principal é uma camada de apresentação/consulta pública, não prova de que o serviço está autorizado ou pronto para operar comercialmente. Não incluir credenciais, dados pessoais, informações internas, resultados não publicados nem prêmios pendentes. O cadastro público exige validação, limitação de tentativas, proteção contra abuso, tratamento de duplicidade e testes de autorização. Não liberar cobranças reais nem deploy com base apenas na criação da página.
+
+### Estado de implementação
+
+A decisão está aprovada e documentada, mas **a página principal ainda não foi implementada**: no código atual, `src/app/page.tsx` executa `redirect("/login")`. A página pública existente de resultados está em rota separada. A próxima implementação deve substituir esse redirecionamento pela home pública e integrar resultados/ganhadores e consulta de recibo, sem reescrever desnecessariamente os endpoints públicos já existentes. Cadastro público de jogador também deve ser implementado com testes e não deve ser presumido existente apenas porque o requisito foi aprovado.
