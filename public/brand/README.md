@@ -8,7 +8,6 @@ As imagens-base das placas ficam em `public/images/plates/`:
 
 O componente `src/components/plates/plate-visual.tsx` usa as duas imagens e posiciona os caracteres em uma camada separada. A posição precisa ser conferida visualmente em diferentes tamanhos de tela antes da publicação.
 
-O ícone de aplicativo configurado no manifesto e nos metadados aponta para o arquivo original do repositório legado:
-`https://raw.githubusercontent.com/jpveiculos/Joga-Placa/main/public/images/brand/joga-placa-app-icon.PNG`
+## Ícone do aplicativo
 
-Antes de publicar, é recomendável copiar esse ícone para `public/images/brand/` e atualizar os caminhos para que os recursos de identidade visual sejam servidos pelo próprio site.
+Os metadados e o manifesto usam atualmente a imagem local da logomarca, para que o projeto não dependa de arquivos hospedados no repositório antigo. O ícone original do aplicativo ainda não foi copiado, porque a ferramenta de transferência não conseguiu recuperar seus bytes completos. Quando ele estiver disponível como arquivo local, deve ser colocado em `public/images/brand/` e configurado nos metadados e no manifesto.
