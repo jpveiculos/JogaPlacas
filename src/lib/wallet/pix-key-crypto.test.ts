@@ -8,6 +8,17 @@ afterEach(() => {
 });
 
 describe("Pix key encryption", () => {
+  it("accepts common Pix key formats and rejects malformed keys", async () => {
+    process.env.WALLET_PIX_ENCRYPTION_KEY = "44".repeat(32);
+    const { isPlausiblePixKey } = await import("./pix-key-crypto");
+    expect(isPlausiblePixKey("jogador@example.com")).toBe(true);
+    expect(isPlausiblePixKey("+55 (11) 99999-9999")).toBe(true);
+    expect(isPlausiblePixKey("123.456.789-01")).toBe(true);
+    expect(isPlausiblePixKey("12345678000195")).toBe(true);
+    expect(isPlausiblePixKey("123e4567-e89b-42d3-a456-426614174000")).toBe(true);
+    expect(isPlausiblePixKey("not a pix key")).toBe(false);
+  });
+
   it("round-trips keys and produces randomized ciphertext", async () => {
     process.env.WALLET_PIX_ENCRYPTION_KEY = "11".repeat(32);
     const { encryptPixKey, decryptPixKey, maskPixKey } = await import("./pix-key-crypto");
