@@ -7,7 +7,6 @@ import { calculateLinePrizeCents, RoundSettlementError } from "@/modules/rounds/
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 const headers = { "Cache-Control": "no-store, private" };
-const DAY = 24 * 60 * 60 * 1000;
 
 async function adminFromRequest(request: NextRequest) {
   const user = await getSessionUser(request.cookies.get(SESSION_COOKIE)?.value);
