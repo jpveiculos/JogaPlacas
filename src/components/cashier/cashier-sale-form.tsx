@@ -67,7 +67,7 @@ export function PlayerPurchaseForm() {
     let active = true;
     const checkPayment = async () => {
       try {
-        const response = await fetch(`/api/cashier/purchases/create/${encodeURIComponent(purchase.id)}/status`, { cache: "no-store" });
+        const response = await fetch(`/api/cashier/purchases/${encodeURIComponent(purchase.id)}/status`, { cache: "no-store" });
         if (!response.ok) return;
         const body = await response.json() as {
           receiptReady?: boolean;
