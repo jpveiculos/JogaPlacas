@@ -25,8 +25,6 @@ export async function GET(request: NextRequest) {
       OR: [
         { id: query },
         { receiptCode: { contains: query, mode: "insensitive" as const } },
-        { customer: { is: { name: { contains: query, mode: "insensitive" as const } } } },
-        { customer: { is: { phone: { contains: query } } } },
         { participations: { some: { lines: { some: { plateDisplay: { contains: query, mode: "insensitive" as const } } } } } },
       ],
     };
@@ -43,7 +41,6 @@ export async function GET(request: NextRequest) {
         receiptCode: true,
         createdAt: true,
         confirmedAt: true,
-        customer: { select: { name: true, phone: true } },
         payment: { select: { status: true, providerStatus: true, providerStatusDetail: true, confirmedAt: true } },
         participations: {
           select: { lines: { select: { plateDisplay: true } } },
@@ -64,8 +61,6 @@ export async function GET(request: NextRequest) {
         receiptCode: purchase.receiptCode,
         createdAt: purchase.createdAt.toISOString(),
         confirmedAt: purchase.confirmedAt?.toISOString() ?? null,
-        customerName: purchase.customer?.name ?? null,
-        customerPhone: purchase.customer?.phone ?? null,
         plates: [...new Set(purchase.participations.flatMap((part) => part.lines.map((line) => line.plateDisplay)))],
         receiptReady: purchase.createdAt.getTime() + 7 * 24 * 60 * 60 * 1000 > Date.now()
           && purchase.status === "CONFIRMED"
