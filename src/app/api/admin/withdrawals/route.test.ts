@@ -62,7 +62,13 @@ describe("admin withdrawals API", () => {
     expect(mocks.transaction).not.toHaveBeenCalled();
   });
 
-  it("allows approval after external Pix payment without requiring an in-platform receipt reference", async () => {\n    const response = await POST(request({ withdrawalId: "withdrawal-1", action: "mark-paid", note: "Pix externo conferido" }));\n    expect(response.status).toBe(200);\n    expect(mocks.withdrawalUpdate).toHaveBeenCalledWith({ where: { id: "withdrawal-1" }, data: { status: "PAID", reviewedById: "admin-1" } });\n  });\n\n  it("marks a manually paid Pix withdrawal with an idempotent audit trail", async () => {
+  it("allows approval after external Pix payment without requiring an in-platform receipt reference", async () => {
+    const response = await POST(request({ withdrawalId: "withdrawal-1", action: "mark-paid", note: "Pix externo conferido" }));
+    expect(response.status).toBe(200);
+    expect(mocks.withdrawalUpdate).toHaveBeenCalledWith({ where: { id: "withdrawal-1" }, data: { status: "PAID", reviewedById: "admin-1" } });
+  });
+
+  it("marks a manually paid Pix withdrawal with an idempotent audit trail", async () => {
     const response = await POST(request({
       withdrawalId: "withdrawal-1", action: "mark-paid", note: "Transferência conferida no extrato",
       providerRef: "E2E123456789",
