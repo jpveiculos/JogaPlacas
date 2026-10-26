@@ -151,3 +151,22 @@ Esses são achados de revisão, não decisões de negócio nem alterações de s
 - Foi adicionado teste para confirmar que a consulta administrativa continua incluindo APPROVED/PROCESSING no conjunto de estados retornados para reconciliação histórica.
 - A interface do jogador também foi ajustada para explicar os dois resultados possíveis: pagamento confirmado ou rejeição com devolução do valor reservado.
 - O PR #2 continua aberto como rascunho e sem merge. A verificação mais recente ainda não retornou status ou execuções do GitHub Actions para o HEAD consultado; os testes foram editados, mas sua execução não está comprovada. A API e os testes devem ser validados por CI antes de qualquer merge.
+
+
+## Reconciliação do estado atual — 2026-10-26
+
+A auditoria anterior contém itens de verificação datados de commits passados; não interpretar seus estados pendentes como automaticamente atuais nem seus sucessos como prova do HEAD atual.
+
+### Código localizado nesta branch
+- Existem páginas e APIs para login/troca de senha, jogador, cambista, administrador, compra/histórico/recibo, resultados, rodadas, webhook Mercado Pago, reconciliação de prêmios e saques.
+- Existem migrações versionadas para sessões, limite de tentativas, dois resultados de placa, recibo após confirmação, verificações de integridade e campos do checkout Pix.
+- Existem serviços transacionais para compra pendente, confirmação de pagamento, sorteio dos dois resultados, apuração idempotente e saques com reserva/liberação.
+- A implementação do checkout/webhook Mercado Pago é incremental, não prova integração pronta: validação com credenciais de teste, formato real das notificações, eventos fora de ordem, pagamento após cutoff e política de estorno/reconciliação continuam gates.
+- Ações administrativas de saque são somente **Pagar** (registrar transferência Pix manual já realizada fora da plataforma) e **Rejeitar** (liberar reserva via `WITHDRAWAL_RELEASE` idempotente). `APPROVED`/`PROCESSING` são estados legados que precisam permanecer visíveis para reconciliação; não converter nem remover automaticamente.
+
+### Limites de validação nesta reconciliação
+- A API de status do commit consultado `ab3a24fa9ed07e02b11f8601d13b7210a13614f9` retornou lista vazia de checks/status. A CI do HEAD atual não está confirmada por essa evidência.
+- Testes escritos e sucessos de CI em commits anteriores são evidências úteis, mas não substituem executar a pipeline no HEAD exato nem testes ponta a ponta do provedor.
+- Continuam necessários testes PostgreSQL para aritmética e concorrência do livro-razão de saques, confirmação idempotente, migrações e reconciliação; validar também falhas transacionais e auditoria.
+- A gestão administrativa completa, vendas em espécie pelo cambista, impressão/QR testados fisicamente e operação do scheduler hospedado não podem ser considerados concluídos apenas pela existência de componentes/rotas.
+- Nenhuma alteração em `main`, deploy, migração em produção ou pagamento real foi realizada ou autorizada por esta auditoria.
