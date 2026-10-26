@@ -16,8 +16,6 @@ type Purchase = {
   receiptCode: string | null;
   createdAt: string;
   confirmedAt: string | null;
-  customerName: string | null;
-  customerPhone: string | null;
   plates: string[];
   receiptReady: boolean;
 };
@@ -74,9 +72,9 @@ export function CashierPurchaseHistory() {
       <h2>Localizar uma compra</h2>
       <p>Encontre compras anteriores para conferir o pagamento e reimprimir o recibo original. Fechar a janela do Pix não cancela a compra.</p>
       <form onSubmit={search} className="cashier-purchase-search">
-        <label htmlFor="cashier-purchase-query">Código da compra/recibo, nome, telefone ou placa</label>
+        <label htmlFor="cashier-purchase-query">Código da compra/recibo ou placa</label>
         <div className="cashier-purchase-search-row">
-          <input id="cashier-purchase-query" value={query} onChange={(event) => setQuery(event.target.value)} maxLength={100} minLength={2} required placeholder="Ex.: JP-AB12CD34, nome, telefone ou placa" />
+          <input id="cashier-purchase-query" value={query} onChange={(event) => setQuery(event.target.value)} maxLength={100} minLength={2} required placeholder="Ex.: JP-AB12CD34 ou ABC-1234" />
           <button type="submit" disabled={loading || query.trim().length < 2}>{loading ? "Pesquisando…" : "Pesquisar"}</button>
         </div>
       </form>
@@ -88,13 +86,12 @@ export function CashierPurchaseHistory() {
             <section className="cashier-purchase-result" key={purchase.id}>
               <div className="cashier-purchase-result-heading">
                 <div>
-                  <strong>{purchase.customerName || "Cliente não identificado"}</strong>
+                  <strong>{purchase.receiptCode ? "Venda registrada" : "Venda sem recibo"}</strong>
                   <p>{purchase.receiptCode ? `Recibo ${purchase.receiptCode}` : `Compra ${purchase.id}`}</p>
                 </div>
                 <strong>{money(purchase.totalCents)}</strong>
               </div>
               <p className="cashier-purchase-meta">Criada: {dateTime(purchase.createdAt)} · {purchase.paymentMethod === "PIX" ? "Pix" : purchase.paymentMethod === "CASH" ? "Dinheiro" : purchase.paymentMethod}</p>
-              {purchase.customerPhone && <p className="cashier-purchase-meta">Telefone: {purchase.customerPhone}</p>}
               {purchase.plates.length > 0 && <p className="cashier-purchase-meta">Placas: {purchase.plates.join(", ")}</p>}
               <p><strong>Situação da compra:</strong> {statusLabels[purchase.status] ?? purchase.status}</p>
               <p><strong>Situação do pagamento:</strong> {statusLabels[purchase.paymentStatus] ?? purchase.paymentStatus}{purchase.providerStatus ? ` · Mercado Pago: ${purchase.providerStatus}` : ""}</p>
