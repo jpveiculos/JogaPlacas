@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: [main, planning/foundation]
   push:
-    branches: [main, planning/foundation, feature/dual-plate-draw]
+    branches: [main, planning/foundation, feature/dual-plate-draw, feature/public-home-registration]
   workflow_dispatch:
 
 jobs:
