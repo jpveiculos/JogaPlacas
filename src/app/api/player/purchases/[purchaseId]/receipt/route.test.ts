@@ -20,6 +20,7 @@ function request(token = "session-token") {
 }
 const confirmedPurchase = () => ({
   id: "purchase-12345678",
+  createdAt: new Date(),
   playerId: "player-1",
   cashierId: null,
   status: "CONFIRMED",
