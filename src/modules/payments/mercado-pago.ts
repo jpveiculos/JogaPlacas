@@ -7,6 +7,7 @@ type MercadoPagoOrder = {
   status?: string;
   status_detail?: string;
   total_amount?: string | number;
+  currency?: string;
   external_reference?: string;
   transactions?: {
     payments?: Array<{
@@ -33,6 +34,7 @@ export type PixCheckout = {
 
 export type VerifiedPixOrder = PixCheckout & {
   externalReference: string | null;
+  currency: string | null;
   amountCents: number | null;
   paymentStatus: string | null;
   paymentAmountCents: number | null;
@@ -46,6 +48,7 @@ export function parseVerifiedPixOrder(payload: MercadoPagoOrder): VerifiedPixOrd
   return {
     ...checkout,
     externalReference: payload.external_reference ?? null,
+    currency: payload.currency ?? null,
     amountCents: Number.isFinite(amount) ? Math.round(amount * 100) : null,
     paymentStatus: payment?.status ?? null,
     paymentAmountCents: Number.isFinite(paymentAmount) ? Math.round(paymentAmount * 100) : null,
