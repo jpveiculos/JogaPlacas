@@ -67,6 +67,12 @@ Não apagar registros históricos de `Customer` nem modificar a base de dados de
 10. Revisar configuração do novo servidor e variáveis de ambiente; preparar implantação e rollback sem tocar no site atual.
 11. Exigir CI verde, revisão final e autorização explícita antes de qualquer mudança de produção.
 
+## Atualização — página pública e cadastro (2026-10-26)
+
+- A página pública existe em `src/app/page.tsx` e apresenta consulta de recibos e resultados públicos. A rota raiz já é a porta de entrada para visitantes; usuários autenticados são encaminhados conforme seu papel.
+- A branch `feature/public-home-registration` adiciona os botões de cadastro, a página `/cadastro` e a API `POST /api/auth/register`, criando somente usuários PLAYER e iniciando sessão após cadastro.
+- Próximas validações obrigatórias: `npm run typecheck`, `npm run lint`, `npm test`, `npm run db:validate` e `npm run build`; revisar proteção antiabuso/limitação de cadastro; validar visualmente e funcionalmente no Railway; confirmar que o serviço e o domínio usam a branch correta. Não publicar em produção antes disso.
+
 ## Estado consolidado da implementação — 2026-10-26
 
 Este quadro substitui as descrições de estado anteriores que diziam que a interface era apenas um placeholder ou que APIs/pagamentos ainda não existiam. Esses textos antigos são registros históricos da etapa em que foram escritos, não retrato do HEAD atual.
