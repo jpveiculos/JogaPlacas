@@ -15,7 +15,7 @@ const labels: Record<Item["status"], string> = { PENDING: "Pendente — aguardan
 
 export function AdminWithdrawalManager() {
   const [items, setItems] = useState<Item[]>([]);
-    const [notes, setNotes] = useState<Record<string, string>>({});
+  const [notes, setNotes] = useState<Record<string, string>>({});
   const [references, setReferences] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
@@ -71,7 +71,7 @@ export function AdminWithdrawalManager() {
     <p>O botão “Aprovar saque” apenas aprova a solicitação. Depois de realizar e conferir o Pix fora da plataforma, use “Registrar pagamento realizado” na lista de aprovados. Nenhum botão envia Pix automaticamente. Em caso de recusa antes da aprovação, a reserva é liberada por lançamento compensatório auditável.</p>
     {error && <p role="alert" className="note-inline">{error}</p>}
     {notice && <p role="status" className="note-inline">{notice}</p>}
-    {loading ? <p>Carregando solicitações…</p> : pending.length === 0 ? <p>Não há saques aguardando pagamento.</p> : <div className="admin-round-list">
+    {loading ? <p>Carregando solicitações…</p> : pending.length === 0 ? <p>Não há saques aguardando aprovação.</p> : <div className="admin-round-list">
       {pending.map((item) => <article className="round-option" key={item.id}>
         <div><strong>{item.username}</strong> · {money(item.amountCents)} · {labels[item.status]}</div>
         <p>Solicitado em {dateTime(item.createdAt)}</p>
