@@ -1,6 +1,6 @@
 # Mapeamento de dependências da refatoração Purchase/Participation
 
-> **Nota de atualização (2026-10-23):** este documento registra uma inspeção/etapa anterior e contém afirmações que podem não refletir a branch atual. Para o estado vigente, consulte `docs/TECHNICAL_ROADMAP.md`, `docs/PRODUCT_SPEC.md`, `docs/POSTGRES_CONCURRENCY_TEST_PLAN.md` e o código atual. A branch já possui `package-lock.json`, usa `npm ci` na CI e contém `prisma/migrations/20261023000000_init/migration.sql`; o schema foi refatorado para `Purchase`/`PurchaseParticipation`, e o serviço possui retry limitado para conflitos Prisma. Não use as descrições antigas abaixo como retrato do HEAD atual nem como autorização para migração em produção.
+> **Documento histórico — 2026-10-23; não representa o estado atual da branch.** O inventário e o plano abaixo descrevem `planning/foundation` naquele momento e contêm afirmações superadas (por exemplo, ausência de APIs, migrações e serviços). Para o estado vigente, consulte `docs/TECHNICAL_ROADMAP.md`, `docs/PRODUCT_SPEC.md` e o código em `feature/dual-plate-draw`. Este arquivo é preservado como registro do motivo e das dependências identificadas durante a refatoração, não como checklist ativo nem autorização para migração em produção.
 
 
 Data da revisão: 2026-10-23
