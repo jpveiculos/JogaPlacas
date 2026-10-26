@@ -116,7 +116,7 @@ describe("POST /api/player/purchases", () => {
     expect(body.purchase.receiptCode).toBeNull();
     expect(body.message).toContain("Nenhum recibo foi emitido");
     expect(body.paymentActionRequired).toBe(true);
-    expect(body.message).toContain("Nenhuma cobrança Pix foi criada");
+    expect(body.message).toContain("A cobrança Pix ainda não foi criada");
   });
 
   it("does not issue a receipt code while the purchase is pending", async () => {
