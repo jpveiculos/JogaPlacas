@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { PlateVisual } from "@/components/plates/plate-visual";
+import { PlayerPurchaseReceipt } from "@/components/receipts/player-purchase-receipt";
 
 type AvailableRound = {
   id: string; code: string; startsAt: string; cutoffAt: string; resultAt: string; status: "SCHEDULED" | "OPEN";
@@ -44,6 +45,7 @@ export function PlayerPurchaseForm() {
   const [purchase, setPurchase] = useState<CreatedPurchase | null>(null);
   const [pixCheckout, setPixCheckout] = useState<PixCheckout | null>(null);
   const [pixModalOpen, setPixModalOpen] = useState(false);
+  const [receiptPurchaseId, setReceiptPurchaseId] = useState<string | null>(null);
   const idempotencyKey = useRef<string | null>(null);
 
   useEffect(() => {
@@ -59,6 +61,30 @@ export function PlayerPurchaseForm() {
       .finally(() => { if (active) setLoadingRounds(false); });
     return () => { active = false; };
   }, []);
+
+  useEffect(() => {
+    if (!pixModalOpen || !purchase?.id) return;
+    let active = true;
+    const checkPayment = async () => {
+      try {
+        const response = await fetch(`/api/player/purchases/${encodeURIComponent(purchase.id)}/status`, { cache: "no-store" });
+        if (!response.ok) return;
+        const body = await response.json() as { receiptReady?: boolean };
+        if (active && body.receiptReady) {
+          setReceiptPurchaseId(purchase.id);
+          setPixModalOpen(false);
+          setPurchase(null);
+          setPixCheckout(null);
+          setNotice("Pagamento confirmado. Seu recibo oficial está na tela.");
+        }
+      } catch {
+        // Polling is best-effort; a temporary network issue must not change payment state.
+      }
+    };
+    void checkPayment();
+    const timer = window.setInterval(() => { void checkPayment(); }, 3000);
+    return () => { active = false; window.clearInterval(timer); };
+  }, [pixModalOpen, purchase?.id]);
 
   const stakeCents = useMemo(() => parseStake(stake), [stake]);
   const normalizedPlate = plate.trim().toUpperCase();
@@ -195,6 +221,7 @@ export function PlayerPurchaseForm() {
           <p>O recibo oficial só será exibido após a confirmação autêntica do pagamento.</p>
           <button type="button" onClick={() => {
             setPixModalOpen(false);
+            setReceiptPurchaseId(null);
             setPurchase(null);
             setPixCheckout(null);
             setPlate("");
@@ -206,6 +233,7 @@ export function PlayerPurchaseForm() {
         </section>
         </div>
       )}
+      {receiptPurchaseId && <PlayerPurchaseReceipt purchaseId={receiptPurchaseId} autoOpen onClose={() => setReceiptPurchaseId(null)} />}
     </section>
   );
 }
