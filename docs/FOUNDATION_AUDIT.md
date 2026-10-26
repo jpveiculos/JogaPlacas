@@ -165,7 +165,7 @@ A auditoria anterior contém itens de verificação datados de commits passados;
 - Ações administrativas de saque são somente **Pagar** (registrar transferência Pix manual já realizada fora da plataforma) e **Rejeitar** (liberar reserva via `WITHDRAWAL_RELEASE` idempotente). `APPROVED`/`PROCESSING` são estados legados que precisam permanecer visíveis para reconciliação; não converter nem remover automaticamente.
 
 ### Limites de validação nesta reconciliação
-- A API de status do commit consultado `ab3a24fa9ed07e02b11f8601d13b7210a13614f9` retornou lista vazia de checks/status. A CI do HEAD atual não está confirmada por essa evidência.
+- A API de status do commit consultado `84938086a2d50fd91de71b572372ab122416dcc9` retornou lista vazia de checks/status. A CI do HEAD atual não está confirmada por essa evidência.
 - Testes escritos e sucessos de CI em commits anteriores são evidências úteis, mas não substituem executar a pipeline no HEAD exato nem testes ponta a ponta do provedor.
 - Continuam necessários testes PostgreSQL para aritmética e concorrência do livro-razão de saques, confirmação idempotente, migrações e reconciliação; validar também falhas transacionais e auditoria.
 - A gestão administrativa completa, vendas em espécie pelo cambista, impressão/QR testados fisicamente e operação do scheduler hospedado não podem ser considerados concluídos apenas pela existência de componentes/rotas.
