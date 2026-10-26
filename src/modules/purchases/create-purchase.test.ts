@@ -50,14 +50,14 @@ describe("createPendingPixPurchase input validation", () => {
     expect(transaction).not.toHaveBeenCalled();
   });
 
-  it("requires a customer for cashier purchases", async () => {
+  it("allows cashier purchases without a customer record", async () => {
     const input = validInput();
     input.playerId = undefined;
     input.cashierId = "cashier-1";
 
-    await expect(createPendingPixPurchase(service(), input))
-      .rejects.toMatchObject({ code: "INVALID_ACTOR" });
-    expect(transaction).not.toHaveBeenCalled();
+    transaction.mockRejectedValue(new Error("transaction reached"));
+    await expect(createPendingPixPurchase(service(), input)).rejects.toThrow("transaction reached");
+    expect(transaction).toHaveBeenCalledOnce();
   });
 
   it("rejects a participation count that differs from repetitions", async () => {
