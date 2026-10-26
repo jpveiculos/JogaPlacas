@@ -80,9 +80,6 @@ export async function createPendingPixPurchase(
   if (Boolean(input.playerId) === Boolean(input.cashierId)) {
     throw new PurchaseServiceError("Exactly one player or cashier must own the purchase", "INVALID_ACTOR");
   }
-  if (input.cashierId && !input.customerId) {
-    throw new PurchaseServiceError("Cashier purchases require a customer record", "INVALID_ACTOR");
-  }
   // Validate plate syntax before opening a database transaction. Invalid user input
   // should not reach persistence or surface as an unclassified Zod exception.
   try {
