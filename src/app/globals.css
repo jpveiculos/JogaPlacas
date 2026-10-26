@@ -430,3 +430,65 @@ h1 {
 .admin-round-create h3, .admin-round-create p { margin: 0; }
 .admin-round-create label { display: grid; gap: 6px; font-weight: 700; }
 .admin-round-create input { width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface, #fff); color: inherit; }
+
+
+.modal-backdrop {
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow-y: auto;
+  padding: 12px;
+  background: rgb(15 23 42 / 72%);
+}
+
+.modal-panel {
+  width: min(100%, 560px);
+  max-height: calc(100dvh - 24px);
+  overflow-y: auto;
+  padding: clamp(16px, 4vw, 28px);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 24px 80px rgb(0 0 0 / 28%);
+  overscroll-behavior: contain;
+}
+
+.pix-modal {
+  text-align: center;
+}
+
+.pix-modal img {
+  display: block;
+  width: min(100%, 260px);
+  height: auto;
+  margin: 12px auto;
+  image-rendering: pixelated;
+}
+
+.pix-copy-paste {
+  display: grid;
+  gap: 8px;
+  text-align: left;
+}
+
+.pix-copy-paste textarea {
+  width: 100%;
+  min-height: 100px;
+  resize: vertical;
+  overflow-wrap: anywhere;
+}
+
+.pix-modal button,
+.receipt-modal button {
+  min-height: 44px;
+  width: 100%;
+  margin-top: 12px;
+}
+
+.receipt-modal .thermal-receipt-print-root {
+  margin: 0 auto;
+}
