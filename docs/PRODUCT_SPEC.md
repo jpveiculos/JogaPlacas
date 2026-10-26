@@ -76,6 +76,11 @@
 - Nos resultados recentes, mostrar os dois resultados independentes da rodada como plaquinhas distintas, identificadas como placa cinza e placa Mercosul; nunca converter uma na outra. Exibir resultados recentes por até 24 horas.
 - Funções secundárias em menus recolhidos, com indicadores de expansão.
 - Modal Pix com QR Code, opção copiar/colar e botão para sair da tela do QR; sair da tela não cancela a cobrança.
+- O modal Pix é uma sobreposição na mesma área/tela atual. Não redirecionar para o checkout hospedado do provedor, não abrir nova página e não apresentar link que leve para fora da área do jogador/cambista.
+- O botão **“Sair e iniciar outro jogo”** fecha apenas o modal e libera a interface para a próxima venda. A cobrança original permanece pendente no servidor, com o mesmo identificador e chave de idempotência, até confirmação, expiração, cancelamento pelo provedor ou reconciliação explícita. Fechar o modal nunca confirma nem cancela o pagamento.
+- Depois de sair do modal Pix, limpar apenas o formulário local da próxima venda; não apagar nem alterar o registro financeiro da cobrança anterior. A interface deve continuar conciliando o pagamento anterior sem bloquear a próxima venda.
+- Após confirmação autêntica do pagamento, exibir o recibo oficial em um modal sobre a mesma área. O modal deve ter **Imprimir** e **Fechar**; fechar o recibo não apaga nem recria a compra. A reimpressão usa o mesmo código e os mesmos dados oficiais.
+- Nenhuma ação de pagamento, saída do QR, recibo ou impressão deve navegar o cambista ou jogador para outra página ou área. O link de pagamento externo do Mercado Pago não faz parte do fluxo.
 - No modal de jogo do jogador e no fluxo de venda do cambista, apresentar o gerador com ações simples **“Gerar placa”**, **“Gerar outra”** e **“Adicionar ao jogo”**. Mostrar claramente a placa sugerida e manter a escolha sob controle do usuário.
 - Mensagens e estados de pagamento devem ser claros, sem afirmar sucesso antes da confirmação do servidor/provedor.
 
