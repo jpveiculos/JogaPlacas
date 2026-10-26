@@ -28,6 +28,7 @@ export default async function HomePage() {
           <a href="#consulta-recibo">Consultar recibo</a>
           <a href="#resultados-publicos">Resultados</a>
           <Link className="home-login-button" href="/login">Entrar</Link>
+          <Link className="home-login-button" href="/cadastro">Criar cadastro</Link>
         </nav>
       </header>
 
@@ -39,6 +40,7 @@ export default async function HomePage() {
           <div className="home-hero-actions">
             <a className="home-primary-button" href="#consulta-recibo">Consultar meu recibo</a>
             <Link className="home-secondary-button" href="/login">Entrar na minha conta</Link>
+            <Link className="home-secondary-button" href="/cadastro">Criar minha conta</Link>
           </div>
           <p className="home-small-note">A consulta pública não exige cadastro nem login.</p>
         </div>
