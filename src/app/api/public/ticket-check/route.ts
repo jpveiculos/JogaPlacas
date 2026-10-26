@@ -23,15 +23,15 @@ type LineResult = {
   };
 };
 
-function getLineStatus(line: LineResult, roundStatus: RoundStatus) {
+function getLineStatus(line: LineResult, roundStatus: RoundStatus, manualClaimDeadlineApplies: boolean) {
   if (line.prizeCents !== null && line.prizeCents > 0 && line.prizeCreditedAt) return "PREMIADA";
-  if ((line.prizeCents ?? 0) > 0 && Date.now() >= line.participation.round.resultAt.getTime() + 7 * 24 * 60 * 60 * 1000) return "PRAZO_EXPIRADO";
+  if (manualClaimDeadlineApplies && (line.prizeCents ?? 0) > 0 && Date.now() >= line.participation.round.resultAt.getTime() + 7 * 24 * 60 * 60 * 1000) return "PRAZO_EXPIRADO";
   if (roundStatus !== "COMPLETED") return "AGUARDANDO_RESULTADO";
   if (line.prizeCents === 0) return "NAO_PREMIADA";
   return "AGUARDANDO_APURACAO";
 }
 
-function toSafeResult(line: LineResult) {
+function toSafeResult(line: LineResult, manualClaimDeadlineApplies: boolean) {
   const round = line.participation.round;
   return {
     id: line.id,
@@ -42,7 +42,7 @@ function toSafeResult(line: LineResult) {
     roundStatus: round.status,
     resultLegacyPlate: round.resultLegacyPlate,
     resultMercosurPlate: round.resultMercosurPlate,
-    status: getLineStatus(line, round.status),
+    status: getLineStatus(line, round.status, manualClaimDeadlineApplies),
     prizeCents: line.prizeCreditedAt && (line.prizeCents ?? 0) > 0 ? line.prizeCents : null,
   };
 }
@@ -58,6 +58,7 @@ export async function GET(request: NextRequest) {
       where: { receiptCode: normalizedCode },
       select: {
         status: true,
+        playerId: true,
         createdAt: true,
         participations: {
           where: { status: "CONFIRMED" },
@@ -79,7 +80,7 @@ export async function GET(request: NextRequest) {
     }
 
     const results = purchase.participations.flatMap((participation) =>
-      participation.lines.map((line) => toSafeResult({ ...line, participation: { round: participation.round } })),
+      participation.lines.map((line) => toSafeResult({ ...line, participation: { round: participation.round } }, purchase.playerId === null)),
     );
     return NextResponse.json({
       found: true,
