@@ -4,7 +4,7 @@
 
 ## Escopo e limites
 
-Inspecionados a árvore Git, arquivos relevantes, schema Prisma, migrações, package.json, documentação, PR #1 e estado da CI. Não foi executada instalação limpa ou suíte local nesta conversa; não houve acesso a banco de produção, segredos, DNS, serviço hospedado, cobranças ou webhooks reais. Nenhuma implantação ou alteração em main foi realizada.
+Na inspeção inicial foram consultados a árvore Git, schema Prisma, migrações, package.json, documentação, PR #1 e estado da CI. As referências a PR #1, placeholders, ausência de webhook/pagamento e dependências abaixo são registros históricos desta primeira inspeção, não o retrato atual da branch.
 
 ## Identidade e estado da branch
 
