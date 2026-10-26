@@ -109,7 +109,7 @@ export function ThermalReceipt({
         </footer>
       </article>
       <button className="thermal-receipt-print-button" type="button" onClick={() => window.print()}>
-        Imprimir recibo (58 mm)
+        Imprimir recibo / Salvar como PDF
       </button>
     </div>
   );
