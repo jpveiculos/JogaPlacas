@@ -1,4 +1,4 @@
-import { createHash } from "node:crypto";
+import { createHash, createHmac, timingSafeEqual } from "node:crypto";
 
 const API_BASE = "https://api.mercadopago.com";
 
@@ -30,6 +30,59 @@ export type PixCheckout = {
   qrCodeBase64: string | null;
   ticketUrl: string | null;
 };
+
+export type VerifiedPixOrder = PixCheckout & {
+  externalReference: string | null;
+  amountCents: number | null;
+  paymentStatus: string | null;
+  paymentAmountCents: number | null;
+};
+
+export function parseVerifiedPixOrder(payload: MercadoPagoOrder): VerifiedPixOrder {
+  const checkout = parseOrder(payload);
+  const payment = payload.transactions?.payments?.[0];
+  const amount = Number(payload.total_amount);
+  const paymentAmount = Number(payment?.amount);
+  return {
+    ...checkout,
+    externalReference: payload.external_reference ?? null,
+    amountCents: Number.isFinite(amount) ? Math.round(amount * 100) : null,
+    paymentStatus: payment?.status ?? null,
+    paymentAmountCents: Number.isFinite(paymentAmount) ? Math.round(paymentAmount * 100) : null,
+  };
+}
+
+export function verifyMercadoPagoWebhookSignature(input: {
+  dataId: string;
+  requestId: string;
+  signatureHeader: string;
+  secret: string;
+  nowMs?: number;
+}): boolean {
+  const fields = Object.fromEntries(input.signatureHeader.split(",").map((part) => {
+    const [key, ...value] = part.trim().split("=");
+    return [key, value.join("=")];
+  }));
+  const timestamp = fields.ts;
+  const supplied = fields.v1;
+  if (!timestamp || !supplied || !/^[a-f0-9]{64}$/i.test(supplied)) return false;
+  if (!/^\\d+$/.test(timestamp)) return false;
+  const timestampMs = Number(timestamp) * 1000;
+  const nowMs = input.nowMs ?? Date.now();
+  // Reject stale/future signed requests to limit replay; provider retries can
+  // be retried normally while inside this bounded acceptance window.
+  if (!Number.isSafeInteger(timestampMs) || Math.abs(nowMs - timestampMs) > 5 * 60 * 1000) return false;
+  const manifest = `id:${input.dataId.toLowerCase()};request-id:${input.requestId};ts:${timestamp};`;
+  const expected = createHmac("sha256", input.secret).update(manifest).digest("hex");
+  const expectedBuffer = Buffer.from(expected, "hex");
+  const suppliedBuffer = Buffer.from(supplied, "hex");
+  return expectedBuffer.length === suppliedBuffer.length && timingSafeEqual(expectedBuffer, suppliedBuffer);
+}
+
+export async function getVerifiedPixOrder(orderId: string): Promise<VerifiedPixOrder> {
+  const payload = await requestOrder(orderId);
+  return parseVerifiedPixOrder(payload);
+}
 
 /**
  * The player is not asked for or required to provide an email.
