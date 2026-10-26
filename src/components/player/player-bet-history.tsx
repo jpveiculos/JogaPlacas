@@ -8,7 +8,7 @@ type HistoryLine = {
   id: string;
   plateFormat: "LEGACY" | "MERCOSUR";
   plateDisplay: string;
-  resultStatus: "PREMIADA" | "NAO_PREMIADA" | "AGUARDANDO_RESULTADO" | "AGUARDANDO_APURACAO" | "COMPRA_PENDENTE";
+  resultStatus: "PREMIADA" | "NAO_PREMIADA" | "AGUARDANDO_RESULTADO" | "AGUARDANDO_APURACAO" | "COMPRA_PENDENTE" | "PRAZO_EXPIRADO";
   prizeCents: number | null;
 };
 type Participation = {
@@ -32,6 +32,7 @@ type HistoryPurchase = {
 };
 const labels: Record<HistoryLine["resultStatus"], string> = {
   PREMIADA: "PRÊMIO CONFIRMADO",
+  PRAZO_EXPIRADO: "PRAZO DE RESGATE EXPIRADO",
   NAO_PREMIADA: "SORTEIO CONCLUÍDO — NÃO PREMIADA",
   AGUARDANDO_RESULTADO: "AGUARDANDO RESULTADO",
   AGUARDANDO_APURACAO: "RESULTADO PUBLICADO — APURAÇÃO PENDENTE",
