@@ -57,6 +57,7 @@ export async function GET(request: NextRequest) {
       where: { receiptCode: normalizedCode },
       select: {
         status: true,
+        createdAt: true,
         participations: {
           where: { status: "CONFIRMED" },
           select: {
@@ -70,6 +71,10 @@ export async function GET(request: NextRequest) {
 
     if (!purchase || purchase.status !== "CONFIRMED") {
       return NextResponse.json({ found: false, results: [], message: "Não encontramos um recibo confirmado com esse código. Confira e tente novamente." }, { headers });
+    }
+
+    if (Date.now() >= purchase.createdAt.getTime() + 7 * 24 * 60 * 60 * 1000) {
+      return NextResponse.json({ found: false, results: [], message: "O prazo de validade de 7 dias deste recibo terminou. A consulta pública não está mais disponível." }, { headers });
     }
 
     const results = purchase.participations.flatMap((participation) =>
