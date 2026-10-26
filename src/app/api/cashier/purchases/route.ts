@@ -18,8 +18,10 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
     const where = {
       cashierId: user.id,
+      createdAt: { gte: since },
       OR: [
         { id: query },
         { receiptCode: { contains: query, mode: "insensitive" as const } },
@@ -65,7 +67,8 @@ export async function GET(request: NextRequest) {
         customerName: purchase.customer?.name ?? null,
         customerPhone: purchase.customer?.phone ?? null,
         plates: [...new Set(purchase.participations.flatMap((part) => part.lines.map((line) => line.plateDisplay)))],
-        receiptReady: purchase.status === "CONFIRMED"
+        receiptReady: purchase.createdAt.getTime() + 7 * 24 * 60 * 60 * 1000 > Date.now()
+          && purchase.status === "CONFIRMED"
           && purchase.payment?.status === "CONFIRMED"
           && Boolean(purchase.receiptCode && purchase.confirmedAt && purchase.payment.confirmedAt),
       })),
