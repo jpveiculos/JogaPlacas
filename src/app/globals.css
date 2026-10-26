@@ -794,3 +794,7 @@ p, .intro, .auth-description, .area-description, .feature-card p,
   .plate-visual.plate-image{width:min(100%,360px)}
   .plate-image .plate-characters{font-size:clamp(1rem,6vw,1.8rem);letter-spacing:.025em}
 }
+
+.home-brand img{display:block;width:auto;height:44px;max-width:min(230px,42vw);object-fit:contain}
+.home-footer .home-brand img{height:38px}
+@media(max-width:600px){.home-brand img{height:36px;max-width:180px}}
