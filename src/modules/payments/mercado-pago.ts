@@ -55,6 +55,24 @@ export function parseVerifiedPixOrder(payload: MercadoPagoOrder): VerifiedPixOrd
   };
 }
 
+
+export function classifyPixOrderStatus(order: Pick<VerifiedPixOrder, "status" | "paymentStatus">): {
+  providerStatus: string;
+  normalizedStatus: string;
+  approved: boolean;
+} {
+  const orderStatus = order.status.toLowerCase();
+  const transactionStatus = order.paymentStatus?.toLowerCase() ?? null;
+  const providerStatus = ["refunded", "cancelled", "canceled", "expired", "rejected", "failed", "failure"].includes(orderStatus)
+    ? order.status
+    : order.paymentStatus ?? order.status;
+  return {
+    providerStatus,
+    normalizedStatus: providerStatus.toLowerCase(),
+    approved: orderStatus === "processed" && transactionStatus === "approved",
+  };
+}
+
 export function verifyMercadoPagoWebhookSignature(input: {
   dataId: string;
   requestId: string;
