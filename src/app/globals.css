@@ -610,3 +610,139 @@ h1 {
  .home-results-section .public-results-header{padding-top:12px}
  .home-footer{align-items:flex-start;flex-direction:column}
 }
+
+
+/* Identidade visual legada Joga Placa — baseada na referência fornecida em 2026-10-26.
+   Aplicada globalmente sem alterar fluxos, permissões ou regras de negócio. */
+:root {
+  color-scheme: dark;
+  --background: #0d111a;
+  --surface: #141b26;
+  --text: #f4f6fb;
+  --muted: #a0adbf;
+  --border: #2b3546;
+  --accent: #59d5f2;
+  --accent-soft: #1b2a3c;
+}
+html, body { background: #0d111a; color: #f4f6fb; }
+body {
+  background:
+    radial-gradient(ellipse at 78% 32%, rgb(33 65 91 / 34%), transparent 43%),
+    #0d111a;
+  color: #f4f6fb;
+}
+.page-shell, .auth-page, .area-page { color: #f4f6fb; }
+.welcome-card, .auth-card, .feature-card, .ticket-check,
+.player-history-purchase, .recent-result, .ticket-check-result,
+.cashier-purchase-result, .round-option, .purchase-form fieldset,
+.admin-round-create, .modal-panel {
+  background: #141b26;
+  border-color: #2b3546;
+  color: #f4f6fb;
+  box-shadow: none;
+}
+.eyebrow, .feature-label, .public-results-eyebrow, .home-eyebrow {
+  color: #59d5f2;
+}
+h1, h2, h3, .feature-card h2, .ticket-check-heading h2 { color: #f4f6fb; }
+p, .intro, .auth-description, .area-description, .feature-card p,
+.account-name, .security-note, .note, .note-inline,
+.ticket-check-heading p, .ticket-check-hint { color: #a0adbf; }
+.area-header { border-bottom-color: #2b3546; }
+.primary-button, .purchase-form button, .ticket-check-form button,
+.thermal-receipt-print-button {
+  background: #59d5f2;
+  color: #08121d;
+}
+.primary-button:hover, .purchase-form button:hover, .ticket-check-form button:hover {
+  background: #82e4fa;
+}
+.logout-button, .secondary-button, .public-load-more,
+.thermal-receipt-actions button {
+  background: #202936;
+  border-color: #374355;
+  color: #f4f6fb;
+}
+.login-form input, .purchase-form input:not([type=checkbox]),
+.plate-entry > input, .admin-round-create input,
+.ticket-check-form input, .pix-copy-paste textarea {
+  background: #0f1520;
+  border-color: #374355;
+  color: #f4f6fb;
+}
+.login-form input:focus-visible, .purchase-form input:focus-visible,
+.purchase-form button:focus-visible, .primary-button:focus-visible,
+.logout-button:focus-visible, .ticket-check-form input:focus-visible,
+.ticket-check-form button:focus-visible {
+  outline-color: #59d5f2;
+}
+.round-option, .format-choice, .player-history-line,
+.player-history-purchase-heading, .player-history-draw-results > div {
+  border-color: #2b3546;
+}
+.round-option input, .format-choice input, .plate-format-options input[type=radio] {
+  accent-color: #59d5f2;
+}
+.format-choice.selected, .plate-format-options .format-choice.selected {
+  border-color: #59d5f2;
+  background: #1b2a3c;
+}
+.purchase-confirmation {
+  border-color: #315d72;
+  background: #142b38;
+  color: #f4f6fb;
+}
+.status-premiada, .player-history-prize { color: #65e0a0; }
+.status-nao_premiada { color: #a0adbf; }
+.status-aguardando_resultado, .status-compra_pendente { color: #f5cb75; }
+.form-error { background: #351d27; border-color: #78404c; color: #ffb9c2; }
+.home-page { background: #0d111a; color: #f4f6fb; }
+.home-header, .home-ticket-section, .home-results-section { color: #f4f6fb; }
+.home-brand { color: #f4f6fb; }
+.home-brand span { color: #59d5f2; }
+.home-nav > a:not(.home-login-button), .home-footer a:not(.home-brand) { color: #c0cad8; }
+.home-login-button, .home-primary-button { background: #59d5f2; color: #08121d; }
+.home-secondary-button { background: #141b26; border-color: #374355; color: #f4f6fb; }
+.home-hero:before { background: linear-gradient(135deg, #142331, #172238); }
+.home-eyebrow { color: #59d5f2; }
+.home-hero-description, .home-small-note,
+.home-section-intro > p:last-child { color: #a0adbf; }
+.home-plate-card { border-color: #374355; box-shadow: 0 18px 36px rgb(0 0 0 / 28%); }
+.home-hero-stamp { background: #59d5f2; color: #08121d; }
+.home-ticket-section .ticket-check { background: #141b26; border-color: #2b3546; box-shadow: none; }
+.home-how-section { background: #141b26; }
+.home-steps article { background: #101722; border-color: #2b3546; }
+.home-steps article > span { background: #1b2a3c; color: #59d5f2; }
+.home-steps p, .home-rules-note p { color: #a0adbf; }
+.home-rules-note { background: #142331; border-left-color: #59d5f2; }
+.home-rules-note a, .home-results-link a { color: #59d5f2; }
+.home-footer { background: #10151e; border-top-color: #2b3546; }
+.home-footer p { color: #8998ad; }
+.public-results-page { background: #0d111a; color: #f4f6fb; }
+.public-results-header, .public-winners-section, .public-results-footer { border-color: #2b3546; }
+.public-result-row, .public-state, .public-winner-card, .public-winners-empty {
+  background: #141b26;
+  border-color: #2b3546;
+  color: #f4f6fb;
+  box-shadow: none;
+}
+.public-result-date time, .public-result-round, .public-result-plate > span,
+.public-section-heading > span, .winner-round, .public-results-footer { color: #a0adbf; }
+.public-result-round strong { color: #f4f6fb; }
+.public-winner-card { background: linear-gradient(145deg, #141b26, #172331); }
+.winner-award, .public-results-brand span { color: #59d5f2; }
+.live-indicator { background: #142b38; border-color: #315d72; color: #59d5f2; }
+.live-indicator span { background: #59d5f2; box-shadow: 0 0 0 4px #1b2a3c; }
+.ticket-check { background: #141b26; border-color: #2b3546; color: #f4f6fb; }
+.ticket-check-heading p, .ticket-check-hint { color: #a0adbf; }
+.ticket-check-form input { background: #0f1520; border-color: #374355; color: #f4f6fb; }
+.ticket-check-form button { background: #59d5f2; color: #08121d; }
+.ticket-check-result { background: #101722; border-color: #2b3546; }
+.ticket-check-status-premiada { color: #65e0a0; }
+.ticket-check-status-nao_premiada { color: #a0adbf; }
+.ticket-check-status-aguardando_resultado, .ticket-check-status-aguardando_apuracao { color: #f5cb75; }
+.cashier-purchase-result { background: #141b26; border-color: #2b3546; }
+.thermal-receipt-actions button { color: #f4f6fb; }
+@media print {
+  body { background: #fff !important; color: #000 !important; }
+}
