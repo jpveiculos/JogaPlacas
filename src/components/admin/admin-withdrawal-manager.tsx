@@ -11,7 +11,7 @@ type Item = {
 };
 const money = (cents: number) => new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
 const dateTime = (value: string) => new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short", timeZone: "America/Sao_Paulo", hourCycle: "h23" }).format(new Date(value));
-const labels: Record<Item["status"], string> = { PENDING: "Pendente — conferir e pagar Pix", APPROVED: "Aprovado", PROCESSING: "Em processamento", PAID: "Pago", REJECTED: "Recusado / reserva liberada" };
+const labels: Record<Item["status"], string> = { PENDING: "Pendente — conferir e pagar Pix", APPROVED: "Estado antigo — requer conferência", PROCESSING: "Estado antigo — requer conferência", PAID: "Pago", REJECTED: "Recusado / reserva liberada" };
 
 export function AdminWithdrawalManager() {
   const [items, setItems] = useState<Item[]>([]);
@@ -52,7 +52,7 @@ export function AdminWithdrawalManager() {
   }
 
   const pending = items.filter((item) => item.status === "PENDING");
-  const history = items.filter((item) => !["PENDING", "APPROVED", "PROCESSING"].includes(item.status));
+  const history = items.filter((item) => item.status !== "PENDING");
 
   return <section className="feature-card" aria-labelledby="admin-withdrawals-heading">
     <span className="feature-label">Financeiro</span>
