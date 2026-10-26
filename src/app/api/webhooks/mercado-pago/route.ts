@@ -106,17 +106,59 @@ export async function POST(request: NextRequest) {
       });
     });
 
-    const normalizedStatus = (order.paymentStatus ?? order.status).toLowerCase();
+    const providerStatus = order.paymentStatus ?? order.status;
+    const normalizedStatus = providerStatus.toLowerCase();
     if (["approved", "processed"].includes(normalizedStatus)) {
       const confirmation = await confirmPixPayment(authPrisma, {
         paymentId: payment.id,
-        providerStatus: order.paymentStatus ?? order.status,
+        providerStatus,
         providerStatusDetail: order.statusDetail,
       });
       if (confirmation.outcome === "late_or_unavailable") {
         // Acknowledge the provider event but leave purchase/receipt pending for
         // an explicit refund/reconciliation decision; never confirm retroactively.
         return response({ received: true, reconciliationRequired: true }, 200);
+      }
+    } else {
+      // A provider-final negative result must close the pending purchase without
+      // issuing a receipt. Only pending records may transition; delayed duplicate
+      // notifications must never undo a previously confirmed purchase.
+      const terminalStatus = ["rejected", "failure", "failed"].includes(normalizedStatus)
+        ? "FAILED"
+        : ["cancelled", "canceled"].includes(normalizedStatus)
+          ? "CANCELLED"
+          : normalizedStatus === "expired"
+            ? "EXPIRED"
+            : null;
+      if (terminalStatus) {
+        await authPrisma.$transaction(async (tx) => {
+          const changed = await tx.payment.updateMany({
+            where: { id: payment.id, status: "PENDING" },
+            data: {
+              status: terminalStatus,
+              providerStatus,
+              providerStatusDetail: order.statusDetail,
+            },
+          });
+          if (changed.count !== 1) return;
+
+          await tx.purchase.updateMany({
+            where: { id: payment.purchaseId, status: "PENDING_PAYMENT" },
+            data: { status: "CANCELLED" },
+          });
+          await tx.purchaseParticipation.updateMany({
+            where: { purchaseId: payment.purchaseId, status: "PENDING" },
+            data: { status: "CANCELLED" },
+          });
+          await tx.auditEvent.create({
+            data: {
+              action: "PIX_PAYMENT_TERMINAL_FAILURE",
+              entityType: "Purchase",
+              entityId: payment.purchaseId,
+              metadata: { paymentId: payment.id, providerStatus, terminalStatus },
+            },
+          });
+        }, { isolationLevel: "Serializable" });
       }
     }
 
