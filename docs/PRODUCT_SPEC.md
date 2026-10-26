@@ -4,6 +4,16 @@
 > Este documento também contém retratos e auditorias datados: eles descrevem o estado na data indicada e não devem ser lidos como fotografia atual se houver uma reconciliação posterior. Para estado de código, testes e pendências, consulte a seção final de reconciliação e `docs/TECHNICAL_ROADMAP.md`.
 > Esta especificação não substitui revisão técnica, testes nem validação jurídica/comercial antes de operar pagamentos e jogos em produção.
 
+## Decisão vigente — venda de cambista sem cadastro de cliente (2026-10-26)
+
+- A venda presencial do cambista não deve exigir nome, telefone, WhatsApp, busca ou seleção de um cadastro de cliente. O recibo emitido após a confirmação válida da venda é a referência entregue ao jogador.
+- O fluxo de venda do cambista deve ser direto: selecionar/informar o formato e digitar a placa, definir os dados necessários da aposta/rodada e valor, confirmar a venda conforme o meio de pagamento permitido, e gerar o recibo com código único e QR Code para consulta pública. O QR Code do recibo não deve ser confundido com QR Code Pix; eventual cobrança Pix é um fluxo de pagamento separado.
+- A consulta de recibos antigos no painel do cambista por nome, telefone ou placa deixa de fazer parte da experiência. A recuperação/segunda via deve usar o código do recibo e respeitar a autorização do cambista e a política de validade vigente; não manter um buscador de clientes como atalho.
+- Não coletar nem persistir novos dados pessoais de clientes presenciais para concluir uma venda. Dados históricos já existentes não devem ser apagados em massa por uma mudança de interface: eventual limpeza/migração precisa de avaliação, retenção, auditoria e plano reversível próprios.
+- A área do cambista deve priorizar a janela de venda rápida e as ações necessárias para concluir a venda e entregar o recibo. Não exibir pesquisa por nome/WhatsApp/telefone/placa.
+- O backend deve permitir uma venda do cambista sem `customerId`, sem criar um registro artificial em `Customer`. A identidade do cambista autenticado, a integridade da compra, o pagamento, as participações, o código do recibo e os registros financeiros/auditoria continuam obrigatórios.
+- **Status da implementação:** esta é a decisão funcional vigente; a interface de venda rápida, o QR Code do recibo e a remoção completa da dependência de cliente ainda exigem implementação e testes. Não considerar o fluxo pronto apenas por remover o buscador da tela.
+
 ## 1. Áreas e acesso
 - A plataforma tem quatro áreas de produto: página principal pública, área do jogador, área do cambista e área do administrador.
 - A página principal pública é a porta de entrada do domínio: apresentação do jogo, explicação de como jogar, regras e equivalências oficiais de prêmios, resultados/ganhadores públicos, consulta de recibo e opções visíveis de Entrar/Criar conta. A página inicial não deve ser substituída por uma tela de login.
