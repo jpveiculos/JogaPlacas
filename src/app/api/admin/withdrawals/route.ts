@@ -57,11 +57,7 @@ const actionSchema = z.object({
   action: z.enum(["mark-paid", "reject"]),
   note: z.string().trim().min(4).max(500),
   providerRef: z.string().trim().min(3).max(200).optional(),
-}).strict().superRefine((value, context) => {
-  if (value.action === "mark-paid" && !value.providerRef) {
-    context.addIssue({ code: z.ZodIssueCode.custom, path: ["providerRef"], message: "Informe a referência/comprovante do Pix pago." });
-  }
-});
+}).strict();
 
 export async function POST(request: NextRequest) {
   const origin = request.headers.get("origin");
@@ -71,7 +67,7 @@ export async function POST(request: NextRequest) {
   let payload: unknown;
   try { payload = await request.json(); } catch { return NextResponse.json({ error: "Corpo da requisição inválido." }, { status: 400, headers }); }
   const parsed = actionSchema.safeParse(payload);
-  if (!parsed.success) return NextResponse.json({ error: "Para dar baixa, informe a referência do Pix já pago e uma observação." }, { status: 400, headers });
+  if (!parsed.success) return NextResponse.json({ error: "Informe a solicitação e uma observação de auditoria válida." }, { status: 400, headers });
 
   try {
     const result = await authPrisma.$transaction(async (tx) => {
@@ -81,17 +77,17 @@ export async function POST(request: NextRequest) {
       if (!withdrawal) throw new Error("NOT_FOUND");
       if (withdrawal.status !== "PENDING") throw new Error("INVALID_STATE");
       if (parsed.data.action === "mark-paid") {
-        const reference = parsed.data.providerRef!.trim();
-        const paid = await tx.withdrawal.update({ where: { id: withdrawal.id }, data: { status: "PAID", reviewedById: auth.user.id, providerRef: reference } });
+        const reference = parsed.data.providerRef?.trim() || null;
+        const paid = await tx.withdrawal.update({ where: { id: withdrawal.id }, data: { status: "PAID", reviewedById: auth.user.id, ...(reference ? { providerRef: reference } : {}) } });
         await tx.ledgerEntry.create({ data: {
           userId: withdrawal.userId, withdrawalId: withdrawal.id, type: "WITHDRAWAL_PAID",
           amountCents: 0, currency: "BRL", idempotencyKey: "withdrawal-paid:" + withdrawal.id,
-          description: "Baixa auditável de saque pago via Pix " + withdrawal.id + "; referência " + reference,
+          description: "Baixa auditável de saque com Pix externo " + withdrawal.id + (reference ? "; referência " + reference : ""),
         } });
-        await tx.withdrawalStatusHistory.create({ data: { withdrawalId: withdrawal.id, fromStatus: "PENDING", toStatus: "PAID", actorId: auth.user.id, note: parsed.data.note.trim() + " | Referência Pix: " + reference } });
+        await tx.withdrawalStatusHistory.create({ data: { withdrawalId: withdrawal.id, fromStatus: "PENDING", toStatus: "PAID", actorId: auth.user.id, note: parsed.data.note.trim() + (reference ? " | Referência Pix externa: " + reference : " | Pagamento Pix externo conferido") } });
         await tx.auditEvent.create({ data: {
           actorId: auth.user.id, action: "WITHDRAWAL_MARKED_PAID", entityType: "Withdrawal", entityId: withdrawal.id,
-          metadata: { userId: withdrawal.userId, username: withdrawal.user.username, amountCents: withdrawal.amountCents, providerRef: reference, note: parsed.data.note.trim(), pixKeyMasked: maskPixKey(decryptPixKey(withdrawal.pixKeyEncrypted)), paidAt: new Date().toISOString(), manualProviderConfirmation: true },
+          metadata: { userId: withdrawal.userId, username: withdrawal.user.username, amountCents: withdrawal.amountCents, providerRef: reference, note: parsed.data.note.trim(), pixKeyMasked: maskPixKey(decryptPixKey(withdrawal.pixKeyEncrypted)), paidAt: new Date().toISOString(), manualProviderConfirmation: true, payoutHandledOutsidePlatform: true },
         } });
         return { id: paid.id, status: paid.status, username: withdrawal.user.username, amountCents: withdrawal.amountCents };
       }
