@@ -38,14 +38,13 @@ export function AdminWithdrawalManager() {
     const note = (notes[item.id] ?? "").trim();
     const providerRef = (references[item.id] ?? "").trim();
     if (note.length < 4) { setError("Registre uma observação para auditar a operação."); return; }
-    if (action === "mark-paid" && !window.confirm) return;
     const prompt = action === "mark-paid"
       ? `Confirma que o Pix de ${money(item.amountCents)} para ${item.username} foi pago fora da plataforma e conferido? A aprovação só registra a baixa no sistema.`
       : `Confirma recusar o saque de ${money(item.amountCents)} de ${item.username} e liberar o valor reservado na carteira?`;
     if (!window.confirm(prompt)) return;
     setBusy(item.id); setError(""); setNotice("");
     try {
-      const response = await fetch("/api/admin/withdrawals", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ withdrawalId: item.id, action, note, ...(action === "mark-paid" ? { providerRef } : {}) }) });
+      const response = await fetch("/api/admin/withdrawals", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ withdrawalId: item.id, action, note, ...(action === "mark-paid" && providerRef.length >= 3 ? { providerRef } : {}) }) });
       const body = await response.json();
       if (!response.ok) throw new Error(body.error ?? "Não foi possível atualizar o saque.");
       setNotice(action === "mark-paid"
