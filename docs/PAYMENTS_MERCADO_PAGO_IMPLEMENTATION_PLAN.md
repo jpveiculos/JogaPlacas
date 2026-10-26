@@ -122,3 +122,37 @@ Na branch de desenvolvimento foram adicionados:
 - Testes unitários do validador de assinatura.
 
 A integração ainda não está pronta para produção. A rota atual consulta o recurso como pedido da Orders API, coerente com o adaptador existente; a compatibilidade real com a configuração da aplicação Mercado Pago e com o formato exato de notificações precisa ser verificada em credenciais de teste. A confirmação de compra, a reconciliação de eventos fora de ordem, a política de pagamento tardio/estorno e os testes do endpoint continuam pendentes. Nenhum deploy, pagamento real ou alteração de produção foi executado.
+
+## Estado real após implementação incremental — 2026-10-26
+
+Esta seção substitui as afirmações de pendência que descreviam o estado anterior; as seções históricas acima foram mantidas para rastreabilidade.
+
+### Implementado na branch de desenvolvimento
+
+- Adaptador de Orders API para criar/consultar pedidos Pix, com X-Idempotency-Key, referência externa vinculada à compra e e-mail técnico sintético determinístico. O jogador não informa e-mail.
+- Migração Prisma para persistir código Pix copia-e-cola, imagem QR em base64, URL técnica do provedor e status/detalhe do provedor.
+- Endpoint de compra de jogador que cria a compra pendente primeiro, tenta preparar a cobrança e mantém a chave idempotente em caso de falha ambígua.
+- Webhook com verificação HMAC, janela temporal, consulta do pedido no provedor, validação da referência/valor e registro idempotente do evento.
+- Serviço transacional de confirmação que bloqueia as rodadas, verifica o cutoff no relógio do banco, confirma pagamento/participações e cria o código do recibo apenas quando elegível.
+- Pagamento aprovado após cutoff ou rodada indisponível permanece pendente para reconciliação manual, sem recibo nem participação retroativa.
+- Estados finais negativos do provedor encerram a compra pendente sem emitir recibo.
+- Tela de jogador mostra QR e Pix copia-e-cola em modal na mesma área; “Sair” fecha o modal e libera a tela sem cancelar a cobrança. A consulta de status abre o recibo apenas após confirmação, ou fecha o modal quando o pagamento termina sem aprovação.
+- Testes unitários para assinatura, rejeição de timestamp inválido/antigo, interpretação do pedido e geração do e-mail sintético.
+
+### Verificações de CI
+
+As execuções abaixo passaram em todos os jobs reportados (verificação geral, migração e concorrência PostgreSQL):
+- Commit 878afb64f775884f7e74b85efa4a4a2b9970cc97: testes do adaptador e do e-mail sintético.
+- Commit bf0f2d3b8cf5eb32f085604b6d812f8ff75d5f6f: verificação após correção documental do fluxo.
+- Commit d88f519fec44822c3b52d9d3e99f545868b67776: transições de falha terminal no webhook.
+- Commit 5e018d522966682ce652b8f0bb97539e427b14bb: fechamento do modal do jogador em estado final negativo.
+
+### Bloqueios que permanecem — não liberar produção
+
+1. Validar o contrato de Orders API, o payload real e a assinatura com credenciais de teste no ambiente de desenvolvimento. Ainda não foi executado teste ponta a ponta com o Mercado Pago.
+2. Adicionar testes de integração do endpoint do webhook para evento duplicado/fora de ordem, valor divergente, falha transitória, confirmação após cutoff e falha transacional.
+3. Definir e testar a política operacional de reconciliação e reembolso para pagamento aprovado depois do cutoff; hoje a compra fica pendente e auditada para decisão manual.
+4. Completar os fluxos de caixa/cambista e recibo no escopo atual, incluindo validação do fluxo completo de impressão e reimpressão.
+5. Revisar transições de estorno e reconciliação, limites de requisição, observabilidade e alertas operacionais.
+6. Confirmar que as variáveis de desenvolvimento foram configuradas por um administrador sem expor seus valores. Não ler nem alterar segredos de produção.
+7. Só após esses gates, preparar uma proposta de implantação. Nenhum deploy foi feito e nenhum pagamento real foi criado nesta etapa.
