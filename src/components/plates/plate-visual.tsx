@@ -6,7 +6,7 @@ export function PlateVisual({ format, value, placeholder = " ", label }: {
   const shown = (value ?? "").trim() || placeholder;
   const legacy = format === "LEGACY";
   const description = label ?? (legacy ? "Placa cinza: " : "Placa Mercosul: ") + shown;
-  const image = legacy ? "/images/plates/placa-cinza.svg" : "/images/plates/placa-mercosul.svg";
+  const image = legacy ? "/images/plates/placa-cinza.png" : "/images/plates/placa-mercosul.png";
 
   return (
     <div className={legacy ? "plate-visual plate-image plate-legacy" : "plate-visual plate-image plate-mercosur"} role="img" aria-label={description}>
