@@ -187,7 +187,9 @@ A execução completa do workflow no commit `576ec2afb43a5a6fcb9deeb38027a0fdf53
 A revisão de `prisma/schema.prisma` e das quatro migrações encontrou invariantes importantes que hoje dependem principalmente dos serviços TypeScript, sem `CHECK` constraints equivalentes no PostgreSQL: valores monetários e alocações não negativos, mínimo por linha/participação e consistência entre totais de compra/participação/linhas. A tabela `Round` também permite estruturalmente um estado com apenas um resultado preenchido ou status `COMPLETED` sem ambos os resultados; os serviços detectam parte desses casos, mas o banco não os impede por si só. Antes de ativar checkout ou pagamentos reais, avaliar constraints compatíveis com estados históricos, acompanhadas de migração e testes. Nenhuma regra nova foi aprovada por esta observação; regras financeiras e operacionais pendentes continuam bloqueadas.
 
 
-## 15. Página pública exclusiva de resultados e ganhadores — 2026-10-25
+## 15. Decisão histórica: página pública exclusiva de resultados — 2026-10-25 (superada)
+
+> **Esta decisão foi substituída em 2026-10-26 pela seção 23.** A exigência antiga de uma página isolada, sem conteúdo promocional e exclusivamente dedicada à consulta não é mais a navegação principal. Resultados e ganhadores continuam públicos, mas agora devem ser incorporados à página principal de apresentação; `/resultados` pode ser mantida como endereço compatível. As regras de privacidade, publicação segura, horários e elegibilidade de ganhadores descritas abaixo continuam válidas quando não conflitarem com a seção 23.
 
 - Decisão aprovada: criar uma página pública dedicada, em /resultados, sem menu de navegação e sem conteúdo promocional ou funcionalidades de aposta. A tela deve conter somente o histórico de resultados e uma área menor de ganhadores.
 - A parte principal mostra os resultados em linhas, com código da rodada, dia e horário em America/Sao_Paulo, e duas plaquinhas separadas: resultado cinza e resultado Mercosul. Nunca converter um formato no outro.
