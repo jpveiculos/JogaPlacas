@@ -432,3 +432,21 @@ A decisão antiga que limitava a experiência a três áreas e rejeitava uma pá
 - Área administrativa: adicionar busca restrita de contas de jogadores por nome de usuário e dados mínimos de manutenção, com paginação, autorização ADMIN no servidor e auditoria. Não criar dados pessoais ausentes.
 - **Dependências técnicas:** inspecionar e adaptar schema Prisma, contratos de API, `create-purchase.ts`, rotas de compra, componentes do jogador/cambista, emissão/consulta de recibo e testes. O serviço de compra atual possui dependências do cliente e fluxo de pagamento PIX pendente; remover apenas a interface antiga antes de substituir o fluxo deixaria a venda incompleta. Não marcar a tarefa concluída até testes de autorização, venda anônima, pagamento, recibo, QR, download/impressão, ausência de PII e regressão dos registros históricos.
 - Não apagar clientes históricos em massa nem migrar banco real como parte da limpeza de interface. Planejar eventual retenção/remoção separadamente, com revisão e plano reversível. Nenhum deploy ou ativação de pagamento real autorizado por esta decisão.
+
+
+## Fluxo de recebimento do cambista — Pix e espécie (regra vigente, 2026-10-26)
+
+### Sequência obrigatória da venda
+1. Cambista informa a placa e os parâmetros indispensáveis da aposta, sem cadastro do comprador.
+2. Escolhe o método de recebimento: Pix ou dinheiro em espécie.
+3. **Pix:** criar cobrança e exibir na mesma tela QR Code Pix + código copia-e-cola. O cliente paga no app bancário. O backend aguarda confirmação autenticada do Mercado Pago, valida valor/referência/status, processa evento idempotentemente e notifica/atualiza a tela. Só então conclui a venda e apresenta automaticamente o recibo oficial com código JP-..., QR de consulta e ações de imprimir/baixar.
+4. **Espécie:** botão explícito de confirmação de recebimento, disponível ao cambista autenticado para a venda em andamento. O servidor registra ator e timestamp e, numa operação transacional/idempotente, confirma a venda e apresenta automaticamente o recibo oficial com código e QR de consulta, pronto para imprimir/baixar.
+5. O QR Pix e o QR do recibo são artefatos distintos. Não emitir recibo oficial para Pix pendente/recusado/expirado; não confiar em estado informado pelo navegador. Webhook ou clique repetido não pode duplicar compra, participações, recibo nem lançamento.
+
+### Critérios de implementação e validação
+- Criar cobrança Pix com referência interna única e validar assinatura/autenticidade do evento recebido; reconciliar status e valor com a cobrança esperada.
+- Implementar webhook idempotente, estado de pagamento persistente e atualização da interface sem exigir recarregamento manual; prever consulta de estado enquanto a confirmação chega.
+- Implementar confirmação de espécie com sessão/role de cambista, proteção contra CSRF, vínculo à venda em andamento, timestamp do servidor, trilha de auditoria e idempotência.
+- A atribuição do código de recibo e a confirmação devem ser consistentes; QR de recibo deve resolver para consulta pública autorizada apenas após confirmação. Impressão/download reutiliza o mesmo recibo e nunca cria nova venda.
+- Testar pagamento aprovado, pendente, recusado, expirado, evento duplicado, evento fora de ordem, valor divergente, webhook inválido, botão de espécie repetido, sessão sem permissão, falha de impressão e reimpressão.
+- **Status:** regra definida; integração ponta a ponta não confirmada. Não habilitar cobrança real nem alegar que o recibo automático está pronto até a CI e testes de integração demonstrarem o comportamento. Nenhum deploy ou alteração de banco de produção é autorizado por esta decisão.
