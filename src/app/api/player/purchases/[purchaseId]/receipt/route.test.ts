@@ -18,7 +18,8 @@ function request(token = "session-token") {
     headers: token ? { cookie: "jogaplacas_session=" + token } : {},
   });
 }
-const confirmedPurchase = () => ({
+const confirmedPurchase = () => {
+  return ({
   id: "purchase-12345678",
   createdAt: new Date(),
   playerId: "player-1",
@@ -46,7 +47,8 @@ const confirmedPurchase = () => ({
       }],
     },
   ],
-});
+  });
+};
 
 describe("GET purchase receipt", () => {
   beforeEach(() => {
