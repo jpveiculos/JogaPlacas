@@ -14,6 +14,7 @@ describe("GET /api/public/ticket-check", () => {
     vi.clearAllMocks();
     mocks.purchaseFindUnique.mockResolvedValue({
       status: "CONFIRMED",
+      createdAt: new Date(),
       participations: [{
         round: { code: "R-01", status: "COMPLETED", resultAt: new Date("2026-10-25T12:00:00Z"), resultLegacyPlate: "ABC-1234", resultMercosurPlate: "XYZ1K23" },
         lines: [
