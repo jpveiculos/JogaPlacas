@@ -563,3 +563,15 @@ A área ADMIN deve ter um buscador próprio de contas de jogadores para manuten�
 
 ### Estado de implementação
 Estas regras substituem instruções anteriores conflitantes nesta especificação, incluindo coleta de WhatsApp no fluxo do jogador e registro de cliente/WhatsApp no fluxo do cambista. **Decisão documentada; não significa que cadastro público, recibo com QR/baixar/imprimir, venda anônima, remoção do buscador antigo ou busca administrativa já estejam implementados e validados.** As pendências técnicas estão descritas no roadmap.
+
+
+## Regra de pagamento do cambista — Pix ou dinheiro em espécie (2026-10-26)
+
+A venda do cambista tem duas formas de recebimento, selecionadas depois de informar a placa e os parâmetros essenciais da aposta:
+
+1. **Pix:** ao avançar para pagamento, o sistema cria a cobrança Pix e mostra o QR Code Pix e o código Pix copia-e-cola na própria tela. O cliente pode escanear o QR ou copiar o código e pagar pelo aplicativo bancário. A interface acompanha o estado da cobrança. Somente a confirmação autêntica e validada do Mercado Pago (webhook/evento confiável, processado de forma idempotente) conclui a venda. Quando essa confirmação chegar, o sistema deve atualizar a tela/notificar o cambista e gerar/exibir automaticamente o recibo oficial, com código único e QR Code de consulta do recibo, pronto para imprimir/baixar. Não aceitar um clique do navegador, retorno de redirecionamento ou captura de tela como prova de pagamento.
+2. **Dinheiro em espécie:** o cambista seleciona dinheiro e recebe o valor do cliente. O botão explícito “Confirmar recebimento em dinheiro” registra que o cambista declarou ter recebido, com ator autenticado e instante no servidor. A confirmação deve ser transacional, auditada e idempotente; em seguida, conclui a venda e gera/exibe automaticamente o mesmo tipo de recibo oficial com código único e QR Code de consulta, pronto para imprimir/baixar. O botão não pode confirmar uma compra diferente da que está em tela nem ser reutilizado para duplicar recibos ou participações.
+
+**Separação obrigatória de códigos:** o QR/código Pix é usado para pagar a cobrança; o QR Code do recibo abre a consulta pública do bilhete pelo código JP-... . São códigos e finalidades diferentes. A venda só pode emitir o recibo oficial depois da confirmação correspondente ao método escolhido. Compra Pix pendente, expirada ou recusada não gera recibo oficial. Um webhook repetido ou toque repetido no botão de dinheiro não deve criar nova compra, nova participação, novo código de recibo ou novo lançamento financeiro.
+
+**Estado técnico:** esta é a regra de produto aprovada; a sequência ponta a ponta (cobrança Pix, confirmação Mercado Pago, atualização/notificação da tela, confirmação de dinheiro e emissão automática de recibo/QR/impressão) ainda precisa ser implementada e validada por testes. Não marcar como funcional nem ativar pagamentos reais antes de comprovar a integração em ambiente de teste.
