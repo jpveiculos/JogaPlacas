@@ -11,6 +11,7 @@ type ReceiptData = {
   paymentMethod: string;
   totalCents: number;
   currency: string;
+  customerLabel: string | null;
   plates: ThermalReceiptPlate[];
 };
 
@@ -72,6 +73,7 @@ export function PlayerPurchaseReceipt({ purchaseId, autoOpen = false, onClose }:
               issuedAt={receipt.issuedAt}
               totalCents={receipt.totalCents}
               plates={receipt.plates}
+              customerLabel={receipt.customerLabel}
               paymentLabel={paymentLabels[receipt.paymentMethod] ?? "Pagamento confirmado"}
             />
             <button type="button" onClick={() => { setReceipt(null); onClose?.(); }}>Fechar recibo</button>
