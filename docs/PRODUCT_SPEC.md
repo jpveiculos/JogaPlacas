@@ -435,3 +435,10 @@ Quando uma compra estiver confirmada pelo sistema e o pagamento estiver confirma
 ## Consulta pública do recibo
 
 A página pública `/consulta` permite digitar o código do recibo e consultar as placas, as rodadas, os resultados publicados e os prêmios que já foram efetivamente creditados. A consulta não exige login, mas somente retorna apostas de compras confirmadas e não expõe dados pessoais da conta. O endpoint do servidor é a fonte de verdade para estados e créditos. O QR Code do comprovante ainda não está conectado à página; essa integração permanece pendente.
+
+
+## Prazo de validade de sete dias — 2026-10-25
+
+**Regra de produto solicitada:** compras e recibos ficam disponíveis para consulta e reimpressão por sete dias corridos a partir da data e hora da compra. Após esse prazo, não se pode consultar nem imprimir a segunda via; o histórico operacional deixa de aparecer nas pesquisas. O resgate de prêmio deve ser solicitado/concluído em até sete dias corridos após o resultado da rodada. Pagamentos já creditados no saldo antes do vencimento são créditos concluídos. A retenção técnica de cópias/backups e registros exigidos por lei não equivale à disponibilidade de histórico no produto.
+
+A página pública de termos está em `/termos-de-uso`. A validade é aplicada pelo servidor ao endpoint de recibos, à consulta pública e à pesquisa do cambista; o histórico do jogador já usa a janela móvel de sete dias. O fluxo operacional de pagamento de prêmios manuais e a eliminação física de dados ainda exigem implementação/validação separada. Revisão jurídica necessária antes de tratar o prazo como política contratual final.
