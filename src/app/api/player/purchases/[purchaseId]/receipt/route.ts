@@ -26,6 +26,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
       where: { id: purchaseId },
       select: {
         id: true,
+        createdAt: true,
         playerId: true,
         cashierId: true,
         status: true,
@@ -65,6 +66,11 @@ export async function GET(request: NextRequest, context: RouteContext) {
       || (user.role === "CASHIER" && purchase?.cashierId === user.id);
     if (!purchase || !ownsPurchase) {
       return NextResponse.json({ error: "Compra não encontrada." }, { status: 404, headers });
+    }
+
+    const retentionDeadline = purchase.createdAt.getTime() + 7 * 24 * 60 * 60 * 1000;
+    if (Date.now() >= retentionDeadline) {
+      return NextResponse.json({ error: "O prazo de validade de 7 dias deste recibo terminou. Não é mais possível consultá-lo ou imprimi-lo." }, { status: 410, headers });
     }
 
     if (purchase.status !== "CONFIRMED"
