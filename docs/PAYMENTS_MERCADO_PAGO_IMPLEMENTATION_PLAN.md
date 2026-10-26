@@ -111,3 +111,14 @@ O adaptador do Mercado Pago será uma camada de infraestrutura isolada do domín
 6. Testar migração e suíte de qualidade em ambiente descartável. Não realizar cobrança real nem implantar nesta fase.
 
 Este registro é uma decisão de compatibilidade e um checklist de engenharia; não declara a integração pronta nem confirma que as variáveis do servidor foram inspecionadas.
+
+## Implementação incremental — webhook autenticado — 2026-10-26
+
+Na branch de desenvolvimento foram adicionados:
+
+- Validador HMAC-SHA256 de `x-signature`, usando `data.id`, `x-request-id` e timestamp; comparação em tempo constante e janela máxima de cinco minutos.
+- Rota `POST /api/webhooks/mercado-pago`, que rejeita assinatura ausente/inválida, consulta o recurso diretamente no Mercado Pago, confere referência externa, total e valor da transação, e registra eventos idempotentes com digest do corpo.
+- Atualização apenas dos campos de estado do provedor após reconciliação. A rota **não confirma compra, não confirma participações e não emite recibo**. Essa barreira é intencional: ainda falta o serviço transacional de confirmação com bloqueio de rodadas e política explícita para pagamento depois do cutoff.
+- Testes unitários do validador de assinatura.
+
+A integração ainda não está pronta para produção. A rota atual consulta o recurso como pedido da Orders API, coerente com o adaptador existente; a compatibilidade real com a configuração da aplicação Mercado Pago e com o formato exato de notificações precisa ser verificada em credenciais de teste. A confirmação de compra, a reconciliação de eventos fora de ordem, a política de pagamento tardio/estorno e os testes do endpoint continuam pendentes. Nenhum deploy, pagamento real ou alteração de produção foi executado.
