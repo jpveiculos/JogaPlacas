@@ -57,7 +57,7 @@ describe("admin withdrawals API", () => {
   });
 
   it("requires an audit note before marking paid", async () => {
-    const response = await POST(request({ withdrawalId: "withdrawal-1", action: "mark-paid", note: "Pago" }));
+    const response = await POST(request({ withdrawalId: "withdrawal-1", action: "mark-paid", note: "Ok" }));
     expect(response.status).toBe(400);
     expect(mocks.transaction).not.toHaveBeenCalled();
   });
