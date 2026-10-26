@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { authPrisma } from "@/lib/auth/session";
-import { getVerifiedPixOrder, verifyMercadoPagoWebhookSignature } from "@/modules/payments/mercado-pago";
+import { classifyPixOrderStatus, getVerifiedPixOrder, verifyMercadoPagoWebhookSignature } from "@/modules/payments/mercado-pago";
 import { confirmPixPayment } from "@/modules/payments/confirm-payment";
 
 export const runtime = "nodejs";
@@ -110,13 +110,8 @@ export async function POST(request: NextRequest) {
     // An order-level terminal state (especially refunded) takes precedence over
     // an older transaction-level "approved" state. Confirmation requires both
     // the order and its Pix transaction to be in their successful states.
-    const orderStatus = order.status.toLowerCase();
-    const transactionStatus = order.paymentStatus?.toLowerCase() ?? null;
-    const providerStatus = ["refunded", "cancelled", "canceled", "expired", "rejected", "failed", "failure"].includes(orderStatus)
-      ? order.status
-      : order.paymentStatus ?? order.status;
-    const normalizedStatus = providerStatus.toLowerCase();
-    if (orderStatus === "processed" && transactionStatus === "approved") {
+    const { providerStatus, normalizedStatus, approved } = classifyPixOrderStatus(order);
+    if (approved) {
       const confirmation = await confirmPixPayment(authPrisma, {
         paymentId: payment.id,
         providerStatus,
