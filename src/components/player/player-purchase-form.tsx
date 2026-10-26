@@ -12,6 +12,8 @@ type CreatedPurchase = {
 };
 type PlateFormat = "LEGACY" | "MERCOSUR";
 
+type PixCheckout = { copyPaste: string | null; qrCodeBase64: string | null; ticketUrl: string | null };
+
 function formatDate(value: string) {
   const date = new Date(value);
   const dateLabel = new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeZone: "America/Sao_Paulo" }).format(date);
@@ -41,6 +43,7 @@ export function PlayerPurchaseForm() {
   const [notice, setNotice] = useState("");
   const [purchase, setPurchase] = useState<CreatedPurchase | null>(null);
   const [pixCheckout, setPixCheckout] = useState<PixCheckout | null>(null);
+  const [pixModalOpen, setPixModalOpen] = useState(false);
   const idempotencyKey = useRef<string | null>(null);
 
   useEffect(() => {
@@ -113,6 +116,7 @@ export function PlayerPurchaseForm() {
       if (!response.ok) throw new Error(body.error ?? "Não foi possível registrar a compra.");
       setPurchase(body.purchase as CreatedPurchase);
       setPixCheckout((body.pixCheckout as PixCheckout | null) ?? null);
+      setPixModalOpen(true);
       idempotencyKey.current = null;
       setNotice(body.message ?? "Compra registrada.");
     } catch (reason) {
@@ -163,9 +167,10 @@ export function PlayerPurchaseForm() {
       </form>
       {error && <p role="alert" className="note-inline">{error}</p>}
       {notice && <p role="status" className="note-inline">{notice}</p>}
-      {purchase && (
-        <div className="purchase-confirmation">
-          <h3>Compra registrada</h3><p>Status: aguardando confirmação do pagamento</p><p>Total: <strong>{formatMoney(purchase.totalCents)}</strong></p>
+      {purchase && pixModalOpen && (
+        <div className="modal-backdrop" role="presentation">
+        <section className="modal-panel pix-modal" role="dialog" aria-modal="true" aria-labelledby="pix-modal-heading">
+          <h3 id="pix-modal-heading">Pagamento Pix</h3><p>Status: aguardando confirmação do pagamento</p><p>Total: <strong>{formatMoney(purchase.totalCents)}</strong></p>
           {purchase.participations.flatMap((participation) => participation.lines.map((line, index) => (
             <div key={participation.roundId + line.plateDisplay + index} className="receipt-plate-line">
               <PlateVisual format={/^[A-Z]{3}-?\d{4}$/.test(line.plateDisplay) ? "LEGACY" : "MERCOSUR"} value={line.plateDisplay} />
@@ -186,8 +191,19 @@ export function PlayerPurchaseForm() {
               }
             }}>Copiar código Pix</button>
           </div>}
-          {pixCheckout?.ticketUrl && <p><a href={pixCheckout.ticketUrl} target="_blank" rel="noreferrer">Abrir pagamento no Mercado Pago</a></p>}
-          <p>O recibo oficial só será gerado após a confirmação autêntica do pagamento.</p>
+          {!pixCheckout?.copyPaste && <p role="status">A cobrança ainda não está disponível. A compra permanece pendente; fechar esta janela não cancela nem confirma o pagamento.</p>}
+          <p>O recibo oficial só será exibido após a confirmação autêntica do pagamento.</p>
+          <button type="button" onClick={() => {
+            setPixModalOpen(false);
+            setPurchase(null);
+            setPixCheckout(null);
+            setPlate("");
+            setSelectedRounds([]);
+            setStake("1,00");
+            setNotice("Tela liberada para iniciar outro jogo. A cobrança anterior continua pendente até confirmação ou reconciliação.");
+            fetch("/api/player/rounds", { cache: "no-store" }).then((response) => response.json()).then((body) => setRounds(body.rounds ?? [])).catch(() => undefined);
+          }}>Sair e iniciar outro jogo</button>
+        </section>
         </div>
       )}
     </section>
