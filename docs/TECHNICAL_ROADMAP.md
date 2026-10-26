@@ -450,3 +450,22 @@ A decisão antiga que limitava a experiência a três áreas e rejeitava uma pá
 - A atribuição do código de recibo e a confirmação devem ser consistentes; QR de recibo deve resolver para consulta pública autorizada apenas após confirmação. Impressão/download reutiliza o mesmo recibo e nunca cria nova venda.
 - Testar pagamento aprovado, pendente, recusado, expirado, evento duplicado, evento fora de ordem, valor divergente, webhook inválido, botão de espécie repetido, sessão sem permissão, falha de impressão e reimpressão.
 - **Status:** regra definida; integração ponta a ponta não confirmada. Não habilitar cobrança real nem alegar que o recibo automático está pronto até a CI e testes de integração demonstrarem o comportamento. Nenhum deploy ou alteração de banco de produção é autorizado por esta decisão.
+
+
+## Requisito de UX — sair do Pix/recibo e limpar a tela após impressão/download (2026-10-26)
+
+**Critério obrigatório para o fluxo do cambista** (e padrão de comportamento para o jogador):
+
+1. Tela de cobrança Pix com botão sempre acessível para sair/fechar, inclusive quando QR/copia-e-cola não carregarem ou a cobrança ficar pendente. Fechar a tela não muda o estado financeiro, não cancela automaticamente a cobrança e não emite recibo.
+2. Tela do recibo com ações separadas: **Imprimir**, **Baixar recibo** e **Sair/Fechar recibo**. A ação de sair é um caminho de recuperação independente das ações de impressão e download.
+3. Após a solicitação de impressão ser aceita e o diálogo de impressão retornar, fechar a tela do recibo e limpar o estado temporário da venda para que a interface esteja pronta para o próximo jogo. Após o navegador aceitar/iniciar o download, fazer a mesma limpeza. O clique isolado não basta: esperar a ação ter sido iniciada/aceita. Se imprimir/baixar falhar ou a impressão for cancelada, manter o recibo na tela com opção de tentar de novo ou sair.
+4. O botão Sair fecha o recibo e limpa a tela sem alterar a compra confirmada. Limpar somente os campos/estado temporários da interface; não apagar histórico nem alterar dados persistidos.
+5. Reimpressão e download usam o mesmo código de recibo e não repetem a venda nem movimentações financeiras. Não alegar que uma página web detecta a impressão física real: validar o retorno do diálogo do navegador e manter a saída manual como alternativa.
+
+**Auditoria do estado atual:**
+- Existe botão para sair da tela Pix em `src/components/player/player-purchase-form.tsx` (“Sair e iniciar outro jogo”); ele fecha a janela e limpa campos locais, mas preserva a cobrança anterior como pendente.
+- Existe botão “Fechar recibo” em `src/components/receipts/player-purchase-receipt.tsx`.
+- `src/components/receipts/thermal-receipt.tsx` chama `window.print()`, mas não oferece fluxo dedicado de download e não executa a limpeza automática após o diálogo de impressão.
+- O fluxo completo do cambista ainda não está implementado; portanto, não considerar os requisitos atendidos ponta a ponta.
+
+**Testes de aceitação necessários:** saída Pix sem mudança indevida do estado da cobrança; botão sair do recibo após falha de impressão/download; impressão concluída limpa a interface; download iniciado limpa a interface; cancelamento/falha mantém recibo e permite sair/tentar novamente; próxima venda inicia sem dados temporários anteriores; nenhuma ação de interface duplica compra, participação, recibo ou lançamento financeiro.
