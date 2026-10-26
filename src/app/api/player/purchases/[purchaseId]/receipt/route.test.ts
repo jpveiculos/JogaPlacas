@@ -46,12 +46,6 @@ const confirmedPurchase = () => ({
       }],
     },
   ],
-  it("refuses receipt reprints after seven days", async () => {
-    mocks.purchaseFindUnique.mockResolvedValue({ ...confirmedPurchase(), createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000 - 1) });
-    const response = await GET(request(), { params: Promise.resolve({ purchaseId: "purchase-12345678" }) });
-    expect(response.status).toBe(410);
-    expect((await response.json()).error).toContain("7 dias");
-  });
 });
 
 describe("GET purchase receipt", () => {
@@ -61,6 +55,13 @@ describe("GET purchase receipt", () => {
       id: "player-1", username: "player", role: "PLAYER", status: "ACTIVE", mustChangePassword: false,
     });
     mocks.purchaseFindUnique.mockResolvedValue(confirmedPurchase());
+  });
+
+  it("refuses receipt reprints after seven days", async () => {
+    mocks.purchaseFindUnique.mockResolvedValue({ ...confirmedPurchase(), createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000 - 1) });
+    const response = await GET(request(), { params: Promise.resolve({ purchaseId: "purchase-12345678" }) });
+    expect(response.status).toBe(410);
+    expect((await response.json()).error).toContain("7 dias");
   });
 
   it("requires a session and does not query when unauthenticated", async () => {
