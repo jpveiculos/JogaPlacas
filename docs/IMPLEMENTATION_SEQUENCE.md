@@ -1,6 +1,6 @@
 # Sequência de implementação — estado atual
 
-Atualizado em 2026-10-25 após revisão adicional da branch feature/dual-plate-draw, HEAD 1d37b8fc59e0c10717272b96dec1d9bd206a6819.
+Registro de planejamento iniciado em 2026-10-25. **A fotografia de estado e o plano abaixo são históricos e foram superados pela reconciliação de 2026-10-26 em `docs/TECHNICAL_ROADMAP.md`.** Consulte o quadro consolidado antes de tomar decisões ou executar tarefas.
 
 ## Decisão permanente
 A integração com Mercado Pago fica para a última fase. Até a aprovação dos gates anteriores, não criar cobranças reais, não ativar webhooks do provedor e não colocar segredos reais do provedor no ambiente. Não alterar main, banco de produção, domínio/DNS nem serviços ativos sem autorização explícita.
@@ -9,9 +9,9 @@ A integração com Mercado Pago fica para a última fase. Até a aprovação dos
 
 Já existem lockfile e instalação npm ci na CI, schema Prisma e migrações versionadas, serviços de autenticação, regras de placas, compra pendente com participações, fechamento de rodada, geração dos dois resultados e apuração de prêmios. Existem rotas de autenticação e rotas administrativas para fechar, sortear e apurar rodadas.
 
-As três páginas de perfil ainda são placeholders. Não há prova nesta auditoria de fluxos de produto ponta a ponta, de instalação limpa executada localmente nesta conversa, de banco de produção atualizado ou de integração real com pagamentos.
+As páginas de jogador, cambista e administrador e várias APIs foram implementadas depois desta fotografia inicial. Isso não prova que todos os fluxos estejam completos nem que a integração de pagamento tenha passado por teste ponta a ponta. Nenhum banco de produção atualizado ou deploy é presumido.
 
-A branch feature/dual-plate-draw está 61 commits à frente e 1 atrás de planning/foundation, e o PR #1 está aberto em rascunho. As branches divergem; não fazer merge automaticamente.
+A contagem de commits e a referência ao PR #1 são históricas e não devem ser usadas para inferir a relação atual entre branches. O PR de trabalho conhecido nesta reconciliação é o #2, aberto em rascunho para `main`; não fazer merge automaticamente.
 
 ## Ordem de trabalho revisada
 
