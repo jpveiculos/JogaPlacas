@@ -78,7 +78,7 @@ Este quadro substitui as descrições de estado anteriores que diziam que a inte
 
 ### Evidência de validação e limites
 - A branch contém workflow CI com `verify`, `migration-test` e `postgres-concurrency-test`, além de testes unitários, de rota e integração PostgreSQL.
-- No HEAD consultado nesta reconciliação (`ab3a24fa9ed07e02b11f8601d13b7210a13614f9`), a API de status do commit não retornou checks/status. Portanto, **não declarar o HEAD atual aprovado por CI** só porque commits anteriores passaram.
+- No HEAD consultado nesta reconciliação (`84938086a2d50fd91de71b572372ab122416dcc9`), a API de status do commit não retornou checks/status. Portanto, **não declarar o HEAD atual aprovado por CI** só porque commits anteriores passaram.
 - Código, testes existentes ou uma migração aprovada em PostgreSQL descartável não provam operação em produção. Nenhum merge para `main`, deploy, migração produtiva ou pagamento real é autorizado por este documento.
 
 ### Próximos gates
