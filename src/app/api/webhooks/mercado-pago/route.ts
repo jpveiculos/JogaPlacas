@@ -67,6 +67,7 @@ export async function POST(request: NextRequest) {
 
     const expectedReference = `jogaplacas_purchase_${payment.purchaseId}`;
     if (order.externalReference !== expectedReference
+      || order.currency !== "BRL"
       || order.amountCents !== payment.amountCents
       || order.amountCents !== payment.purchase.totalCents
       || (order.paymentAmountCents !== null && order.paymentAmountCents !== payment.amountCents)) {
@@ -106,9 +107,16 @@ export async function POST(request: NextRequest) {
       });
     });
 
-    const providerStatus = order.paymentStatus ?? order.status;
+    // An order-level terminal state (especially refunded) takes precedence over
+    // an older transaction-level "approved" state. Confirmation requires both
+    // the order and its Pix transaction to be in their successful states.
+    const orderStatus = order.status.toLowerCase();
+    const transactionStatus = order.paymentStatus?.toLowerCase() ?? null;
+    const providerStatus = ["refunded", "cancelled", "canceled", "expired", "rejected", "failed", "failure"].includes(orderStatus)
+      ? order.status
+      : order.paymentStatus ?? order.status;
     const normalizedStatus = providerStatus.toLowerCase();
-    if (["approved", "processed"].includes(normalizedStatus)) {
+    if (orderStatus === "processed" && transactionStatus === "approved") {
       const confirmation = await confirmPixPayment(authPrisma, {
         paymentId: payment.id,
         providerStatus,
@@ -128,7 +136,9 @@ export async function POST(request: NextRequest) {
         : ["cancelled", "canceled"].includes(normalizedStatus)
           ? "CANCELLED"
           : normalizedStatus === "expired"
-            ? "EXPIRED"
+          ? "EXPIRED"
+          : normalizedStatus === "refunded"
+            ? "REFUNDED"
             : null;
       if (terminalStatus) {
         await authPrisma.$transaction(async (tx) => {
