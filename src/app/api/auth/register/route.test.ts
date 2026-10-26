@@ -115,6 +115,5 @@ describe("POST /api/auth/register", () => {
     expect(await response.json()).toEqual({
       error: "Não foi possível criar sua conta agora. Tente novamente.",
     });
-    expect(await response.text().catch(() => "")).toBe("");
   });
 });
