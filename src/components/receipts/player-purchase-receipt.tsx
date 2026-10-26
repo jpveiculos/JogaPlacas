@@ -75,8 +75,8 @@ export function PlayerPurchaseReceipt({ purchaseId, autoOpen = false, onClose }:
               plates={receipt.plates}
               customerLabel={receipt.customerLabel}
               paymentLabel={paymentLabels[receipt.paymentMethod] ?? "Pagamento confirmado"}
+              onClose={() => { setReceipt(null); onClose?.(); }}
             />
-            <button type="button" onClick={() => { setReceipt(null); onClose?.(); }}>Fechar recibo</button>
           </section>
         </div>
       )}
