@@ -14,6 +14,13 @@
 - O backend deve permitir uma venda do cambista sem `customerId`, sem criar um registro artificial em `Customer`. A identidade do cambista autenticado, a integridade da compra, o pagamento, as participações, o código do recibo e os registros financeiros/auditoria continuam obrigatórios.
 - **Status da implementação:** esta é a decisão funcional vigente; a interface de venda rápida, o QR Code do recibo e a remoção completa da dependência de cliente ainda exigem implementação e testes. Não considerar o fluxo pronto apenas por remover o buscador da tela.
 
+## Atualização de implementação — página pública e cadastro (2026-10-26)
+
+- A rota `/` já contém a página pública com apresentação, consulta de recibo, resultados públicos e link de login; não deve ser substituída pela tela de login.
+- Nesta branch, estão sendo adicionados os acessos visíveis a `/cadastro` e o fluxo inicial de criação de conta de jogador, com senha armazenada por hash e sessão segura.
+- **Ainda não considerar pronto para produção:** executar typecheck, lint, testes e build; testar cadastro/login no Railway; adicionar/validar limitação persistente de tentativas e controles antiabuso para cadastro público; confirmar a branch e o domínio configurados no serviço.
+- Cadastro público cria exclusivamente papel `PLAYER`. Administradores e cambistas continuam fora do cadastro público.
+
 ## 1. Áreas e acesso
 - A plataforma tem quatro áreas de produto: página principal pública, área do jogador, área do cambista e área do administrador.
 - A página principal pública é a porta de entrada do domínio: apresentação do jogo, explicação de como jogar, regras e equivalências oficiais de prêmios, resultados/ganhadores públicos, consulta de recibo e opções visíveis de Entrar/Criar conta. A página inicial não deve ser substituída por uma tela de login.
