@@ -67,7 +67,7 @@ export function PlayerPurchaseReceipt({ purchaseId }: { purchaseId: string }) {
             <button type="button" onClick={() => setReceipt(null)}>Fechar recibo</button>
           </section>
         </div>
-      )}}
+      )}
     </div>
   );
 }
