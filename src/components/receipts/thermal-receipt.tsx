@@ -96,11 +96,11 @@ export function ThermalReceipt({
             <strong className="thermal-receipt-code">{receiptCode}</strong>
             <span className="thermal-receipt-payment">{paymentLabel}</span>
           </div>
-          {qrCodeDataUrl ? (
-            <img className="thermal-receipt-qr" style={qrStyle} src={qrCodeDataUrl} alt={`QR Code do recibo ${receiptCode}`} />
+          {effectiveQrUrl ? (
+            <img className="thermal-receipt-qr" style={qrStyle} src={effectiveQrUrl} alt={`QR Code do recibo ${receiptCode}`} />
           ) : (
             <div className="thermal-receipt-qr-placeholder" aria-label="QR Code indisponível">
-              QR
+              QR indisponível
             </div>
           )}
         </section>
