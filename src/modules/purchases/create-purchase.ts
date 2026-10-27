@@ -56,10 +56,11 @@ export class PurchaseServiceError extends Error {
 }
 
 /**
- * Persist a pending Pix checkout and its per-round participations atomically, without issuing a receipt.
- * This function does not call Mercado Pago and never marks a payment as paid.
- * The provider adapter must create the external charge after this transaction,
- * using the persisted payment idempotency key, and reconcile failures safely.
+ * Persist a purchase and its per-round participations atomically.
+ * Pix purchases remain pending until the payment provider confirms them.
+ * Cash purchases are confirmed inside this transaction and receive an official
+ * receipt code, cashier commission, and audit event. This function never calls
+ * Mercado Pago; the Pix provider adapter creates its charge after this transaction.
  */
 export async function createPurchase(
   prisma: PrismaClient,
@@ -349,6 +350,7 @@ export async function createPurchase(
         amountCents: calculateCommissionCents(totals.totalCents, cashier.commissionRateBasisPoints),
       } });
       await tx.auditEvent.create({ data: {
+        actorId: input.cashierId,
         action: "CASH_PURCHASE_CONFIRMED",
         entityType: "Purchase",
         entityId: created.id,
