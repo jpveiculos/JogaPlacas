@@ -615,7 +615,7 @@ Na branch `feature/public-home-registration`, foram iniciados os seguintes compo
 - Resumo da área do cambista com dois valores distintos: vendas confirmadas em reais e comissão acumulada em reais.
 - Comissão Pix calculada em centavos inteiros e persistida por compra no momento da confirmação, usando a taxa vigente naquele momento; alteração posterior da taxa não reescreve o snapshot.
 
-**Ainda não considerar o requisito concluído:** o caminho de venda em espécie e sua confirmação atômica ainda não estão completos; testes de integração/autorização do CRUD, migração e fluxo Pix alterado ainda precisam ser executados e aprovados. Estornos de compras confirmadas e sua reconciliação financeira precisam de política e testes específicos. Não habilitar produção com base apenas na existência deste código.
+**Estado parcial em 2026-10-27:** foi implementado em branch um caminho de venda em espécie com endpoint separado, confirmação da compra e participações, código de recibo, comissão e auditoria na mesma transação; a tela do cambista agora permite selecionar Pix ou dinheiro. O código ainda não foi validado por typecheck, testes locais/integração e migração. Estornos de compras confirmadas e sua reconciliação financeira precisam de política e testes específicos. Não habilitar produção com base apenas na existência deste código.
 
 
 ## Decisão de compatibilidade — impressoras térmicas Bluetooth (2026-10-27)
