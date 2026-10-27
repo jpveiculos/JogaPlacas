@@ -13,7 +13,7 @@ import {
 export const runtime = "nodejs";
 const schema = z.object({
   currentPassword: z.string().min(1).max(1024),
-  newPassword: z.string().min(12).max(1024),
+  newPassword: z.string().min(6).max(1024),
 }).strict();
 
 function secureCookie(request: NextRequest) {
