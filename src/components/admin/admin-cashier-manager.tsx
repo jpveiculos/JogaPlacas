@@ -108,6 +108,8 @@ export function AdminCashierManager() {
     <span className="feature-label">Equipe de vendas</span>
     <h2 id="admin-cashiers-heading">Cadastro de cambistas</h2>
     <p>Cadastre cada vendedor com sua própria comissão. Alterar a porcentagem não deve mudar as comissões já registradas em vendas anteriores.</p>
+    {error && <p role="alert" className="note-inline" aria-live="assertive">{error}</p>}
+    {notice && <p role="status" className="note-inline" aria-live="polite">{notice}</p>}
     <form className="admin-round-create" onSubmit={submit}>
       <h3>{editingId ? "Editar cambista" : "Cadastrar novo cambista"}</h3>
       <label>Nome completo
