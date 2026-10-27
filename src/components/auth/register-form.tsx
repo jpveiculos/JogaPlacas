@@ -43,10 +43,10 @@ export function RegisterForm() {
       <input id="username" name="username" autoComplete="username" autoCapitalize="none" spellCheck={false} minLength={3} maxLength={24} pattern="[A-Za-z0-9_.-]+" value={username} onChange={(event) => setUsername(event.target.value)} required aria-describedby="username-help" />
       <p id="username-help" className="password-requirement">Use de 3 a 24 caracteres: letras, números, ponto, hífen ou sublinhado.</p>
       <label htmlFor="password">Crie uma senha</label>
-      <input id="password" name="password" type="password" autoComplete="new-password" minLength={12} maxLength={1024} value={password} onChange={(event) => setPassword(event.target.value)} required aria-describedby="password-help" />
-      <p id="password-help" className="password-requirement">A senha deve ter pelo menos 12 caracteres.</p>
+      <input id="password" name="password" type="password" autoComplete="new-password" minLength={6} maxLength={1024} value={password} onChange={(event) => setPassword(event.target.value)} required aria-describedby="password-help" />
+      <p id="password-help" className="password-requirement">A senha deve ter pelo menos 6 caracteres.</p>
       <label htmlFor="confirm-password">Confirme sua senha</label>
-      <input id="confirm-password" name="confirm-password" type="password" autoComplete="new-password" minLength={12} maxLength={1024} value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} required />
+      <input id="confirm-password" name="confirm-password" type="password" autoComplete="new-password" minLength={6} maxLength={1024} value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} required />
       {error ? <p className="form-error" role="alert">{error}</p> : null}
       <button className="primary-button" type="submit" disabled={isSubmitting}>{isSubmitting ? "Criando conta..." : "Criar minha conta"}</button>
     </form>
