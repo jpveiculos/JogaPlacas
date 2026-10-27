@@ -22,8 +22,18 @@ function secureCookie(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const origin = request.headers.get("origin");
-  if (origin && origin !== request.nextUrl.origin) {
-    return NextResponse.json({ error: "Requisição inválida." }, { status: 403 });
+  if (origin) {
+    let originHost: string;
+    try {
+      originHost = new URL(origin).host;
+    } catch {
+      return NextResponse.json({ error: "Requisição inválida." }, { status: 403 });
+    }
+    // Behind Railway's reverse proxy, nextUrl.origin may be an internal URL.
+    const requestHost = request.headers.get("host");
+    if (!requestHost || originHost !== requestHost) {
+      return NextResponse.json({ error: "Requisição inválida." }, { status: 403 });
+    }
   }
 
   const token = request.cookies.get(SESSION_COOKIE)?.value;
