@@ -49,7 +49,7 @@ Já existem hash de senha, login/logout, sessões opacas persistidas e endpoint 
 
 ## Provisionamento operacional do primeiro administrador
 
-O comando `npm run admin:provision` é deliberadamente separado do site e não possui endpoint público. Execute-o somente em ambiente controlado depois de aplicar as migrações em um banco apropriado. Injete temporariamente `DATABASE_URL`, `ADMIN_USERNAME`, `ADMIN_INITIAL_PASSWORD` e `CONFIRM_ADMIN_PROVISIONING=CREATE_FIRST_ADMIN` pelo mecanismo seguro do ambiente; não grave os valores no repositório ou em logs. A senha inicial precisa ter pelo menos 12 caracteres e a conta é obrigada a trocá-la no primeiro acesso. O comando recusa execução sem confirmação, não altera usuários existentes e não cria um segundo administrador. A implementação ainda precisa ser exercitada em banco descartável antes de ser considerada aprovada.
+O comando `npm run admin:provision` é deliberadamente separado do site e não possui endpoint público. Execute-o somente em ambiente controlado depois de aplicar as migrações em um banco apropriado. Injete temporariamente `DATABASE_URL`, `ADMIN_USERNAME`, `ADMIN_INITIAL_PASSWORD` e `CONFIRM_ADMIN_PROVISIONING=CREATE_FIRST_ADMIN` pelo mecanismo seguro do ambiente; não grave os valores no repositório ou em logs. A senha inicial precisa ter pelo menos 6 caracteres e a conta é obrigada a trocá-la no primeiro acesso. O comando recusa execução sem confirmação, não altera usuários existentes e não cria um segundo administrador. A implementação ainda precisa ser exercitada em banco descartável antes de ser considerada aprovada.
 
 
 ## Limitação de tentativas de login
