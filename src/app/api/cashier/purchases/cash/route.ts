@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createCurrentPrizeRuleSnapshot, CURRENT_PRIZE_RULE_VERSION } from "@/domain/prize-rule-snapshot";
-import { createPendingPixPurchase, PurchaseServiceError } from "@/modules/purchases/create-purchase";
+import { createPurchase, PurchaseServiceError } from "@/modules/purchases/create-purchase";
 import { authPrisma, getSessionUser, SESSION_COOKIE } from "@/lib/auth/session";
 
 export const runtime = "nodejs";
@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const snapshot = createCurrentPrizeRuleSnapshot();
-    const purchase = await createPendingPixPurchase(authPrisma, {
+    const purchase = await createPurchase(authPrisma, {
       idempotencyKey: parsed.data.idempotencyKey,
       cashierId: user.id,
       paymentMethod: "CASH",
