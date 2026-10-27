@@ -80,7 +80,8 @@ export async function GET(request: NextRequest) {
       winnersWindowDays: WINNER_WINDOW_DAYS,
       generatedAt: new Date().toISOString(),
     }, { headers: { "Cache-Control": "no-store, public, max-age=0" } });
-  } catch {
+  } catch (error) {
+    console.error("[public-results] Failed to load public results", error);
     return NextResponse.json({ error: "Não foi possível carregar os resultados agora." }, { status: 500, headers: { "Cache-Control": "no-store" } });
   }
 }
