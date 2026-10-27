@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
         _count: { _all: true },
       }),
       authPrisma.cashierCommission.aggregate({
-        where: { cashierId: user.id },
+        where: { cashierId: user.id, purchase: { status: "CONFIRMED" } },
         _sum: { amountCents: true },
       }),
     ]);
