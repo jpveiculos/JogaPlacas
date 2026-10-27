@@ -65,8 +65,8 @@ export function AdminRoundManager() {
 
   async function createRound(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault(); setError(""); setNotice("");
-    const startsAt = saoPauloWallTimeToIso(startsAtInput);
-    const resultAt = saoPauloWallTimeToIso(resultAtInput);
+    const startsAt = brasiliaWallTimeToIso(startsAtInput);
+    const resultAt = brasiliaWallTimeToIso(resultAtInput);
     if (!startsAt || !resultAt) { setError("Informe horários válidos no horário de Brasília (UTC−03:00)."); return; }
     setBusy("create");
     try {
