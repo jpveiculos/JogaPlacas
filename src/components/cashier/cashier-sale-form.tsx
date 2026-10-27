@@ -15,13 +15,12 @@ type PlateFormat = "LEGACY" | "MERCOSUR";
 
 function sanitizePlateInput(value: string, format: PlateFormat): string {
   const chars = value.toUpperCase().replace(/[^A-Z0-9]/g, "").split("");
-  const pattern = format === "LEGACY" ? /^[A-Z]{3}[0-9]{0,4}$/ : /^[A-Z]{3}[0-9]?[A-Z]?[0-9]{0,2}$/;
   let result = "";
   for (const char of chars) {
     const index = result.length;
     const expectsLetter = format === "LEGACY" ? index < 3 : index < 3 || index === 4;
     if (expectsLetter ? /[A-Z]/.test(char) : /[0-9]/.test(char)) result += char;
-    if (result.length >= (format === "LEGACY" ? 7 : 7)) break;
+    if (result.length >= 7) break;
   }
   return result;
 }
@@ -222,7 +221,7 @@ export function CashierSaleForm() {
         <div className="plate-entry">
           <label htmlFor="cashier-plate-input">Digite a placa da venda</label>
           <PlateVisual format={plateFormat} value={platePreview} placeholder={plateFormat === "LEGACY" ? "ABC1234" : "ABC1D23"} />
-          <input id="cashier-plate-input" value={plate} onChange={(event) => setPlate(sanitizePlateInput(event.target.value, plateFormat))} placeholder={plateFormat === "LEGACY" ? "ABC-1234" : "ABC1D23"} maxLength={8} autoComplete="off" aria-describedby="plate-format-help" required />
+          <input id="cashier-plate-input" value={plate} onChange={(event) => setPlate(sanitizePlateInput(event.target.value, plateFormat))} inputMode={plateFormat === "LEGACY" ? "text" : "text"} placeholder={plateFormat === "LEGACY" ? "ABC-1234" : "ABC1D23"} maxLength={8} autoComplete="off" aria-describedby="plate-format-help" required />
           <small id="plate-format-help">{plateFormat === "LEGACY" ? "Três letras de A a Z, seguidas de quatro números de 0 a 9, sem hífen." : "Três letras, um número, uma letra e dois números. A quinta posição aceita A–Z."}</small>
         </div>
         <label>Valor total por placa e rodada (R$)
