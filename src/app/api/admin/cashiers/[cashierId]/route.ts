@@ -27,7 +27,19 @@ async function requireAdmin(request: NextRequest) {
 
 export async function PATCH(request: NextRequest, context: RouteContext) {
   const origin = request.headers.get("origin");
-  if (origin && origin !== request.nextUrl.origin) return NextResponse.json({ error: "Requisição inválida." }, { status: 403, headers });
+  if (origin) {
+    let originHost: string;
+    try {
+      originHost = new URL(origin).host;
+    } catch {
+      return NextResponse.json({ error: "Requisição inválida." }, { status: 403, headers });
+    }
+    // Keep the same reverse-proxy-safe origin check used by login.
+    const requestHost = request.headers.get("host");
+    if (!requestHost || originHost !== requestHost) {
+      return NextResponse.json({ error: "Requisição inválida." }, { status: 403, headers });
+    }
+  }
   const auth = await requireAdmin(request);
   if (auth.response) return auth.response;
   const { cashierId } = await context.params;
