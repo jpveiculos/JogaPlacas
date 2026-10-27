@@ -1,4 +1,6 @@
+import { randomBytes } from "node:crypto";
 import { Prisma, PaymentMethod, RoundStatus, type PrismaClient } from "../../generated/prisma/client";
+import { calculateCommissionCents } from "../../domain/cashier-commission";
 import { normalizePlate } from "../plates/normalize-plate";
 import { APPROVED_PRIZE_MULTIPLIERS, PRIZE_CATEGORIES, readPrizeMultipliers } from "../../domain/prize-rule-snapshot";
 import { allocatePlateStake } from "../../domain/allocate-plate-stake";
@@ -77,7 +79,7 @@ export async function createPendingPixPurchase(
   if (new Set(input.participations.map((item) => item.roundId)).size !== input.participations.length) {
     throw new PurchaseServiceError("Each participation must reference a distinct round", "INVALID_PURCHASE");
   }
-  if (Boolean(input.playerId) === Boolean(input.cashierId)) {
+  const paymentMethod = input.paymentMethod === "CASH" ? PaymentMethod.CASH : PaymentMethod.PIX;\n  if (paymentMethod === PaymentMethod.CASH && (!input.cashierId || input.playerId)) {\n    throw new PurchaseServiceError("Cash sales must be created by an authenticated cashier", "INVALID_ACTOR");\n  }\n  if (Boolean(input.playerId) === Boolean(input.cashierId)) {
     throw new PurchaseServiceError("Exactly one player or cashier must own the purchase", "INVALID_ACTOR");
   }
   // Validate plate syntax before opening a database transaction. Invalid user input
@@ -157,7 +159,7 @@ export async function createPendingPixPurchase(
         ].join("|")).sort().join("\\n"),
       ]));
       const sameRequest =
-        existing.paymentMethod === PaymentMethod.PIX &&
+        existing.paymentMethod === paymentMethod &&
         existing.receiptCode === (input.receiptCode ?? null) &&
         existing.playerId === (input.playerId ?? null) &&
         existing.cashierId === (input.cashierId ?? null) &&
@@ -242,7 +244,7 @@ export async function createPendingPixPurchase(
 
     const draft: PurchaseDraft = {
       repetitions: input.repetitions,
-      paymentMethod: "PIX",
+      paymentMethod: paymentMethod === PaymentMethod.CASH ? "CASH" : "PIX",
       participations: input.participations.map((participation) => {
         const round = roundsById.get(participation.roundId);
         if (!round || (round.status !== RoundStatus.SCHEDULED && round.status !== RoundStatus.OPEN)) {
@@ -284,22 +286,26 @@ export async function createPendingPixPurchase(
       totalByRound.set(participation.roundId, total);
     }
 
-    return tx.purchase.create({
+    const isCash = paymentMethod === PaymentMethod.CASH;
+    const receiptCode = isCash ? `JP-${randomBytes(8).toString("hex").toUpperCase()}` : (input.receiptCode ?? null);
+    const created = await tx.purchase.create({
       data: {
         playerId: input.playerId ?? null,
         cashierId: input.cashierId ?? null,
         customerId: input.customerId ?? null,
-        status: "PENDING_PAYMENT",
-        paymentMethod: PaymentMethod.PIX,
+        status: isCash ? "CONFIRMED" : "PENDING_PAYMENT",
+        paymentMethod,
         totalCents: totals.totalCents,
         currency: "BRL",
-        receiptCode: input.receiptCode ?? null,
+        receiptCode,
+        confirmedAt: isCash ? decisionTime : null,
         idempotencyKey: input.idempotencyKey,
         participations: {
           create: input.participations.map((participation) => ({
             roundId: participation.roundId,
-            status: "PENDING",
+            status: isCash ? "CONFIRMED" : "PENDING",
             totalCents: totalByRound.get(participation.roundId)!,
+            ...(isCash ? { confirmedAt: decisionTime } : {}),
             lines: {
               create: participation.lines.map((line) => {
                 const normalized = normalizePlate(line.plateDisplay);
@@ -316,17 +322,35 @@ export async function createPendingPixPurchase(
             },
           })),
         },
-        payment: {
-          create: {
-            provider: "MERCADO_PAGO",
-            status: "PENDING",
-            amountCents: totals.totalCents,
-            idempotencyKey: `pix-payment:${input.idempotencyKey}`,
-          },
-        },
+        ...(!isCash ? { payment: { create: {
+          provider: "MERCADO_PAGO",
+          status: "PENDING",
+          amountCents: totals.totalCents,
+          idempotencyKey: `pix-payment:${input.idempotencyKey}`,
+        } } } : {}),
       },
       include: { participations: { include: { lines: true } }, payment: true },
     });
+    if (isCash && input.cashierId) {
+      const cashier = await tx.user.findFirst({
+        where: { id: input.cashierId, role: "CASHIER", status: "ACTIVE" },
+        select: { commissionRateBasisPoints: true },
+      });
+      if (!cashier) throw new PurchaseServiceError("Cashier is not active", "INVALID_ACTOR");
+      await tx.cashierCommission.create({ data: {
+        purchaseId: created.id,
+        cashierId: input.cashierId,
+        rateBasisPoints: cashier.commissionRateBasisPoints,
+        amountCents: calculateCommissionCents(totals.totalCents, cashier.commissionRateBasisPoints),
+      } });
+      await tx.auditEvent.create({ data: {
+        action: "CASH_PURCHASE_CONFIRMED",
+        entityType: "Purchase",
+        entityId: created.id,
+        metadata: { receiptCode, totalCents: totals.totalCents },
+      } });
+    }
+    return created;
       }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
     } catch (error) {
       const knownRequestError =
