@@ -519,3 +519,19 @@ O texto do painel administrativo que dizia que “não existe integração ativa
 - **Consulta de vendas do cambista:** a API e a interface agora exigem o código completo do recibo, em vez de buscar por placa ou por trecho do identificador. Isso alinha a recuperação de segunda via à regra funcional e reduz a exposição de vendas por pesquisa ampla. Commits: `303b85caa591ad47c217bf5788d36c083a42032c` e `03726a137cd89bfe43304f5e8716614efc8ce255`.
 - **Validação:** o GitHub não retornou status checks nem execuções de Actions para o commit da correção do webhook consultado. Portanto, essas alterações estão registradas no repositório, mas não são declaradas testadas ou publicadas.
 - **Próximo gap funcional do cambista:** a tela existente ainda prepara vendas por Pix; recebimento em dinheiro com confirmação auditada/idempotente e QR Code real do recibo continuam pendentes. Não substituir o fluxo atual sem implementar uma transição de estado atômica.
+
+
+## Decisão funcional — cadastro administrativo e comissão individual de cambistas (2026-10-27)
+
+### Regra aprovada
+- A área ADMIN deve permitir criar e editar cambistas por um formulário com nome completo, nome de usuário único, senha inicial, WhatsApp e percentual individual de comissão. Senha deve ser armazenada apenas com hash; nunca registrar senha/hash em auditoria. O administrador também pode ativar ou bloquear o cambista.
+- Cada cambista tem sua própria porcentagem, editável pelo administrador, para suportar pontos fixos e vendedores itinerantes com condições diferentes. A taxa é aplicada a vendas futuras; mudanças não reescrevem o histórico.
+- A área do cambista deve exibir dois indicadores: total bruto das vendas confirmadas e comissão acumulada em dinheiro (R$). Exemplo: R$ 100,00 em vendas elegíveis com taxa individual de 20% representam R$ 20,00 de comissão, não “20%” como contador.
+- A comissão por venda deve guardar taxa e valor calculado como snapshot ligado à compra, em centavos inteiros, de modo idempotente e auditável. Vendas pendentes/fracassadas/canceladas/estornadas não devem ser contadas indevidamente; a política de estorno de uma venda já confirmada precisa de implementação e teste explícitos.
+- A alteração de taxa, criação/edição de cambista e bloqueio devem registrar ator, data e valores anterior/novo relevantes, sem expor credenciais.
+
+### Situação técnica encontrada nesta inspeção
+- A especificação já previa, de forma genérica, percentual administrado e indicadores de vendas/comissão; faltavam a exigência explícita de taxa individual por cambista, o formulário com os campos e a distinção clara entre percentual e valor monetário acumulado.
+- prisma/schema.prisma contém CashierCommission com rateBasisPoints e amountCents por compra, o que oferece estrutura para preservar a taxa e o valor históricos por venda.
+- O modelo User inspecionado não contém campos de nome completo/WhatsApp nem taxa individual configurada. Portanto, o esquema atual, por si só, não permite cumprir todo o formulário solicitado. Também não há evidência nesta inspeção de que o formulário administrativo e os dois contadores estejam implementados ponta a ponta.
+- Status: requisito documental corrigido; implementação funcional ainda pendente. Antes de considerar concluído, implementar migração versionada para os dados necessários, CRUD de cambistas protegido por ADMIN, validação da taxa, cálculo/snapshot transacional de comissão na confirmação de venda, os dois contadores da área do cambista e testes de autorização, histórico após edição da taxa, idempotência, arredondamento e estorno. Não alterar banco de produção nem declarar o recurso pronto antes da CI e dos testes de integração.
