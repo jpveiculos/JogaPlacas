@@ -121,7 +121,7 @@ export function PlayerPurchaseForm() {
     ? /^[A-Z]{3}-?\d{4}$/.test(normalizedPlate)
     : /^[A-Z]{3}\d[A-Z]\d{2}$/.test(normalizedPlate);
   const platePreview = plateFormat === "LEGACY"
-    ? normalizedPlate.replace(/^(\w{3})(\d{4})$/, "$1-$2")
+    ? normalizedPlate.replace(/^(\w{3})(\d{4})$/, "$1$2")
     : normalizedPlate.replace("-", "");
 
   function toggleRound(id: string) {
