@@ -21,6 +21,24 @@
 - **Ainda não considerar pronto para produção:** executar typecheck, lint, testes e build; testar cadastro/login no Railway; adicionar/validar limitação persistente de tentativas e controles antiabuso para cadastro público; confirmar a branch e o domínio configurados no serviço.
 - Cadastro público cria exclusivamente papel `PLAYER`. Administradores e cambistas continuam fora do cadastro público.
 
+## Decisão vigente — recibo único para compra com rodadas repetidas/agendadas (2026-10-27)
+
+- Uma compra que inclua várias rodadas terá **um recibo principal e um QR Code de consulta principal**. O QR Code contém apenas o endereço público de verificação do recibo; ele não codifica a lista completa de placas/rodadas nem resultados.
+- A página pública consultará os dados oficiais no servidor e listará todas as participações confirmadas vinculadas à compra. Cada participação permanece individualmente ligada à sua rodada, e cada placa deve ser exibida sob a rodada correta.
+- O jogador poderá abrir a consulta de cada rodada a partir da página principal do recibo. Não é necessário imprimir um QR Code separado por rodada para permitir consulta individual. Códigos individuais podem ser considerados como recurso adicional, mas não substituem o recibo da compra.
+- Por rodada, a consulta deve distinguir: sorteio aguardando; horário alcançado mas resultado oficial ainda não publicado; resultado publicado e participação premiada; resultado publicado e participação não premiada. Nunca declarar derrota apenas porque o horário passou, nem afirmar pagamento de prêmio sem confirmação financeira.
+- A consulta pública deve usar exclusivamente os registros oficiais. Um QR copiado de um recibo antigo só revela a compra original e nunca deve validar placas/rodadas fornecidas por papel, URL manipulada ou navegador.
+- A leitura pública do QR não autoriza, por si só, pagamento de prêmio. A apuração e o pagamento devem validar a participação, o resultado oficial e o estado financeiro, com proteção contra crédito/resgate duplicado.
+- O comportamento de agendamento e repetição continua subordinado às regras existentes do manual mestre; esta decisão define apenas a forma de agrupar e consultar as participações, sem alterar preço, calendário, regras do jogo ou de premiação.
+
+### Auditoria de compatibilidade — 2026-10-27
+
+- **Confirmado no código:** `Purchase` possui relação com várias `PurchaseParticipation`; cada participação referencia uma `Round`; a combinação compra/rodada é única. A estrutura de dados é compatível com uma compra que reúna várias rodadas e uma página de recibo que as liste separadamente.
+- **Confirmado no fluxo atual de compra do jogador:** `POST /api/player/purchases` recebe `roundIds` (1 a 10), exige rodadas distintas e replica as placas enviadas para cada rodada; o serviço valida até dez repetições e exige uma participação por rodada distinta. Isso representa seleção de rodadas existentes, não prova por si só que exista um agendador autônomo que crie reservas futuras.
+- **Confirmado na consulta pública atual:** a API busca participações confirmadas e suas placas, mas retorna apenas o código da rodada e os dados das placas. Ainda não retorna horários/estados/resultados oficiais por rodada e não implementa a apuração visual definida acima.
+- **Pendente de conferência:** não foi localizado na biblioteca de arquivos acessível nesta auditoria um documento separado identificado como “manual mestre”. A especificação funcional do repositório é a fonte vigente encontrada; a compatibilidade final com qualquer manual externo de agendamento ainda precisa ser confirmada quando esse documento estiver disponível.
+- **Pendente de implementação/teste:** completar a API e a interface pública para estados/resultados; verificar a geração do QR no fluxo real de impressão; implementar ou confirmar atualização periódica dos estados; executar testes de integração. Não declarar o recurso pronto até essas verificações passarem.
+
 ## 1. Áreas e acesso
 - A plataforma tem quatro áreas de produto: página principal pública, área do jogador, área do cambista e área do administrador.
 - A página principal pública é a porta de entrada do domínio: apresentação do jogo, explicação de como jogar, regras e equivalências oficiais de prêmios, resultados/ganhadores públicos, consulta de recibo e opções visíveis de Entrar/Criar conta. A página inicial não deve ser substituída por uma tela de login.
