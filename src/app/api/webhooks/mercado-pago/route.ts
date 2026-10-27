@@ -76,14 +76,14 @@ export async function POST(request: NextRequest) {
 
     const eventId = String(body.id ?? `${body.type ?? "unknown"}:${resourceId}:${requestId}`);
     const digest = createHash("sha256").update(rawBody).digest("hex");
-    await authPrisma.$transaction(async (tx) => {
+    const eventState = await authPrisma.$transaction(async (tx) => {
       const existing = await tx.webhookEvent.findUnique({
         where: { provider_providerEventId: { provider: "MERCADO_PAGO", providerEventId: eventId } },
-        select: { id: true },
+        select: { id: true, processedAt: true },
       });
-      if (existing) return;
+      if (existing?.processedAt) return { alreadyProcessed: true, eventId: existing.id };
 
-      const event = await tx.webhookEvent.create({
+      const event = existing ?? await tx.webhookEvent.create({
         data: {
           provider: "MERCADO_PAGO",
           providerEventId: eventId,
@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
           payloadDigest: digest,
           paymentId: payment.id,
         },
-        select: { id: true },
+        select: { id: true, processedAt: true },
       });
 
       await tx.payment.update({
@@ -101,11 +101,16 @@ export async function POST(request: NextRequest) {
           providerStatusDetail: order.statusDetail,
         },
       });
-      await tx.webhookEvent.update({
-        where: { id: event.id },
-        data: { processedAt: new Date() },
-      });
+      return { alreadyProcessed: false, eventId: event.id };
     });
+    if (eventState.alreadyProcessed) return response({ received: true, duplicate: true }, 200);
+
+    const markEventProcessed = async () => {
+      await authPrisma.webhookEvent.updateMany({
+        where: { id: eventState.eventId, processedAt: null },
+        data: { processedAt: new Date(), processingError: null },
+      });
+    };
 
     // An order-level terminal state (especially refunded) takes precedence over
     // an older transaction-level "approved" state. Confirmation requires both
@@ -120,6 +125,7 @@ export async function POST(request: NextRequest) {
       if (confirmation.outcome === "late_or_unavailable") {
         // Acknowledge the provider event but leave purchase/receipt pending for
         // an explicit refund/reconciliation decision; never confirm retroactively.
+        await markEventProcessed();
         return response({ received: true, reconciliationRequired: true }, 200);
       }
     } else {
@@ -167,8 +173,11 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    await markEventProcessed();
     return response({ received: true }, 200);
   } catch {
+    // Leave the event unprocessed on failure so the provider's retry can safely
+    // resume reconciliation instead of being acknowledged as complete.
     // Do not leak provider responses, payloads, database details or credentials.
     return response({ error: "Webhook reconciliation temporarily unavailable." }, 503);
   }
