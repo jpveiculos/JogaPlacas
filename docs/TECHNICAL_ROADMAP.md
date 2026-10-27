@@ -483,3 +483,32 @@ A decisão antiga que limitava a experiência a três áreas e rejeitava uma pá
 - A tela Pix do jogador já tinha “Sair e iniciar outro jogo”; ela continua apenas fechando a tela e limpando os campos locais, sem afirmar que isso cancela o pagamento pendente.
 - **Limite ainda aberto:** o fluxo de impressão não fecha automaticamente o recibo, porque os navegadores não distinguem de forma confiável impressão física concluída de diálogo cancelado; fechar no evento `afterprint` também fecharia quando o usuário cancela. O botão de saída manual permanece como recuperação. Validar se a experiência pode ser melhorada sem perder a opção de tentar novamente após cancelamento.
 - O recibo ainda pode mostrar placeholder no lugar do QR real. O fluxo de cambista (venda anônima, cobrança Pix/confirmar dinheiro, emissão e limpeza de tela) continua não implementado ponta a ponta. CI dos commits recentes está em execução; não considerar validado até os jobs terminarem.
+
+
+## Reconciliação executada — branch feature/public-home-registration — 2026-10-27
+
+Esta seção reconcilia o código que foi inspecionado nesta branch com o manual. Ela prevalece sobre notas antigas que afirmem genericamente que a integração de Pix não existe; não transforma código implementado em prova de operação ponta a ponta.
+
+### Confirmado no código inspecionado
+- **Mercado Pago Pix do jogador:** `src/app/api/player/purchases/route.ts` cria uma compra pendente, reutiliza a chave de idempotência, cria/recupera uma ordem Pix e persiste o ID da ordem, QR/copia-e-cola, URL de pagamento e status do provedor.
+- **Webhook:** `src/app/api/webhooks/mercado-pago/route.ts` exige segredo e assinatura HMAC, consulta o estado canônico no provedor, compara referência, moeda e valores, registra eventos e encaminha aprovação para confirmação transacional. Estados finais negativos cancelam registros ainda pendentes.
+- **Confirmação e consulta:** `src/modules/payments/confirm-payment.ts` centraliza a confirmação; `src/app/api/player/purchases/[purchaseId]/status/route.ts` permite ao jogador consultar estado e só informa recibo pronto quando compra e pagamento estão confirmados.
+- **Interface do jogador:** `src/components/player/player-purchase-form.tsx` acompanha o estado enquanto a tela Pix está aberta.
+- **Saques:** o painel administrativo registra pagamento manual ou rejeição; não realiza transferência Pix automaticamente.
+
+### Correção documental aplicada
+O texto do painel administrativo que dizia que “não existe integração ativa com provedor” estava desatualizado e contradizia os módulos presentes. Foi substituído por uma descrição precisa: a implementação de checkout/webhook existe, mas a validação ponta a ponta e a autorização para operação real continuam pendentes.
+
+### Ainda falta — prioridade de execução
+1. Consultar os resultados atuais do GitHub Actions para o HEAD desta branch e corrigir qualquer falha; a existência de testes não prova que passaram neste commit.
+2. Completar/validar os testes de contrato da Orders API com respostas reais de homologação, incluindo ordem sem QR, erro de rede após criação e persistência segura do ID para permitir reconciliação.
+3. Testar o fluxo do jogador ponta a ponta em homologação: compra pendente → QR/copia-e-cola → notificação autenticada → confirmação única → recibo pronto; também assinatura inválida, valor/referência divergentes, evento duplicado/fora de ordem, recusa, expiração, reembolso e pagamento após cutoff. Não é necessário movimentar dinheiro real.
+4. Revisar a idempotência do webhook: o evento é marcado como processado antes de terminar a confirmação da compra. Se a confirmação falhar depois desse registro, uma repetição com o mesmo ID pode ser ignorada. Ajustar o ciclo de processamento para que falhas sejam reprocessáveis sem duplicar efeitos financeiros.
+5. Verificar estados de reembolso/estorno após uma compra já confirmada. O código atual fecha somente pagamentos ainda PENDING no ramo de estado negativo; não presumir que uma notificação de reembolso reverte automaticamente uma compra já confirmada.
+6. Implementar o fluxo prioritário ainda ausente do cambista: venda sem cadastro de cliente, escolha Pix ou espécie, confirmação de espécie auditada/idempotente, recibo com código único e QR de consulta, e recuperação sem duplicar venda.
+7. Completar os módulos administrativos faltantes (gestão de contas, regras/configurações financeiras, comissões e relatórios), conforme a especificação funcional.
+8. Validar QR real do recibo, download/impressão e comportamento de saída/limpeza da tela; a cobrança Pix e o QR do recibo são artefatos diferentes.
+9. Confirmar o agendamento externo do scheduler no ambiente de desenvolvimento e a navegação da página pública/cadastro, sem tratar deploy bem-sucedido como prova de todos os fluxos.
+
+### Patamar atual
+**Fundação e fluxos do jogador: implementação substancial, com gates de teste/validação ainda abertos.** **Pix do jogador: código implementado, homologação ponta a ponta ainda não comprovada.** **Cambista: fluxo de venda rápida e recebimento ainda incompleto.** **Administração: operações básicas de rodadas, reconciliação de prêmios e fila de saques existem; gestão completa continua pendente.** Nenhuma alteração de produção ou cobrança real é autorizada por esta reconciliação.
