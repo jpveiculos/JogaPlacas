@@ -8,14 +8,14 @@
 Repositório: [jpveiculos/JogaPlacas](https://github.com/jpveiculos/JogaPlacas)
 
 1. **Especificação funcional vigente (regras do produto e decisões aprovadas):** [docs/PRODUCT_SPEC.md — branch feature/public-home-registration](https://github.com/jpveiculos/JogaPlacas/blob/feature/public-home-registration/docs/PRODUCT_SPEC.md)
-2. **Manual técnico de implementação e sequência de trabalho:** [docs/TECHNICAL_ROADMAP.md — branch planning/foundation](https://github.com/jpveiculos/JogaPlacas/blob/planning/foundation/docs/TECHNICAL_ROADMAP.md)
+2. **Manual técnico de implementação e sequência de trabalho:** [docs/TECHNICAL_ROADMAP.md — branch feature/public-home-registration](https://github.com/jpveiculos/JogaPlacas/blob/feature/public-home-registration/docs/TECHNICAL_ROADMAP.md)
 3. **Decisão detalhada de recibo, QR Code e rodadas agendadas:** [docs/decisao-recibo-qr-rodadas-agendadas.md — branch feature/public-home-registration](https://github.com/jpveiculos/JogaPlacas/blob/feature/public-home-registration/docs/decisao-recibo-qr-rodadas-agendadas.md)
 4. **Estado oficial das branches e prevenção de trabalho em versões antigas:** [docs/BRANCH-STATUS.md](docs/BRANCH-STATUS.md)
 
 ## Regra de precedência
 
 - Para **regras do produto**, use `docs/PRODUCT_SPEC.md` na branch de trabalho ativa, atualmente `feature/public-home-registration`.
-- Para **arquitetura e sequência técnica**, consulte o manual técnico `docs/TECHNICAL_ROADMAP.md` em `planning/foundation`, comparando com o estado atual do código antes de reutilizar instruções.
+- Para **arquitetura e sequência técnica**, consulte `docs/TECHNICAL_ROADMAP.md` exclusivamente em `feature/public-home-registration` e confira o estado atual do código antes de reutilizar instruções. Não use `planning/foundation` como fonte de trabalho.
 - Este arquivo é o índice permanente e ponto de entrada; não substitui as regras detalhadas dos documentos acima.
 - Se encontrar divergência entre branches, não misture nem copie código automaticamente. Identifique a divergência, compare commits/arquivos e documente qual decisão prevalece antes de implementar.
 - Quando uma decisão for aprovada, atualize a especificação funcional vigente na branch de trabalho e, quando necessário, o manual técnico. Atualize este índice se os caminhos mudarem.
@@ -31,4 +31,4 @@ Repositório: [jpveiculos/JogaPlacas](https://github.com/jpveiculos/JogaPlacas)
 
 ## Estado conhecido deste índice
 
-Criado em 2026-10-27 para evitar que o manual e as decisões fiquem difíceis de localizar. O manual técnico original continua na branch `planning/foundation`; a especificação funcional e as alterações atuais continuam na branch `feature/public-home-registration`. Isso é intencional até que uma comparação explícita justifique consolidar branches.
+Criado em 2026-10-27 para evitar que o manual e as decisões fiquem difíceis de localizar. Em 2026-10-27, a conferência das refs remotas encontrou somente `main` e `feature/public-home-registration`. O manual técnico, a especificação funcional e as decisões de produto estão disponíveis na branch oficial de desenvolvimento. `main` permanece preservada e não deve ser alterada sem autorização explícita.
