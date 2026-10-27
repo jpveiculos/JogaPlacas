@@ -24,9 +24,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Requisição inválida." }, { status: 403 });
     }
 
-    // Behind Railway's reverse proxy, nextUrl.origin can reflect the internal
-    // request URL rather than the public hostname sent by the browser. Compare
-    // the browser Origin to the incoming Host instead of the reconstructed URL.
+    // Railway reverse proxy: compare browser origin with the public Host header.
     const requestHost = request.headers.get("host");
     if (!requestHost || originHost !== requestHost) {
       return NextResponse.json({ error: "Requisição inválida." }, { status: 403 });
@@ -40,7 +38,9 @@ export async function POST(request: NextRequest) {
   const parsed = schema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: "Dados inválidos." }, { status: 400 });
 
-  const blocked = await getLoginBlock(authPrisma, parsed.data.username);
+  // Usernames are stored in lowercase during registration and admin provisioning.
+  const username = parsed.data.username.toLowerCase();
+  const blocked = await getLoginBlock(authPrisma, username);
   if (blocked) {
     const limited = NextResponse.json({ error: "Muitas tentativas. Aguarde antes de tentar novamente." }, { status: 429 });
     limited.headers.set("Retry-After", String(blocked.retryAfterSeconds));
@@ -49,12 +49,12 @@ export async function POST(request: NextRequest) {
   }
 
   const user = await authPrisma.user.findUnique({
-    where: { username: parsed.data.username },
+    where: { username },
     select: { id: true, passwordHash: true, status: true },
   });
   const validPassword = await verifyPassword(parsed.data.password, user?.passwordHash ?? "");
   if (!user || user.status !== "ACTIVE" || !validPassword) {
-    const failure = await recordLoginFailure(authPrisma, parsed.data.username);
+    const failure = await recordLoginFailure(authPrisma, username);
     if (failure.blocked) {
       const limited = NextResponse.json({ error: "Muitas tentativas. Aguarde antes de tentar novamente." }, { status: 429 });
       limited.headers.set("Retry-After", String(failure.retryAfterSeconds));
@@ -64,9 +64,9 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Usuário ou senha inválidos." }, { status: 401, headers: { "Cache-Control": "no-store" } });
   }
 
-  await clearLoginFailures(authPrisma, parsed.data.username);
+  await clearLoginFailures(authPrisma, username);
   const { token, expiresAt } = await createSession(user.id);
-  const response = NextResponse.json({ authenticated: true });
+  const response = NextResponse.json({ authenticated: true }, { headers: { "Cache-Control": "no-store" } });
   response.cookies.set(SESSION_COOKIE, token, {
     httpOnly: true, secure: secureCookie(request), sameSite: "lax", path: "/", expires: expiresAt,
   });
