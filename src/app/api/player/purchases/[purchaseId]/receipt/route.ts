@@ -73,11 +73,11 @@ export async function GET(request: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: "O prazo de validade de 7 dias deste recibo terminou. Não é mais possível consultá-lo ou imprimi-lo." }, { status: 410, headers });
     }
 
+    const isCashSale = purchase.paymentMethod === "CASH";
     if (purchase.status !== "CONFIRMED"
-      || purchase.payment?.status !== "CONFIRMED"
+      || (!isCashSale && (purchase.payment?.status !== "CONFIRMED" || !purchase.payment.confirmedAt))
       || !purchase.receiptCode
-      || !purchase.confirmedAt
-      || !purchase.payment.confirmedAt) {
+      || !purchase.confirmedAt) {
       return NextResponse.json({ error: "O recibo oficial estará disponível após a confirmação do pagamento." }, { status: 409, headers });
     }
 
@@ -96,7 +96,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
       receipt: {
         purchaseId: purchase.id,
         receiptCode: purchase.receiptCode,
-        paymentStatus: purchase.payment.status,
+        paymentStatus: "CONFIRMED",
         issuedAt: purchase.confirmedAt.toISOString(),
         paymentMethod: purchase.paymentMethod,
         totalCents: purchase.totalCents,
