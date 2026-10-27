@@ -12,7 +12,7 @@ type RouteContext = { params: Promise<{ cashierId: string }> };
 const updateSchema = z.object({
   fullName: z.string().trim().min(3).max(120),
   username: z.string().trim().min(3).max(24).regex(/^[A-Za-z0-9_.-]+$/),
-  password: z.string().min(12).max(1024).optional().or(z.literal("")),
+  password: z.string().min(6).max(1024).optional().or(z.literal("")),
   whatsapp: z.string().trim().min(10).max(24),
   commissionPercent: z.number().finite().min(0).max(100).refine((value) => Number.isInteger(value * 100), "Use até duas casas decimais."),
   status: z.enum(["ACTIVE", "BLOCKED"]),
