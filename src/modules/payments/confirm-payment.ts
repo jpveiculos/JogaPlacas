@@ -21,7 +21,7 @@ export async function confirmPixPayment(
       return await prisma.$transaction(async (tx) => {
         const paymentRow = await tx.payment.findUnique({
           where: { id: input.paymentId },
-          select: { id: true, purchaseId: true, status: true, amountCents: true, purchase: { select: { status: true, totalCents: true, receiptCode: true } } },
+          select: { id: true, purchaseId: true, status: true, amountCents: true, purchase: { select: { status: true, totalCents: true, receiptCode: true, cashierId: true } } },
         });
         if (!paymentRow) return { outcome: "not_pending" } as const;
         if (paymentRow.status === "CONFIRMED" && paymentRow.purchase.status === "CONFIRMED" && paymentRow.purchase.receiptCode) {
@@ -98,6 +98,23 @@ export async function confirmPixPayment(
           where: { id: paymentRow.purchaseId },
           data: { status: "CONFIRMED", confirmedAt: now, receiptCode },
         });
+        if (paymentRow.purchase.cashierId) {
+          const cashier = await tx.user.findFirst({
+            where: { id: paymentRow.purchase.cashierId, role: "CASHIER" },
+            select: { commissionRateBasisPoints: true },
+          });
+          if (!cashier) throw new Error("Cashier commission owner is invalid");
+          const rateBasisPoints = cashier.commissionRateBasisPoints;
+          const amountCents = Math.floor((paymentRow.purchase.totalCents * rateBasisPoints + 5000) / 10000);
+          await tx.cashierCommission.create({
+            data: {
+              purchaseId: paymentRow.purchaseId,
+              cashierId: paymentRow.purchase.cashierId,
+              rateBasisPoints,
+              amountCents,
+            },
+          });
+        }
         await tx.auditEvent.create({
           data: {
             action: "PIX_PAYMENT_CONFIRMED",
