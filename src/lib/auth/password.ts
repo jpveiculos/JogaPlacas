@@ -5,6 +5,7 @@ const COST = 16_384;
 const BLOCK_SIZE = 8;
 const PARALLELIZATION = 1;
 const MAX_MEMORY = 64 * 1024 * 1024;
+const MIN_PASSWORD_LENGTH = 6;
 
 function deriveKey(password: string, salt: Buffer, N: number, r: number, p: number): Promise<Buffer> {
   return new Promise((resolve, reject) => {
@@ -16,8 +17,8 @@ function deriveKey(password: string, salt: Buffer, N: number, r: number, p: numb
 }
 
 export async function hashPassword(password: string): Promise<string> {
-  if (password.length < 12 || Buffer.byteLength(password, "utf8") > 1024) {
-    throw new Error("Password must be between 12 characters and 1024 UTF-8 bytes");
+  if (password.length < MIN_PASSWORD_LENGTH || Buffer.byteLength(password, "utf8") > 1024) {
+    throw new Error("Password must be at least 6 characters and no more than 1024 UTF-8 bytes");
   }
   const salt = randomBytes(16);
   const derived = await deriveKey(password, salt, COST, BLOCK_SIZE, PARALLELIZATION);
