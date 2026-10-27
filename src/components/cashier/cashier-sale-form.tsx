@@ -38,6 +38,7 @@ export function CashierSaleForm() {
   const [plateFormat, setPlateFormat] = useState<PlateFormat>("LEGACY");
   const [plate, setPlate] = useState("");
   const [stake, setStake] = useState("1,00");
+  const [paymentMethod, setPaymentMethod] = useState<"PIX" | "CASH">("PIX");
   const [loadingRounds, setLoadingRounds] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -148,7 +149,7 @@ export function CashierSaleForm() {
 
     setSubmitting(true);
     try {
-      const response = await fetch("/api/cashier/purchases/create", {
+      const response = await fetch(paymentMethod === "CASH" ? "/api/cashier/purchases/cash" : "/api/cashier/purchases/create", {
         method: "POST", headers: { "content-type": "application/json" },
         body: JSON.stringify({
           idempotencyKey: idempotencyKey.current ?? (idempotencyKey.current = crypto.randomUUID()),
@@ -157,11 +158,21 @@ export function CashierSaleForm() {
       });
       const body = await response.json();
       if (!response.ok) throw new Error(body.error ?? "Não foi possível registrar a compra.");
-      setPurchase(body.purchase as CreatedPurchase);
-      setPixCheckout((body.pixCheckout as PixCheckout | null) ?? null);
-      setPixModalOpen(true);
+      const created = body.purchase as CreatedPurchase;
+      setPurchase(created);
       idempotencyKey.current = null;
-      setNotice(body.message ?? "Compra registrada.");
+      if (paymentMethod === "CASH") {
+        setReceiptPurchaseId(created.id);
+        setPixCheckout(null);
+        setPixModalOpen(false);
+        setPlate(""); setSelectedRounds([]); setStake("1,00");
+        setNotice(body.message ?? "Venda em dinheiro confirmada. O recibo está disponível.");
+        fetch("/api/cashier/rounds", { cache: "no-store" }).then((roundResponse) => roundResponse.json()).then((roundBody) => setRounds(roundBody.rounds ?? [])).catch(() => undefined);
+      } else {
+        setPixCheckout((body.pixCheckout as PixCheckout | null) ?? null);
+        setPixModalOpen(true);
+        setNotice(body.message ?? "Compra registrada.");
+      }
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Erro ao registrar a compra.");
     } finally { setSubmitting(false); }
@@ -173,6 +184,17 @@ export function CashierSaleForm() {
       <h2 id="player-purchase-heading">Escolha a placa e a sequência de rodadas</h2>
       <p>Você pode jogar nos dois formatos. Cada aposta concorre somente ao resultado do mesmo formato. O valor é dividido automaticamente entre seis categorias. Ao repetir, as rodadas são consecutivas: a primeira precisa estar aberta e cada próxima fica exatamente 30 minutos depois, sem pular sorteios. O recibo só será liberado após a confirmação do pagamento.</p>
       <form onSubmit={submit} className="purchase-form">
+        <fieldset className="plate-format-options">
+          <legend>Forma de pagamento</legend>
+          <label className={paymentMethod === "PIX" ? "format-choice selected" : "format-choice"}>
+            <input type="radio" name="cashierPaymentMethod" value="PIX" checked={paymentMethod === "PIX"} onChange={() => setPaymentMethod("PIX")} />
+            <span><strong>Pix</strong><br /><small>Aguardará confirmação automática</small></span>
+          </label>
+          <label className={paymentMethod === "CASH" ? "format-choice selected" : "format-choice"}>
+            <input type="radio" name="cashierPaymentMethod" value="CASH" checked={paymentMethod === "CASH"} onChange={() => setPaymentMethod("CASH")} />
+            <span><strong>Dinheiro</strong><br /><small>Confirmação no ato pelo cambista</small></span>
+          </label>
+        </fieldset>
         <fieldset className="plate-format-options">
           <legend>Formato da placa</legend>
           <label className={plateFormat === "LEGACY" ? "format-choice selected" : "format-choice"}>
@@ -206,7 +228,7 @@ export function CashierSaleForm() {
           {selectedRounds.length === 10 && <small>Limite de 10 rodadas por compra atingido.</small>}
         </fieldset>
         {stakeCents !== null && selectedRounds.length > 0 && <p>Total estimado: <strong>{formatMoney(stakeCents * selectedRounds.length)}</strong> ({selectedRounds.length} rodada(s)).</p>}
-        <button type="submit" disabled={submitting || loadingRounds || rounds.length === 0}>{submitting ? "Registrando…" : "Registrar venda e preparar Pix"}</button>
+        <button type="submit" disabled={submitting || loadingRounds || rounds.length === 0}>{submitting ? "Registrando…" : paymentMethod === "CASH" ? "Confirmar venda em dinheiro" : "Registrar venda e preparar Pix"}</button>
       </form>
       {error && <p role="alert" className="note-inline">{error}</p>}
       {notice && <p role="status" className="note-inline">{notice}</p>}
