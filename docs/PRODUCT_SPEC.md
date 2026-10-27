@@ -595,3 +595,10 @@ Esta regra vale para a área do cambista e deve manter o mesmo padrão de usabil
 - **Integridade:** imprimir, baixar, fechar ou reimprimir nunca cria outra compra, participação, cobrança ou código de recibo. Uma segunda via deve reutilizar o mesmo recibo confirmado. O QR Pix continua sendo para pagamento e o QR do recibo para consulta pública.
 
 **Conferência do código existente:** a tela Pix do jogador já tem um botão “Sair e iniciar outro jogo”; o componente de recibo do jogador já tem “Fechar recibo” e o componente térmico tem “Imprimir recibo / Salvar como PDF”. Porém, o componente térmico usa apenas `window.print()`, não tem botão de baixar arquivo dedicado nem fecha/limpa automaticamente após o fluxo; a tela do cambista e o fluxo ponta a ponta não estão concluídos. Portanto, a exigência está parcialmente coberta na interface do jogador, mas ainda não está integralmente implementada/validada para o produto.
+
+
+## Reconciliação adicional do código Pix — 2026-10-27
+
+O código de checkout Pix do jogador e o webhook Mercado Pago já existem na branch `feature/public-home-registration`; não descrevê-los como inexistentes. O endpoint de compra cria/recupera a ordem e persiste dados do QR; o webhook autentica a assinatura, consulta o estado no provedor e valida referência, moeda e valor antes de encaminhar confirmação transacional. O jogador pode consultar o estado da compra.
+
+**Estado correto:** implementação presente; funcionamento ponta a ponta em homologação ainda não comprovado. Continuam obrigatórios testes de contrato da Orders API, eventos duplicados/fora de ordem, falhas reprocessáveis do webhook, pagamentos tardios, recusas/expiração, reembolso após confirmação, recibo e fluxo completo de interface. A venda rápida do cambista (Pix ou espécie) e o recibo com QR próprio ainda não estão completos. A configuração das variáveis de ambiente já informada pelo operador não deve ser tratada como tarefa pendente nem solicitada novamente.
