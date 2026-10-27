@@ -1,6 +1,6 @@
 # Joga Placas — Manual técnico de implementação
 
-Status: manual operacional vigente; reconciliação do estado da branch feature/dual-plate-draw em 2026-10-26. A especificação funcional em docs/PRODUCT_SPEC.md é a fonte de verdade para comportamento; decisões arquiteturais em docs/ADR-001-FOUNDATION.md e docs/TARGET_DOMAIN_MODEL.md complementam o manual. Este documento contém registros cronológicos de inspeções: quando um registro antigo divergir da seção “Estado consolidado da implementação”, prevalece a seção consolidada, sem apagar o histórico. O retrato de código refere-se somente à branch feature/dual-plate-draw; não presumir que planning/foundation ou main contém as mesmas alterações.
+Status: manual operacional vigente na branch oficial de desenvolvimento `feature/public-home-registration`, revisado em 2026-10-27. A especificação funcional em `docs/PRODUCT_SPEC.md` é a fonte de verdade para comportamento; decisões arquiteturais em `docs/ADR-001-FOUNDATION.md` e `docs/TARGET_DOMAIN_MODEL.md` complementam o manual. Este documento contém registros cronológicos de inspeções: quando um registro antigo divergir da seção “Estado consolidado da implementação”, prevalece a seção consolidada, sem apagar o histórico. Entradas datadas descrevem o estado observado na data indicada; antes de agir, conferir o código atual desta branch. Não usar branches históricas nem `main` como fonte de implementação.
 
 ## Produto e navegação obrigatórios — decisão vigente em 2026-10-26
 
@@ -552,7 +552,7 @@ O texto do painel administrativo que dizia que “não existe integração ativa
 2. **Capability adapter:** definir uma interface de impressão que separe UI do transporte, por exemplo printReceipt(receipt, capabilities); selecionar caminho de impressão somente após detectar suporte real.
 3. **Bluetooth Web:** avaliar como melhoria opcional para dispositivos BLE e navegadores suportados; feature-detect, tratar cancelamento/permissão/desconexão/timeouts e manter fallback.
 4. **Bridge nativa opcional:** se a cobertura de campo exigir Bluetooth Classic/SPP, implementar ou integrar um aplicativo auxiliar por plataforma com permissões do sistema e perfis/protocolos adequados. Não presumir que uma PWA ou um site Next.js possa acessar livremente Bluetooth Classic.
-5. **QR próprio:** gerar QR localmente/na aplicação para URL pública de consulta do recibo e embutir no recibo; não gerar QR de recibo por serviço externo nem confundir com o QR Pix.
+5. **QR próprio:** gerar QR localmente/na aplicação para URL pública de consulta do recibo e embutir no recibo; não gerar QR de recibo por serviço externo nem confundir com o QR Pix. O QR principal identifica a compra inteira; a página consulta cada participação/rodada separadamente.
 6. **Resiliência:** falha de pareamento/impressão nunca deve criar outra venda, apagar o recibo confirmado nem impedir a saída; oferecer retry, download e diálogo de impressão padrão.
 
 ### Critérios de aceitação
@@ -572,3 +572,11 @@ O componente atual src/components/receipts/thermal-receipt.tsx usa window.print(
 - A chave de idempotência mantém o mesmo resultado em repetição da mesma solicitação e impede reutilização para conteúdo divergente.
 - **Não validado ainda:** execução local de typecheck/testes, teste integrado com PostgreSQL, revisão completa de casos de repetição e confirmação do deploy. O endpoint é código em branch, não autorização para operação em produção. A tela do cambista já oferece seleção entre Pix e dinheiro e encaminha a venda em dinheiro para o endpoint separado; após sucesso, abre o recibo pelo componente existente. Ainda precisa de typecheck, testes locais/integração e teste manual do recibo para confirmar a integração ponta a ponta. Uma revisão de integração corrigiu o endpoint de recibos oficiais para aceitar compras em dinheiro confirmadas, que não têm registro de pagamento Pix, mantendo a exigência de pagamento confirmado para compras Pix.
 
+
+
+## Atualização de implementação — consulta pública por QR e rodadas (2026-10-27)
+
+- A rota pública `/verificar-recibo/[receiptCode]` consulta a compra confirmada no banco oficial. A API agora inclui as rodadas vinculadas, horário programado, resultados oficiais publicados e estado de apuração de cada placa.
+- A interface pública mostra separadamente: sorteio aguardando; aguardando resultado oficial; resultado publicado; rodada cancelada; placa premiada, não premiada ou ainda aguardando apuração. Só apresenta o crédito como pago quando há registro de crédito do prêmio.
+- O QR continua identificando o recibo/compra; uma compra com várias rodadas mostra cada rodada separadamente, sem misturar placas nem exigir um QR impresso por rodada.
+- **Ainda não validado:** executar typecheck, lint, testes e build; verificar o modelo de dados e os casos de borda de rodada concluída sem apuração; testar a consulta em celular e o QR impresso. Não declarar esta implementação pronta para produção até passar essas verificações.
