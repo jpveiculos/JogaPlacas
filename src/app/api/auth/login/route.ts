@@ -16,8 +16,21 @@ function secureCookie(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const origin = request.headers.get("origin");
-  if (origin && origin !== request.nextUrl.origin) {
-    return NextResponse.json({ error: "Requisição inválida." }, { status: 403 });
+  if (origin) {
+    let originHost: string;
+    try {
+      originHost = new URL(origin).host;
+    } catch {
+      return NextResponse.json({ error: "Requisição inválida." }, { status: 403 });
+    }
+
+    // Behind Railway's reverse proxy, nextUrl.origin can reflect the internal
+    // request URL rather than the public hostname sent by the browser. Compare
+    // the browser Origin to the incoming Host instead of the reconstructed URL.
+    const requestHost = request.headers.get("host");
+    if (!requestHost || originHost !== requestHost) {
+      return NextResponse.json({ error: "Requisição inválida." }, { status: 403 });
+    }
   }
 
   let body: unknown;
