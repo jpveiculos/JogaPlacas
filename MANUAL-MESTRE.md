@@ -11,6 +11,7 @@ Repositório: [jpveiculos/JogaPlacas](https://github.com/jpveiculos/JogaPlacas)
 2. **Manual técnico de implementação e sequência de trabalho:** [docs/TECHNICAL_ROADMAP.md — branch feature/public-home-registration](https://github.com/jpveiculos/JogaPlacas/blob/feature/public-home-registration/docs/TECHNICAL_ROADMAP.md)
 3. **Decisão detalhada de recibo, QR Code e rodadas agendadas:** [docs/decisao-recibo-qr-rodadas-agendadas.md — branch feature/public-home-registration](https://github.com/jpveiculos/JogaPlacas/blob/feature/public-home-registration/docs/decisao-recibo-qr-rodadas-agendadas.md)
 4. **Estado oficial das branches e prevenção de trabalho em versões antigas:** [docs/BRANCH-STATUS.md](docs/BRANCH-STATUS.md)
+5. **Configuração inicial do Railway e criação segura do primeiro administrador:** [docs/RAILWAY_SETUP.md](docs/RAILWAY_SETUP.md)
 
 ## Regra de precedência
 
