@@ -1,3 +1,5 @@
+> **Índice do manual:** comece sempre pelo [MANUAL-MESTRE.md na raiz do repositório](../MANUAL-MESTRE.md), que aponta para a especificação vigente e para o manual técnico. Não use um documento isolado sem verificar a branch e a precedência definidas nesse índice.
+
 # Joga Placas — Especificação funcional vigente
 
 > Fonte de verdade funcional do projeto. Decisões novas devem ser registradas aqui antes de alterar comportamentos já aprovados. Quando uma melhoria aprovada substituir uma ideia inicial, atualizar a regra principal e marcar o texto anterior como histórico/superado, em vez de manter instruções contraditórias.
