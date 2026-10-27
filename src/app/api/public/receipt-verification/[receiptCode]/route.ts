@@ -29,8 +29,25 @@ export async function GET(_request: NextRequest, context: RouteContext) {
           where: { status: "CONFIRMED" },
           orderBy: { round: { resultAt: "asc" } },
           select: {
-            round: { select: { code: true } },
-            lines: { orderBy: [{ createdAt: "asc" }, { id: "asc" }], select: { plateDisplay: true, plateFormat: true } },
+            round: {
+              select: {
+                code: true,
+                status: true,
+                startsAt: true,
+                resultAt: true,
+                resultLegacyPlate: true,
+                resultMercosurPlate: true,
+              },
+            },
+            lines: {
+              orderBy: [{ createdAt: "asc" }, { id: "asc" }],
+              select: {
+                plateDisplay: true,
+                plateFormat: true,
+                prizeCents: true,
+                prizeCreditedAt: true,
+              },
+            },
           },
         },
       },
@@ -60,11 +77,39 @@ export async function GET(_request: NextRequest, context: RouteContext) {
       totalCents: purchase.totalCents,
       currency: purchase.currency,
       confirmedAt: purchase.confirmedAt?.toISOString() ?? null,
-      plates: purchase.participations.flatMap((participation) => participation.lines.map((line) => ({
-        plateDisplay: line.plateDisplay,
-        plateFormat: line.plateFormat,
-        roundCode: participation.round.code,
-      }))),
+      rounds: purchase.participations.map((participation) => {
+        const round = participation.round;
+        const completed = round.status === "COMPLETED";
+        const now = Date.now();
+        const roundStatus = round.status === "CANCELLED"
+          ? "RODADA_CANCELADA"
+          : completed
+            ? "RESULTADO_PUBLICADO"
+            : now < round.resultAt.getTime()
+              ? "SORTEIO_AGUARDANDO"
+              : "AGUARDANDO_RESULTADO_OFICIAL";
+        return {
+          roundCode: round.code,
+          status: roundStatus,
+          startsAt: round.startsAt.toISOString(),
+          resultAt: round.resultAt.toISOString(),
+          resultLegacyPlate: completed ? round.resultLegacyPlate : null,
+          resultMercosurPlate: completed ? round.resultMercosurPlate : null,
+          plates: participation.lines.map((line) => ({
+            plateDisplay: line.plateDisplay,
+            plateFormat: line.plateFormat,
+            resultStatus: !completed
+              ? "AGUARDANDO"
+              : (line.prizeCents ?? 0) > 0
+                ? "PREMIADA"
+                : line.prizeCents === 0
+                  ? "NAO_PREMIADA"
+                  : "AGUARDANDO_APURACAO",
+            prizeCents: completed && (line.prizeCents ?? 0) > 0 ? line.prizeCents : null,
+            prizePaid: Boolean(line.prizeCreditedAt),
+          })),
+        };
+      }),
       message: "Recibo registrado e pagamento confirmado no sistema oficial.",
     }, { headers });
   } catch {
