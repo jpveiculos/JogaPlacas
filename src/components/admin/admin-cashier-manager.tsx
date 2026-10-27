@@ -80,7 +80,7 @@ export function AdminCashierManager() {
       setError("A comissão precisa estar entre 0% e 100%."); return;
     }
     if (!editingId && form.password.length < 6) {
-      setError("A senha inicial precisa ter pelo menos 12 caracteres."); return;
+      setError("A senha inicial precisa ter pelo menos 6 caracteres."); return;
     }
     setBusy(true);
     try {
