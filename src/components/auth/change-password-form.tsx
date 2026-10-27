@@ -39,10 +39,10 @@ export function ChangePasswordForm() {
   return <form className="login-form" onSubmit={submit}>
     <label htmlFor="current-password">Senha atual</label>
     <input id="current-password" type="password" autoComplete="current-password" maxLength={1024} value={currentPassword} onChange={e => setCurrentPassword(e.target.value)} required />
-    <label htmlFor="new-password">Nova senha (mínimo de 12 caracteres)</label>
-    <input id="new-password" type="password" autoComplete="new-password" minLength={12} maxLength={1024} value={newPassword} onChange={e => setNewPassword(e.target.value)} required />
+    <label htmlFor="new-password">Nova senha (mínimo de 6 caracteres)</label>
+    <input id="new-password" type="password" autoComplete="new-password" minLength={6} maxLength={1024} value={newPassword} onChange={e => setNewPassword(e.target.value)} required />
     <label htmlFor="confirm-password">Confirme a nova senha</label>
-    <input id="confirm-password" type="password" autoComplete="new-password" minLength={12} maxLength={1024} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required />
+    <input id="confirm-password" type="password" autoComplete="new-password" minLength={6} maxLength={1024} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required />
     {error ? <p className="form-error" role="alert">{error}</p> : null}
     <button className="primary-button" type="submit" disabled={busy}>{busy ? "Atualizando..." : "Alterar senha"}</button>
   </form>;
