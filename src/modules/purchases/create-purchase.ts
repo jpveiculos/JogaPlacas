@@ -61,7 +61,7 @@ export class PurchaseServiceError extends Error {
  * The provider adapter must create the external charge after this transaction,
  * using the persisted payment idempotency key, and reconcile failures safely.
  */
-export async function createPendingPixPurchase(
+export async function createPurchase(
   prisma: PrismaClient,
   input: PixPurchaseInput,
   decisionTimeOverride?: Date,
@@ -391,3 +391,6 @@ export async function createPendingPixPurchase(
     }
   }
 }
+
+/** Backwards-compatible name for existing Pix checkout callers. */
+export const createPendingPixPurchase = createPurchase;
