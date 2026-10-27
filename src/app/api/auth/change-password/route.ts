@@ -22,8 +22,22 @@ function secureCookie(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const origin = request.headers.get("origin");
-  if (origin && origin !== request.nextUrl.origin) {
-    return NextResponse.json({ error: "Requisição inválida." }, { status: 403 });
+  if (origin) {
+    // Railway terminates public HTTPS before forwarding to the app. The
+    // upstream request origin can therefore differ from the public origin.
+    // APP_BASE_URL must be the canonical public URL (scheme + host).
+    const allowedOrigins = new Set<string>([request.nextUrl.origin]);
+    const appBaseUrl = process.env.APP_BASE_URL;
+    if (appBaseUrl) {
+      try {
+        allowedOrigins.add(new URL(appBaseUrl).origin);
+      } catch {
+        return NextResponse.json({ error: "Configuração de origem inválida." }, { status: 500 });
+      }
+    }
+    if (!allowedOrigins.has(origin)) {
+      return NextResponse.json({ error: "Requisição inválida." }, { status: 403 });
+    }
   }
 
   const token = request.cookies.get(SESSION_COOKIE)?.value;
