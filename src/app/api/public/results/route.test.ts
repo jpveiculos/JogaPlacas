@@ -37,10 +37,15 @@ describe("GET /api/public/results", () => {
     expect(body.winners[0]).toMatchObject({ displayName: "jo•••", prizeCents: 120, plateFormat: "LEGACY" });
   });
   it("supports older result pages without querying winners again", async () => {
-    const response = await GET(request("https://example.test/api/public/results?before=2026-10-20T00%3A00%3A00.000Z"));
+    const response = await GET(request("https://example.test/api/public/results?before=2026-10-20T00%3A00%3A00.000Z%7Cround-older"));
     expect(response.status).toBe(200);
     expect(mocks.roundFindMany).toHaveBeenCalledWith(expect.objectContaining({
-      where: expect.objectContaining({ resultAt: { lt: new Date("2026-10-20T00:00:00.000Z") } }),
+      where: expect.objectContaining({
+        OR: [
+          { resultAt: { lt: new Date("2026-10-20T00:00:00.000Z") } },
+          { resultAt: new Date("2026-10-20T00:00:00.000Z"), id: { lt: "round-older" } },
+        ],
+      }),
     }));
     expect(mocks.participationLineFindMany).not.toHaveBeenCalled();
   });
