@@ -7,7 +7,7 @@ export const runtime = "nodejs";
 
 const schema = z.object({
   username: z.string().trim().min(3).max(24).regex(/^[A-Za-z0-9_.-]+$/),
-  password: z.string().min(12).max(1024),
+  password: z.string().min(6).max(1024),
 }).strict();
 
 function secureCookie(request: NextRequest) {
@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
 
   const parsed = schema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: "Informe um usuário válido e uma senha com pelo menos 12 caracteres." }, { status: 400, headers: { "Cache-Control": "no-store" } });
+    return NextResponse.json({ error: "Informe um usuário válido e uma senha com pelo menos 6 caracteres." }, { status: 400, headers: { "Cache-Control": "no-store" } });
   }
 
   const username = parsed.data.username.toLowerCase();
