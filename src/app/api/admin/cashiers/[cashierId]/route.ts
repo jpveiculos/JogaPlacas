@@ -35,7 +35,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
   let body: unknown;
   try { body = await request.json(); } catch { return NextResponse.json({ error: "Dados inválidos." }, { status: 400, headers }); }
   const parsed = updateSchema.safeParse(body);
-  if (!parsed.success) return NextResponse.json({ error: "Confira os campos e use uma senha de pelo menos 12 caracteres quando for redefini-la." }, { status: 400, headers });
+  if (!parsed.success) return NextResponse.json({ error: "Confira os campos e use uma senha de pelo menos 6 caracteres quando for redefini-la." }, { status: 400, headers });
   const whatsapp = parsed.data.whatsapp.replace(/\D/g, "");
   if (whatsapp.length < 10 || whatsapp.length > 15) return NextResponse.json({ error: "Informe um WhatsApp válido com DDD e código do país, se aplicável." }, { status: 400, headers });
 
