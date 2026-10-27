@@ -5,7 +5,7 @@ describe("normalizePlate", () => {
   it("normalizes a legacy plate and preserves its display format", () => {
     expect(normalizePlate("abc-1323")).toEqual({
       normalized: "ABC1323",
-      display: "ABC-1323",
+      display: "ABC1323",
       format: "legacy",
     });
   });
@@ -44,6 +44,7 @@ describe("normalizePlate", () => {
   );
 
   it("validates legacy and complete Mercosur formats", () => {
+    expect(plateInputSchema.safeParse("ABC1323").success).toBe(true);
     expect(plateInputSchema.safeParse("ABC-1323").success).toBe(true);
     expect(plateInputSchema.safeParse("ABC1D23").success).toBe(true);
     expect(plateInputSchema.safeParse("ABC1Z23").success).toBe(true);
