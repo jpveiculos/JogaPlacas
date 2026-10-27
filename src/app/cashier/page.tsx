@@ -3,10 +3,12 @@ import { requireRole } from "@/lib/auth/require-role";
 import { QuickTicketCheck } from "@/components/results/quick-ticket-check";
 import { CashierPurchaseHistory } from "@/components/cashier/cashier-purchase-history";
 import { CashierSaleForm } from "@/components/cashier/cashier-sale-form";
+import { CashierSalesSummary } from "@/components/cashier/cashier-sales-summary";
 export const dynamic = "force-dynamic";
 export default async function CashierPage() {
   const user = await requireRole("CASHIER");
   return <AreaShell title="Área do cambista" username={user.username} description="Área de trabalho do cambista, separada da conta do jogador e da administração.">
+    <CashierSalesSummary />
     <CashierSaleForm />
     <QuickTicketCheck compact />
     <CashierPurchaseHistory />
