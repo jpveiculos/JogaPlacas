@@ -166,7 +166,7 @@ h1 {
 .plate-legacy .plate-topline{background:#d5d8da;border-bottom-color:#aab0b5;color:#333}
 .plate-mercosur .plate-topline{background:#154b91;color:#fff}
 .mercosur-flag{font-size:.8rem}
-.plate-characters{display:flex;align-items:center;justify-content:center;min-height:52px;font-family:monospace;font-size:clamp(2.1rem,8vw,3.1rem);font-weight:900;letter-spacing:.06em;line-height:1}
+.plate-characters{display:flex;align-items:center;justify-content:center;min-height:52px;font-family:monospace;font-size:clamp(3.15rem,12vw,4.65rem);font-weight:900;letter-spacing:.06em;line-height:1}
 .plate-bottomline{align-self:flex-end;color:#4b5660;font-size:.52rem;font-weight:800;letter-spacing:.16em}
 .plate-entry>input{width:100%;max-width:360px;min-height:44px;padding:10px 12px;border:1px solid var(--border);border-radius:9px;background:var(--surface);font:inherit}
 .receipt-plate-line{padding:12px 0;border-top:1px solid #c5e5d2}
