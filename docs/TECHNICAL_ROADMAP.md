@@ -536,3 +536,31 @@ O texto do painel administrativo que dizia que “não existe integração ativa
 - O modelo User não continha os campos do perfil; isso foi corrigido na implementação incremental abaixo. A estrutura `CashierCommission` existente armazena a taxa em pontos-base e o valor em centavos por compra.
 - **Implementação incremental iniciada nesta branch:** adicionados campos opcionais `fullName`/`whatsapp` e `commissionRateBasisPoints` ao modelo User, com migração versionada e limite de 0–10000 pontos-base; endpoints ADMIN para listar/criar/editar cambistas, definir comissão individual, ativar/bloquear conta e redefinir senha; formulário administrativo na área ADMIN; resumo autenticado na área do cambista com total de vendas confirmadas e comissão acumulada em reais; cálculo e persistência da comissão no mesmo fluxo transacional de confirmação Pix, usando a taxa vigente no momento da confirmação e arredondamento em centavos inteiros.
 - **Ainda parcial / sem validação:** comissão só foi ligada ao caminho de confirmação Pix que foi alterado. Venda em espécie ainda não está implementada ponta a ponta e não gera comissão por esse caminho; estornos após confirmação, testes específicos do novo CRUD/cálculo e validação de migração/CI continuam pendentes. O status Railway consultado para o commit `a8cc86ae0e8a072466b26d75ffa04302a9b01220` estava `pending`; não afirmar deploy concluído nem CI verde. Não executar migração produtiva nem habilitar operação real sem os gates apropriados.
+
+
+## Decisão técnica — impressão térmica Bluetooth com máxima compatibilidade (2026-10-27)
+
+**Objetivo aprovado:** oferecer o maior alcance possível de impressoras térmicas atuais via Bluetooth, com arquitetura independente de fabricante e alternativas claras quando o acesso direto não for suportado.
+
+### Fatos de plataforma que orientam a implementação
+- Não há API única de navegador que acesse toda impressora Bluetooth. Web Bluetooth tem suporte restrito por navegador/plataforma, normalmente exige contexto seguro e não equivale a suporte geral a Bluetooth Classic/SPP.
+- A impressão padrão via navegador funciona quando o sistema operacional já consegue usar a impressora; a disponibilidade do driver/serviço de impressão é responsabilidade do dispositivo/OS.
+- Alguns modelos exigem protocolo ou comandos específicos (por exemplo, variantes de ESC/POS) ou SDK do fabricante. Não assumir que o mesmo pacote de bytes funciona em todo equipamento.
+
+### Arquitetura alvo
+1. **Default:** recibo HTML/CSS de 58 mm e impressão via diálogo nativo do sistema, sem acoplar a marca.
+2. **Capability adapter:** definir uma interface de impressão que separe UI do transporte, por exemplo printReceipt(receipt, capabilities); selecionar caminho de impressão somente após detectar suporte real.
+3. **Bluetooth Web:** avaliar como melhoria opcional para dispositivos BLE e navegadores suportados; feature-detect, tratar cancelamento/permissão/desconexão/timeouts e manter fallback.
+4. **Bridge nativa opcional:** se a cobertura de campo exigir Bluetooth Classic/SPP, implementar ou integrar um aplicativo auxiliar por plataforma com permissões do sistema e perfis/protocolos adequados. Não presumir que uma PWA ou um site Next.js possa acessar livremente Bluetooth Classic.
+5. **QR próprio:** gerar QR localmente/na aplicação para URL pública de consulta do recibo e embutir no recibo; não gerar QR de recibo por serviço externo nem confundir com o QR Pix.
+6. **Resiliência:** falha de pareamento/impressão nunca deve criar outra venda, apagar o recibo confirmado nem impedir a saída; oferecer retry, download e diálogo de impressão padrão.
+
+### Critérios de aceitação
+- Impressão legível em 58 mm, com margens, quebras e conteúdo conferidos em impressoras reais.
+- QR do recibo escaneável após impressão e apontando para a consulta pública correta.
+- Testes registrados para Android/BLE, Android/Classic-SPP, iOS com modelos explicitamente compatíveis e desktop via sistema, sem extrapolar o resultado de um modelo para todos.
+- UI identifica o caminho utilizado e informa quando Bluetooth direto não é suportado.
+- Nenhuma mensagem de sucesso baseada apenas em abrir o diálogo; a web não pode confirmar que o papel foi fisicamente impresso.
+
+### Estado e próximo passo
+O componente atual src/components/receipts/thermal-receipt.tsx usa window.print() e HTML baixável, sem camada Bluetooth direta e com placeholder se qrCodeDataUrl não for fornecido. Próximo passo de implementação: corrigir a geração do QR e robustecer impressão HTML/CSS como caminho base; em seguida escolher o caminho Bluetooth direto/bridge com base nos dispositivos e sistemas operacionais que se pretende suportar. Não instalar SDK específico nem prometer universalidade sem teste e sem definir a plataforma auxiliar.
