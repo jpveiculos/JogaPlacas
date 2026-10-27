@@ -139,13 +139,13 @@ describe("POST /api/admin/rounds", () => {
     expect(result.status).toBe(201);
     expect(mocks.transaction).toHaveBeenCalledOnce();
     expect(mocks.roundCreate).toHaveBeenCalledWith({ data: expect.objectContaining({
-      code: expect.stringMatching(/^JP-20350101-\d{4}$/),
+      code: "JP-20350101-0930",
       startsAt: new Date("2035-01-01T12:01:00.000Z"),
       cutoffAt: new Date("2035-01-01T12:29:00.000Z"),
       resultAt: new Date("2035-01-01T12:30:00.000Z"), status: "SCHEDULED",
     }), select: expect.any(Object) });
     expect(mocks.auditCreate).toHaveBeenCalledWith({ data: expect.objectContaining({
-      actorId: "admin-1", action: "ROUND_CREATED", entityType: "Round",
+      actorId: "admin-1", action: "ROUND_CREATED", entityType: "Round", metadata: expect.objectContaining({ timeZone: "UTC-03:00 (Horário de Brasília)" }),
     }) });
   });
 });
