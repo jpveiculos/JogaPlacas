@@ -70,12 +70,12 @@ export function CashierPurchaseHistory() {
     <article className="feature-card">
       <span className="feature-label">Consulta e segunda via</span>
       <h2>Localizar uma compra</h2>
-      <p>Encontre compras anteriores para conferir o pagamento e reimprimir o recibo original. Fechar a janela do Pix não cancela a compra.</p>
+      <p>Localize uma venda pelo código completo do recibo para conferir o pagamento e reimprimir o comprovante. Fechar a janela do Pix não cancela a compra.</p>
       <form onSubmit={search} className="cashier-purchase-search">
-        <label htmlFor="cashier-purchase-query">Código da compra/recibo ou placa</label>
+        <label htmlFor="cashier-purchase-query">Código completo do recibo</label>
         <div className="cashier-purchase-search-row">
-          <input id="cashier-purchase-query" value={query} onChange={(event) => setQuery(event.target.value)} maxLength={100} minLength={2} required placeholder="Ex.: JP-AB12CD34 ou ABC-1234" />
-          <button type="submit" disabled={loading || query.trim().length < 2}>{loading ? "Pesquisando…" : "Pesquisar"}</button>
+          <input id="cashier-purchase-query" value={query} onChange={(event) => setQuery(event.target.value)} maxLength={100} minLength={11} required placeholder="JP-AB12CD34" />
+          <button type="submit" disabled={loading || !/^JP-[A-Z0-9]{8,32}$/i.test(query.trim())}>{loading ? "Pesquisando…" : "Pesquisar"}</button>
         </div>
       </form>
       {error && <p className="note-inline" role="status">{error}</p>}
