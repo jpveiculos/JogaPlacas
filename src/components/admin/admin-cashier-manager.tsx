@@ -86,8 +86,12 @@ export function AdminCashierManager() {
     try {
       const payload: Record<string, unknown> = {
         fullName: form.fullName, username: form.username, whatsapp: form.whatsapp,
-        commissionPercent, status: form.status,
+        commissionPercent,
       };
+      // The create API uses a strict schema and intentionally does not accept
+      // status: new cashiers are created ACTIVE on the server. Status is only
+      // editable through the PATCH endpoint.
+      if (editingId) payload.status = form.status;
       if (!editingId || form.password) payload.password = form.password;
       const response = await fetch(editingId ? "/api/admin/cashiers/" + encodeURIComponent(editingId) : "/api/admin/cashiers", {
         method: editingId ? "PATCH" : "POST",
