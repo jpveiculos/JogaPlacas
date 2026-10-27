@@ -13,6 +13,19 @@ type CreatedPurchase = {
 };
 type PlateFormat = "LEGACY" | "MERCOSUR";
 
+function sanitizePlateInput(value: string, format: PlateFormat): string {
+  const chars = value.toUpperCase().replace(/[^A-Z0-9]/g, "").split("");
+  const pattern = format === "LEGACY" ? /^[A-Z]{3}[0-9]{0,4}$/ : /^[A-Z]{3}[0-9]?[A-Z]?[0-9]{0,2}$/;
+  let result = "";
+  for (const char of chars) {
+    const index = result.length;
+    const expectsLetter = format === "LEGACY" ? index < 3 : index < 3 || index === 4;
+    if (expectsLetter ? /[A-Z]/.test(char) : /[0-9]/.test(char)) result += char;
+    if (result.length >= (format === "LEGACY" ? 7 : 7)) break;
+  }
+  return result;
+}
+
 type PixCheckout = { copyPaste: string | null; qrCodeBase64: string | null; ticketUrl: string | null };
 
 function formatDate(value: string) {
@@ -140,7 +153,7 @@ export function CashierSaleForm() {
     setError(""); setNotice(""); setPurchase(null); setPixCheckout(null);
     if (!plateLooksValid) {
       setError(plateFormat === "LEGACY"
-        ? "Placa cinza inválida. Use o formato ABC-1234."
+        ? "Placa cinza inválida. Use o formato ABC1234."
         : "Placa Mercosul inválida. Use o formato ABC1D23 (a quinta posição aceita letras A–Z).");
       return;
     }
@@ -199,7 +212,7 @@ export function CashierSaleForm() {
           <legend>Formato da placa</legend>
           <label className={plateFormat === "LEGACY" ? "format-choice selected" : "format-choice"}>
             <input type="radio" name="plateFormat" value="LEGACY" checked={plateFormat === "LEGACY"} onChange={() => { setPlateFormat("LEGACY"); setPlate(""); }} />
-            <span><strong>Placa cinza (antiga)</strong><br /><small>ABC-1234</small></span>
+            <span><strong>Placa cinza (antiga)</strong><br /><small>ABC1234</small></span>
           </label>
           <label className={plateFormat === "MERCOSUR" ? "format-choice selected" : "format-choice"}>
             <input type="radio" name="plateFormat" value="MERCOSUR" checked={plateFormat === "MERCOSUR"} onChange={() => { setPlateFormat("MERCOSUR"); setPlate(""); }} />
@@ -208,9 +221,9 @@ export function CashierSaleForm() {
         </fieldset>
         <div className="plate-entry">
           <label htmlFor="cashier-plate-input">Digite a placa da venda</label>
-          <PlateVisual format={plateFormat} value={platePreview} placeholder={plateFormat === "LEGACY" ? "ABC-1234" : "ABC1D23"} />
-          <input id="cashier-plate-input" value={plate} onChange={(event) => setPlate(event.target.value.toUpperCase())} placeholder={plateFormat === "LEGACY" ? "ABC-1234" : "ABC1D23"} maxLength={8} autoComplete="off" aria-describedby="plate-format-help" required />
-          <small id="plate-format-help">{plateFormat === "LEGACY" ? "Três letras, hífen e quatro números." : "Três letras, um número, uma letra e dois números. A quinta posição aceita A–Z."}</small>
+          <PlateVisual format={plateFormat} value={platePreview} placeholder={plateFormat === "LEGACY" ? "ABC1234" : "ABC1D23"} />
+          <input id="cashier-plate-input" value={plate} onChange={(event) => setPlate(sanitizePlateInput(event.target.value, plateFormat))} placeholder={plateFormat === "LEGACY" ? "ABC-1234" : "ABC1D23"} maxLength={8} autoComplete="off" aria-describedby="plate-format-help" required />
+          <small id="plate-format-help">{plateFormat === "LEGACY" ? "Três letras de A a Z, seguidas de quatro números de 0 a 9, sem hífen." : "Três letras, um número, uma letra e dois números. A quinta posição aceita A–Z."}</small>
         </div>
         <label>Valor total por placa e rodada (R$)
           <input inputMode="decimal" value={stake} onChange={(event) => setStake(event.target.value)} placeholder="1,00" required />
