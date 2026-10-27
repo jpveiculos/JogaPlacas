@@ -69,7 +69,22 @@ export function ReceiptVerification({ receiptCode }: { receiptCode: string }) {
       }
     }
     void verify();
-    return () => controller.abort();
+    // Refresh official status while this public receipt page remains open.
+    // The QR identifies the purchase; the database remains the source of truth.
+    const refreshTimer = window.setInterval(() => {
+      if (document.visibilityState === "visible") void verify();
+    }, 30_000);
+    const refreshOnFocus = () => {
+      if (document.visibilityState === "visible") void verify();
+    };
+    document.addEventListener("visibilitychange", refreshOnFocus);
+    window.addEventListener("focus", refreshOnFocus);
+    return () => {
+      controller.abort();
+      window.clearInterval(refreshTimer);
+      document.removeEventListener("visibilitychange", refreshOnFocus);
+      window.removeEventListener("focus", refreshOnFocus);
+    };
   }, [receiptCode]);
 
   const money = (cents: number, currency = "BRL") => new Intl.NumberFormat("pt-BR", { style: "currency", currency }).format(cents / 100);
