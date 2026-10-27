@@ -616,3 +616,30 @@ Na branch `feature/public-home-registration`, foram iniciados os seguintes compo
 - Comissão Pix calculada em centavos inteiros e persistida por compra no momento da confirmação, usando a taxa vigente naquele momento; alteração posterior da taxa não reescreve o snapshot.
 
 **Ainda não considerar o requisito concluído:** o caminho de venda em espécie e sua confirmação atômica ainda não estão completos; testes de integração/autorização do CRUD, migração e fluxo Pix alterado ainda precisam ser executados e aprovados. Estornos de compras confirmadas e sua reconciliação financeira precisam de política e testes específicos. Não habilitar produção com base apenas na existência deste código.
+
+
+## Decisão de compatibilidade — impressoras térmicas Bluetooth (2026-10-27)
+
+### Objetivo
+A impressão do recibo deve ser o mais universal e flexível possível para impressoras térmicas atuais conectadas por Bluetooth, sem assumir uma marca ou modelo específico. A interface deve oferecer um caminho padrão que funcione no maior número possível de celulares e computadores, além de uma estratégia de compatibilidade para dispositivos que exigem integração nativa.
+
+### Limite técnico importante
+Não existe um método único que funcione com literalmente toda impressora Bluetooth. Há diferenças entre Bluetooth Classic (incluindo dispositivos seriais/SPP), Bluetooth Low Energy (BLE), perfis e comandos ESC/POS proprietários, além de restrições dos navegadores e dos sistemas operacionais para descobrir, parear e enviar dados à impressora. Uma página web comum não pode prometer acesso direto a todos esses dispositivos.
+
+### Estratégia de compatibilidade
+1. **Caminho padrão universal:** manter recibo HTML responsivo e CSS de impressão para impressão pelo diálogo nativo do navegador/sistema, aproveitando as impressoras que o sistema operacional já instalou ou disponibilizou. O usuário escolhe a impressora no próprio sistema.
+2. **Caminho Bluetooth direto quando suportado:** avaliar Web Bluetooth somente em navegadores/sistemas compatíveis e para dispositivos BLE compatíveis; detectar suporte e explicar claramente quando indisponível. Não apresentar Web Bluetooth como compatível com todos os modelos, especialmente impressoras Bluetooth Classic/SPP.
+3. **Caminho de compatibilidade ampliada:** desenhar um adaptador opcional (aplicativo auxiliar nativo ou solução equivalente) para Android/iOS/desktop conforme a necessidade, usando descoberta/pareamento do sistema e protocolos suportados pelo dispositivo. Manter o site desacoplado desse adaptador por uma interface de impressão definida, sem dependência obrigatória de uma marca.
+4. **ESC/POS:** usar comandos ESC/POS apenas para dispositivos que comprovadamente os suportem; preparar perfis/adaptadores por capacidade, não assumir que toda impressora térmica interpreta o mesmo conjunto de comandos.
+5. **Recibo e QR:** gerar o QR Code real de consulta no próprio sistema e incluí-lo no recibo impresso; não usar serviços externos para gerar QR com códigos de recibo. O QR Pix de cobrança continua separado do QR de consulta do recibo.
+6. **Fallback:** se impressão direta ou Bluetooth não estiver disponível, oferecer impressão pelo navegador e download de um formato imprimível, sem bloquear a venda nem impedir fechar o recibo.
+
+### Requisitos de usabilidade e segurança
+- Informar claramente os caminhos disponíveis no dispositivo e não simular conexão ou sucesso quando a impressora não foi detectada.
+- Permitir tentar novamente, escolher outra impressora, baixar o recibo e fechar a tela em caso de falha.
+- Imprimir somente recibos de compra confirmada; reimpressão usa o mesmo código e nunca cria nova venda.
+- Validar em dispositivos reais representativos: Android + impressoras BLE e Classic/SPP, iPhone/iPad com modelos compatíveis com o ecossistema Apple, e desktop com impressora instalada. Registrar marca/modelo, SO, navegador, protocolo e resultado.
+- Não declarar “compatível com qualquer impressora” até existir matriz de testes; a meta é máxima compatibilidade com fallback, não uma garantia tecnicamente impossível de universalidade absoluta.
+
+### Estado
+Esta é a direção aprovada para arquitetura e produto. O componente térmico atual prepara um recibo HTML de 58 mm e usa window.print(); ainda não implementa pareamento Bluetooth direto, detecção de capacidades, adaptador nativo nem QR de recibo garantidamente real. A compatibilidade Bluetooth ampla e a validação física continuam pendentes.
