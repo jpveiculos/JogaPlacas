@@ -9,7 +9,7 @@ export const plateInputSchema = z
   .transform((value) => value.toUpperCase().replace(/\s+/g, ""))
   .refine(
     (value) => legacyPlatePattern.test(value) || mercosurPlatePattern.test(value),
-    "Informe uma placa válida no padrão ABC-1234 ou ABC1D23.",
+    "Informe uma placa válida no padrão ABC1234 ou ABC1D23.",
   );
 
 export type NormalizedPlate = {
@@ -28,7 +28,7 @@ export function normalizePlate(input: string): NormalizedPlate {
     const normalized = parsed.replace("-", "");
     return {
       normalized,
-      display: `${normalized.slice(0, 3)}-${normalized.slice(3)}`,
+      display: normalized,
       format: "legacy",
     };
   }
