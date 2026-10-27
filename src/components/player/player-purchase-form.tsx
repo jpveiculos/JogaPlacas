@@ -199,7 +199,7 @@ export function PlayerPurchaseForm() {
         <div className="plate-entry">
           <label htmlFor="player-plate-input">Digite sua placa</label>
           <PlateVisual format={plateFormat} value={platePreview} placeholder={plateFormat === "LEGACY" ? "ABC1234" : "ABC1D23"} />
-          <input id="player-plate-input" value={plate} onChange={(event) => setPlate(sanitizePlateInput(event.target.value, plateFormat))} placeholder={plateFormat === "LEGACY" ? "ABC-1234" : "ABC1D23"} maxLength={8} autoComplete="off" aria-describedby="plate-format-help" required />
+          <input id="player-plate-input" value={plate} onChange={(event) => setPlate(sanitizePlateInput(event.target.value, plateFormat))} inputMode={plateFormat === "LEGACY" ? "text" : "text"} placeholder={plateFormat === "LEGACY" ? "ABC-1234" : "ABC1D23"} maxLength={8} autoComplete="off" aria-describedby="plate-format-help" required />
           <small id="plate-format-help">{plateFormat === "LEGACY" ? "Três letras de A a Z, seguidas de quatro números de 0 a 9, sem hífen." : "Três letras, um número, uma letra e dois números. A quinta posição aceita A–Z."}</small>
         </div>
         <label>Valor total por placa e rodada (R$)
