@@ -23,8 +23,9 @@ async function main() {
   const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: databaseUrl }) });
   try {
     const result = await prisma.$transaction(async (tx) => {
-      // Serialize concurrent bootstrap attempts so only one can create the first admin.
-      await tx.$queryRaw`SELECT pg_advisory_xact_lock(728194603112::bigint)`;
+      // Cast PostgreSQL's void result to text so Prisma can deserialize it.
+      // Keep the transaction-scoped advisory lock to serialize bootstrap attempts.
+      await tx.$queryRaw`SELECT pg_advisory_xact_lock(728194603112::bigint)::text AS lock_acquired`;
       const existingAdmin = await tx.user.findFirst({
         where: { role: "ADMIN" },
         select: { id: true, username: true },
