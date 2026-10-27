@@ -1,6 +1,6 @@
 "use client";
 
-import type { CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 
 import type { ThermalReceiptPlate } from "./thermal-receipt-types";
 import { getReceiptRepetitionNumbers } from "./receipt-repetition";
@@ -55,13 +55,13 @@ export function ThermalReceipt({
   const date = `${dateLabel} ${timeLabel}`;
 
   const qrStyle: CSSProperties = { width: 76, height: 76, objectFit: "contain" };
-  const verificationUrl = typeof window !== "undefined"
-    ? `${window.location.origin}/verificar-recibo/${encodeURIComponent(receiptCode)}`
-    : "";
-  // QR image encodes only the official verification URL; receipt facts are loaded from our database.
-  const generatedQrUrl = verificationUrl
-    ? `https://api.qrserver.com/v1/create-qr-code/?size=240x240&format=png&data=${encodeURIComponent(verificationUrl)}`
-    : null;
+  const [generatedQrUrl, setGeneratedQrUrl] = useState<string | null>(null);
+  useEffect(() => {
+    // Build the absolute public URL after mount to avoid server/client hydration mismatch.
+    const verificationUrl = `${window.location.origin}/verificar-recibo/${encodeURIComponent(receiptCode)}`;
+    // The QR encodes only the public verification URL; receipt facts are loaded from the official database.
+    setGeneratedQrUrl(`https://api.qrserver.com/v1/create-qr-code/?size=240x240&format=png&data=${encodeURIComponent(verificationUrl)}`);
+  }, [receiptCode]);
   const effectiveQrUrl = qrCodeDataUrl ?? generatedQrUrl;
   const repetitionNumbers = getReceiptRepetitionNumbers(plates);
 
