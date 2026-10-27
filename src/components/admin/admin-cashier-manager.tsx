@@ -117,7 +117,7 @@ export function AdminCashierManager() {
         <input autoComplete="username" value={form.username} onChange={(event) => setForm({ ...form, username: event.target.value })} minLength={3} maxLength={24} pattern="[A-Za-z0-9_.-]+" required />
       </label>
       <label>{editingId ? "Nova senha (opcional)" : "Senha inicial"}
-        <input autoComplete="new-password" type="password" value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} minLength={editingId && !form.password ? undefined : 12} maxLength={1024} required={!editingId} placeholder={editingId ? "Deixe vazio para manter a senha" : "Mínimo de 12 caracteres"} />
+        <input autoComplete="new-password" type="password" value={form.password} onChange={(event) => setForm({ ...form, password: event.target.value })} minLength={editingId && !form.password ? undefined : 6} maxLength={1024} required={!editingId} placeholder={editingId ? "Deixe vazio para manter a senha" : "Mínimo de 12 caracteres"} />
       </label>
       <label>WhatsApp
         <input autoComplete="tel" type="tel" value={form.whatsapp} onChange={(event) => setForm({ ...form, whatsapp: event.target.value })} minLength={10} maxLength={24} required />
