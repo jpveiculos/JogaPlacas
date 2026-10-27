@@ -11,8 +11,8 @@ type Round = {
 type Dashboard = { rounds: Round[]; summary: { pendingPayments: number; confirmedPurchases: number } };
 const formatDate = (value: string) => {
   const date = new Date(value);
-  const dateLabel = new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeZone: "America/Sao_Paulo" }).format(date);
-  const timeLabel = new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit", hourCycle: "h23", timeZone: "America/Sao_Paulo" }).format(date);
+  const dateLabel = new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeZone: "Etc/GMT+3" }).format(date);
+  const timeLabel = new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit", hourCycle: "h23", timeZone: "Etc/GMT+3" }).format(date);
   return `${dateLabel} ${timeLabel}`;
 };
 const statusLabels: Record<Round["status"], string> = {
@@ -45,19 +45,19 @@ export function AdminRoundManager() {
     return () => window.clearTimeout(timer);
   }, [load]);
 
-  function saoPauloWallTimeToIso(value: string): string | null {
+  function brasiliaWallTimeToIso(value: string): string | null {
     const match = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/.exec(value);
     if (!match) return null;
     const [, y, mo, d, h, mi] = match;
     const desired = Date.UTC(Number(y), Number(mo) - 1, Number(d), Number(h), Number(mi));
     let candidate = desired;
     for (let index = 0; index < 3; index += 1) {
-      const parts = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23" }).formatToParts(new Date(candidate));
+      const parts = new Intl.DateTimeFormat("en-CA", { timeZone: "Etc/GMT+3", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23" }).formatToParts(new Date(candidate));
       const fields = Object.fromEntries(parts.map((part) => [part.type, part.value]));
       const represented = Date.UTC(Number(fields.year), Number(fields.month) - 1, Number(fields.day), Number(fields.hour), Number(fields.minute), Number(fields.second));
       candidate += desired - represented;
     }
-    const check = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(new Date(candidate));
+    const check = new Intl.DateTimeFormat("en-CA", { timeZone: "Etc/GMT+3", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(new Date(candidate));
     const fields = Object.fromEntries(check.map((part) => [part.type, part.value]));
     return Number(fields.year) === Number(y) && Number(fields.month) === Number(mo) && Number(fields.day) === Number(d) && Number(fields.hour) === Number(h) && Number(fields.minute) === Number(mi)
       ? new Date(candidate).toISOString() : null;
@@ -67,7 +67,7 @@ export function AdminRoundManager() {
     event.preventDefault(); setError(""); setNotice("");
     const startsAt = saoPauloWallTimeToIso(startsAtInput);
     const resultAt = saoPauloWallTimeToIso(resultAtInput);
-    if (!startsAt || !resultAt) { setError("Informe horários válidos no fuso de São Paulo."); return; }
+    if (!startsAt || !resultAt) { setError("Informe horários válidos no horário de Brasília (UTC−03:00)."); return; }
     setBusy("create");
     try {
       const response = await fetch("/api/admin/rounds", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ startsAt, resultAt }) });
@@ -102,7 +102,7 @@ export function AdminRoundManager() {
     <p>As ações são verificadas novamente no servidor. O sorteio só fica disponível após o fechamento e no horário programado; a apuração exige os dois resultados publicados.</p>
     <form className="admin-round-create" onSubmit={createRound}>
       <h3>Criar uma rodada</h3>
-      <p>Informe os horários no fuso <strong>America/Sao_Paulo</strong>. O início deve ser 29 minutos antes do resultado, que acontece nos minutos :00 ou :30. O sistema fecha as apostas um minuto antes do sorteio.</p>
+      <p>Informe os horários no horário de Brasília <strong>(UTC−03:00)</strong>. O início deve ser 29 minutos antes do resultado, que acontece nos minutos :00 ou :30. O sistema fecha as apostas um minuto antes do sorteio.</p>
       <label>Início da rodada <input type="datetime-local" value={startsAtInput} onChange={(event) => setStartsAtInput(event.target.value)} required /></label>
       <label>Horário do resultado <input type="datetime-local" value={resultAtInput} onChange={(event) => setResultAtInput(event.target.value)} required /></label>
       <button type="submit" disabled={busy !== null}>{busy === "create" ? "Criando…" : "Criar rodada"}</button>
