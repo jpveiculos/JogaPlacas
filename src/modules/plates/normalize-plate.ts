@@ -6,7 +6,7 @@ const mercosurPlatePattern = /^[A-Z]{3}\d[A-Z]\d{2}$/;
 export const plateInputSchema = z
   .string()
   .trim()
-  .transform((value) => value.toUpperCase().replace(/\s+/g, ""))
+  .transform((value) => value.toUpperCase())
   .refine(
     (value) => legacyPlatePattern.test(value) || mercosurPlatePattern.test(value),
     "Informe uma placa válida no padrão ABC1234 ou ABC1D23.",
