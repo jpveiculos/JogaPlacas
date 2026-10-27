@@ -74,6 +74,16 @@ describe("POST /api/auth/login", () => {
     expect(sessionCreate).not.toHaveBeenCalled();
   });
 
+  it("normalizes username casing before looking up the account", async () => {
+    userLookup.mockResolvedValue({ id: "user-1", passwordHash: "encoded", status: "ACTIVE" } as never);
+    passwordVerify.mockResolvedValue(true);
+    sessionCreate.mockResolvedValue({ token: "opaque-token", expiresAt: new Date("2035-01-01T00:00:00.000Z") });
+    const response = await POST(request({ username: "  ADMIN  ", password: "some-password" }));
+    expect(response.status).toBe(200);
+    expect(userLookup).toHaveBeenCalledWith({ where: { username: "admin" }, select: { id: true, passwordHash: true, status: true } });
+    expect(loginBlock).toHaveBeenCalledWith(expect.anything(), "admin");
+  });
+
   it("creates a session only after a valid active-user password", async () => {
     userLookup.mockResolvedValue({ id: "user-1", passwordHash: "encoded", status: "ACTIVE" } as never);
     passwordVerify.mockResolvedValue(true);
