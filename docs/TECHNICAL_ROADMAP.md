@@ -503,7 +503,7 @@ O texto do painel administrativo que dizia que “não existe integração ativa
 1. Consultar os resultados atuais do GitHub Actions para o HEAD desta branch e corrigir qualquer falha; a existência de testes não prova que passaram neste commit.
 2. Completar/validar os testes de contrato da Orders API com respostas reais de homologação, incluindo ordem sem QR, erro de rede após criação e persistência segura do ID para permitir reconciliação.
 3. Testar o fluxo do jogador ponta a ponta em homologação: compra pendente → QR/copia-e-cola → notificação autenticada → confirmação única → recibo pronto; também assinatura inválida, valor/referência divergentes, evento duplicado/fora de ordem, recusa, expiração, reembolso e pagamento após cutoff. Não é necessário movimentar dinheiro real.
-4. Revisar a idempotência do webhook: o evento é marcado como processado antes de terminar a confirmação da compra. Se a confirmação falhar depois desse registro, uma repetição com o mesmo ID pode ser ignorada. Ajustar o ciclo de processamento para que falhas sejam reprocessáveis sem duplicar efeitos financeiros.
+4. **Correção aplicada em 2026-10-27:** o webhook deixa o evento sem `processedAt` enquanto executa a reconciliação e marca como processado só após concluir o caminho de confirmação ou registrar a necessidade de reconciliação manual. Falhas permanecem reprocessáveis. Commit `27bb05b14a1a36c2c93d9534bfe15564b6f7b95d`. Ainda requer testes de concorrência, retry e duplicidade.
 5. Verificar estados de reembolso/estorno após uma compra já confirmada. O código atual fecha somente pagamentos ainda PENDING no ramo de estado negativo; não presumir que uma notificação de reembolso reverte automaticamente uma compra já confirmada.
 6. Implementar o fluxo prioritário ainda ausente do cambista: venda sem cadastro de cliente, escolha Pix ou espécie, confirmação de espécie auditada/idempotente, recibo com código único e QR de consulta, e recuperação sem duplicar venda.
 7. Completar os módulos administrativos faltantes (gestão de contas, regras/configurações financeiras, comissões e relatórios), conforme a especificação funcional.
@@ -512,3 +512,10 @@ O texto do painel administrativo que dizia que “não existe integração ativa
 
 ### Patamar atual
 **Fundação e fluxos do jogador: implementação substancial, com gates de teste/validação ainda abertos.** **Pix do jogador: código implementado, homologação ponta a ponta ainda não comprovada.** **Cambista: fluxo de venda rápida e recebimento ainda incompleto.** **Administração: operações básicas de rodadas, reconciliação de prêmios e fila de saques existem; gestão completa continua pendente.** Nenhuma alteração de produção ou cobrança real é autorizada por esta reconciliação.
+
+
+### Correções incrementais — 2026-10-27
+- **Webhook Pix:** o registro do evento deixou de ser marcado como processado antes da confirmação transacional. Eventos ainda não processados podem ser retomados após falha; eventos já processados são reconhecidos como duplicados. Commit: `27bb05b14a1a36c2c93d9534bfe15564b6f7b95d`.
+- **Consulta de vendas do cambista:** a API e a interface agora exigem o código completo do recibo, em vez de buscar por placa ou por trecho do identificador. Isso alinha a recuperação de segunda via à regra funcional e reduz a exposição de vendas por pesquisa ampla. Commits: `303b85caa591ad47c217bf5788d36c083a42032c` e `03726a137cd89bfe43304f5e8716614efc8ce255`.
+- **Validação:** o GitHub não retornou status checks nem execuções de Actions para o commit da correção do webhook consultado. Portanto, essas alterações estão registradas no repositório, mas não são declaradas testadas ou publicadas.
+- **Próximo gap funcional do cambista:** a tela existente ainda prepara vendas por Pix; recebimento em dinheiro com confirmação auditada/idempotente e QR Code real do recibo continuam pendentes. Não substituir o fluxo atual sem implementar uma transição de estado atômica.
