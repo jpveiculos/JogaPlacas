@@ -1,5 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { Prisma, RoundStatus, type PrismaClient } from "../../generated/prisma/client";
+import { calculateCommissionCents } from "../../domain/cashier-commission";
 
 export type ConfirmPaymentResult =
   | { outcome: "confirmed"; receiptCode: string }
@@ -105,7 +106,7 @@ export async function confirmPixPayment(
           });
           if (!cashier) throw new Error("Cashier commission owner is invalid");
           const rateBasisPoints = cashier.commissionRateBasisPoints;
-          const amountCents = Math.floor((paymentRow.purchase.totalCents * rateBasisPoints + 5000) / 10000);
+          const amountCents = calculateCommissionCents(paymentRow.purchase.totalCents, rateBasisPoints);
           await tx.cashierCommission.create({
             data: {
               purchaseId: paymentRow.purchaseId,
