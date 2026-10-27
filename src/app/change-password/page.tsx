@@ -17,7 +17,7 @@ export default async function ChangePasswordPage() {
   }
   return <main className="auth-page"><section className="auth-card" aria-labelledby="change-password-title">
     <p className="eyebrow">Segurança da conta</p><h1 id="change-password-title">Atualize sua senha</h1>
-    <p className="auth-description">Sua conta exige uma nova senha antes de continuar. Use pelo menos 12 caracteres.</p>
+    <p className="auth-description">Sua conta exige uma nova senha antes de continuar. Use pelo menos 6 caracteres.</p>
     <ChangePasswordForm />
   </section></main>;
 }

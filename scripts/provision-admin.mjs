@@ -3,24 +3,16 @@
 async function main() {
   if (process.argv.includes("--help")) {
     process.stdout.write(
-      "Provision the first Joga Placas administrator.\n" +
-      "Required environment: DATABASE_URL, ADMIN_USERNAME, ADMIN_INITIAL_PASSWORD, CONFIRM_ADMIN_PROVISIONING=CREATE_FIRST_ADMIN.\n" +
-      "The account is created with mustChangePassword=true. Never put these values in source control.\n",
+      "Safely create the first Joga Placas administrator if none exists.\n" +
+      "Required only when no administrator exists: DATABASE_URL, ADMIN_USERNAME, ADMIN_INITIAL_PASSWORD, CONFIRM_ADMIN_PROVISIONING=CREATE_FIRST_ADMIN.\n" +
+      "The account is created with mustChangePassword=true. Never put credentials in source control.\n" +
+      "If an administrator already exists, this command exits successfully without changing any account.\n",
     );
     return;
   }
 
   const databaseUrl = process.env.DATABASE_URL;
-  const username = process.env.ADMIN_USERNAME?.trim().toLowerCase();
-  const initialPassword = process.env.ADMIN_INITIAL_PASSWORD;
-  const confirmation = process.env.CONFIRM_ADMIN_PROVISIONING;
-
-  if (!databaseUrl || !username || !initialPassword || confirmation !== "CREATE_FIRST_ADMIN") {
-    throw new Error("Missing required environment or confirmation. Run with --help for instructions.");
-  }
-  if (!/^[a-z0-9._-]{3,50}$/.test(username)) {
-    throw new Error("ADMIN_USERNAME must be 3-50 characters: letters, numbers, dot, underscore or hyphen.");
-  }
+  if (!databaseUrl) throw new Error("DATABASE_URL is required to check administrator setup.");
 
   const [{ PrismaPg }, { PrismaClient }, { hashPassword }] = await Promise.all([
     import("@prisma/adapter-pg"),
@@ -30,26 +22,43 @@ async function main() {
 
   const prisma = new PrismaClient({ adapter: new PrismaPg({ connectionString: databaseUrl }) });
   try {
-    const passwordHash = await hashPassword(initialPassword);
-    const created = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx) => {
       // Serialize concurrent bootstrap attempts so only one can create the first admin.
       await tx.$queryRaw`SELECT pg_advisory_xact_lock(728194603112::bigint)`;
-      const existingAdmin = await tx.user.findFirst({ where: { role: "ADMIN" }, select: { id: true } });
-      if (existingAdmin) throw new Error("An administrator already exists; bootstrap refuses to create another.");
+      const existingAdmin = await tx.user.findFirst({
+        where: { role: "ADMIN" },
+        select: { id: true, username: true },
+      });
+      if (existingAdmin) return { created: false, username: existingAdmin.username };
+
+      const username = process.env.ADMIN_USERNAME?.trim().toLowerCase();
+      const initialPassword = process.env.ADMIN_INITIAL_PASSWORD;
+      const confirmation = process.env.CONFIRM_ADMIN_PROVISIONING;
+      if (!username || !initialPassword || confirmation !== "CREATE_FIRST_ADMIN") {
+        throw new Error("No administrator exists. Configure ADMIN_USERNAME, ADMIN_INITIAL_PASSWORD and CONFIRM_ADMIN_PROVISIONING=CREATE_FIRST_ADMIN.");
+      }
+      if (!/^[a-z0-9._-]{3,50}$/.test(username)) {
+        throw new Error("ADMIN_USERNAME must be 3-50 characters: letters, numbers, dot, underscore or hyphen.");
+      }
+      if (initialPassword.length < 6) {
+        throw new Error("ADMIN_INITIAL_PASSWORD must contain at least 6 characters.");
+      }
+
       const existingUser = await tx.user.findUnique({ where: { username }, select: { id: true } });
       if (existingUser) throw new Error("That username already exists; bootstrap will not change existing accounts.");
-      return tx.user.create({
-        data: {
-          username,
-          passwordHash,
-          role: "ADMIN",
-          status: "ACTIVE",
-          mustChangePassword: true,
-        },
-        select: { id: true, username: true, role: true },
+      const passwordHash = await hashPassword(initialPassword);
+      const created = await tx.user.create({
+        data: { username, passwordHash, role: "ADMIN", status: "ACTIVE", mustChangePassword: true },
+        select: { id: true, username: true },
       });
+      return { created: true, username: created.username, id: created.id };
     });
-    process.stdout.write(`Created first administrator: ${created.username} (id ${created.id}). Sign in and change the initial password.\n`);
+
+    if (result.created) {
+      process.stdout.write(`Created first administrator: ${result.username} (id ${result.id}). Sign in and change the initial password.\n`);
+    } else {
+      process.stdout.write(`Administrator already exists: ${result.username}. No account or password was changed.\n`);
+    }
   } finally {
     await prisma.$disconnect();
   }

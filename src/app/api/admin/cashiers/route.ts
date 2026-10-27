@@ -18,7 +18,7 @@ async function requireAdmin(request: NextRequest) {
 const profileSchema = z.object({
   fullName: z.string().trim().min(3).max(120),
   username: z.string().trim().min(3).max(24).regex(/^[A-Za-z0-9_.-]+$/),
-  password: z.string().min(12).max(1024),
+  password: z.string().min(6).max(1024),
   whatsapp: z.string().trim().min(10).max(24),
   commissionPercent: z.number().finite().min(0).max(100).refine((value) => Number.isInteger(value * 100), "Use até duas casas decimais."),
 }).strict();
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
   let body: unknown;
   try { body = await request.json(); } catch { return NextResponse.json({ error: "Dados inválidos." }, { status: 400, headers }); }
   const parsed = profileSchema.safeParse(body);
-  if (!parsed.success) return NextResponse.json({ error: "Informe nome completo, usuário válido, senha com pelo menos 12 caracteres, WhatsApp e comissão de 0% a 100%." }, { status: 400, headers });
+  if (!parsed.success) return NextResponse.json({ error: "Informe nome completo, usuário válido, senha com pelo menos 6 caracteres, WhatsApp e comissão de 0% a 100%." }, { status: 400, headers });
   const whatsapp = normalizeWhatsapp(parsed.data.whatsapp);
   if (whatsapp.length < 10 || whatsapp.length > 15) return NextResponse.json({ error: "Informe um WhatsApp válido com DDD e código do país, se aplicável." }, { status: 400, headers });
   const username = parsed.data.username.toLowerCase();
