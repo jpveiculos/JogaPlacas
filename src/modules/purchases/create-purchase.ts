@@ -17,6 +17,7 @@ export type PixPurchaseInput = {
   playerId?: string;
   cashierId?: string;
   customerId?: string;
+  paymentMethod?: "PIX" | "CASH";
   repetitions: number;
   participations: Array<{
     roundId: string;
@@ -79,7 +80,11 @@ export async function createPendingPixPurchase(
   if (new Set(input.participations.map((item) => item.roundId)).size !== input.participations.length) {
     throw new PurchaseServiceError("Each participation must reference a distinct round", "INVALID_PURCHASE");
   }
-  const paymentMethod = input.paymentMethod === "CASH" ? PaymentMethod.CASH : PaymentMethod.PIX;\n  if (paymentMethod === PaymentMethod.CASH && (!input.cashierId || input.playerId)) {\n    throw new PurchaseServiceError("Cash sales must be created by an authenticated cashier", "INVALID_ACTOR");\n  }\n  if (Boolean(input.playerId) === Boolean(input.cashierId)) {
+  const paymentMethod = input.paymentMethod === "CASH" ? PaymentMethod.CASH : PaymentMethod.PIX;\n  if (paymentMethod === PaymentMethod.CASH && (!input.cashierId || input.playerId)) {\n    throw new PurchaseServiceError("Cash sales must be created by an authenticated cashier", "INVALID_ACTOR");\n  }\n  const paymentMethod = input.paymentMethod === "CASH" ? PaymentMethod.CASH : PaymentMethod.PIX;
+  if (paymentMethod === PaymentMethod.CASH && (!input.cashierId || input.playerId)) {
+    throw new PurchaseServiceError("Cash sales must be created by an authenticated cashier", "INVALID_ACTOR");
+  }
+  if (Boolean(input.playerId) === Boolean(input.cashierId)) {
     throw new PurchaseServiceError("Exactly one player or cashier must own the purchase", "INVALID_ACTOR");
   }
   // Validate plate syntax before opening a database transaction. Invalid user input
