@@ -79,7 +79,7 @@ export function AdminCashierManager() {
     if (!Number.isFinite(commissionPercent) || commissionPercent < 0 || commissionPercent > 100) {
       setError("A comissão precisa estar entre 0% e 100%."); return;
     }
-    if (!editingId && form.password.length < 12) {
+    if (!editingId && form.password.length < 6) {
       setError("A senha inicial precisa ter pelo menos 12 caracteres."); return;
     }
     setBusy(true);
