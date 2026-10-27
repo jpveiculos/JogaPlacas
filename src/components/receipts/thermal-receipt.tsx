@@ -55,6 +55,14 @@ export function ThermalReceipt({
   const date = `${dateLabel} ${timeLabel}`;
 
   const qrStyle: CSSProperties = { width: 76, height: 76, objectFit: "contain" };
+  const verificationUrl = typeof window !== "undefined"
+    ? `${window.location.origin}/verificar-recibo/${encodeURIComponent(receiptCode)}`
+    : "";
+  // QR image encodes only the official verification URL; receipt facts are loaded from our database.
+  const generatedQrUrl = verificationUrl
+    ? `https://api.qrserver.com/v1/create-qr-code/?size=240x240&format=png&data=${encodeURIComponent(verificationUrl)}`
+    : null;
+  const effectiveQrUrl = qrCodeDataUrl ?? generatedQrUrl;
   const repetitionNumbers = getReceiptRepetitionNumbers(plates);
 
   function downloadReceipt() {
@@ -91,7 +99,7 @@ export function ThermalReceipt({
           {qrCodeDataUrl ? (
             <img className="thermal-receipt-qr" style={qrStyle} src={qrCodeDataUrl} alt={`QR Code do recibo ${receiptCode}`} />
           ) : (
-            <div className="thermal-receipt-qr-placeholder" aria-label="QR Code será exibido após integração">
+            <div className="thermal-receipt-qr-placeholder" aria-label="QR Code indisponível">
               QR
             </div>
           )}
