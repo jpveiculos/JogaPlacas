@@ -50,7 +50,7 @@ const createRoundSchema = z.object({
 
 function roundCodeFor(date: Date) {
   const parts = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "America/Sao_Paulo", year: "numeric", month: "2-digit", day: "2-digit",
+    timeZone: "Etc/GMT+3", year: "numeric", month: "2-digit", day: "2-digit",
     hour: "2-digit", minute: "2-digit", hourCycle: "h23",
   }).formatToParts(date);
   const value = Object.fromEntries(parts.map((part) => [part.type, part.value]));
@@ -89,7 +89,7 @@ export async function POST(request: NextRequest) {
       });
       await tx.auditEvent.create({ data: {
         actorId: user.id, action: "ROUND_CREATED", entityType: "Round", entityId: created.id,
-        metadata: { code, startsAt: startsAt.toISOString(), cutoffAt: cutoffAt.toISOString(), resultAt: resultAt.toISOString(), timeZone: "America/Sao_Paulo" },
+        metadata: { code, startsAt: startsAt.toISOString(), cutoffAt: cutoffAt.toISOString(), resultAt: resultAt.toISOString(), timeZone: "UTC-03:00 (Horário de Brasília)" },
       } });
       return created;
     }, { isolationLevel: "Serializable" });
