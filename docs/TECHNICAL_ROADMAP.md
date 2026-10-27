@@ -564,3 +564,11 @@ O texto do painel administrativo que dizia que “não existe integração ativa
 
 ### Estado e próximo passo
 O componente atual src/components/receipts/thermal-receipt.tsx usa window.print() e HTML baixável, sem camada Bluetooth direta e com placeholder se qrCodeDataUrl não for fornecido. Próximo passo de implementação: corrigir a geração do QR e robustecer impressão HTML/CSS como caminho base; em seguida escolher o caminho Bluetooth direto/bridge com base nos dispositivos e sistemas operacionais que se pretende suportar. Não instalar SDK específico nem prometer universalidade sem teste e sem definir a plataforma auxiliar.
+
+## Implementação retomada — venda em dinheiro do cambista (2026-10-27)
+
+- Foi adicionado o endpoint de desenvolvimento `POST /api/cashier/purchases/cash`, separado do endpoint Pix e protegido por sessão de cambista, validação de origem e validação estrita do payload.
+- O serviço de compra passou a aceitar modo `CASH`: cria compra e participações confirmadas, gera código de recibo `JP-...`, grava a comissão com a taxa vigente e registra evento de auditoria dentro da mesma transação serializável. O fluxo de dinheiro não cria registro de pagamento Mercado Pago nem cobra Pix.
+- A chave de idempotência mantém o mesmo resultado em repetição da mesma solicitação e impede reutilização para conteúdo divergente.
+- **Não validado ainda:** execução local de typecheck/testes, teste integrado com PostgreSQL, revisão completa de casos de repetição e confirmação do deploy. O endpoint é código em branch, não autorização para operação em produção. O front-end do cambista ainda precisa oferecer o botão/fluxo de venda em dinheiro e exibir o recibo confirmado.
+
