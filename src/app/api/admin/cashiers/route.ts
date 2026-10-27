@@ -49,7 +49,20 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   const origin = request.headers.get("origin");
-  if (origin && origin !== request.nextUrl.origin) return NextResponse.json({ error: "Requisição inválida." }, { status: 403, headers });
+  if (origin) {
+    let originHost: string;
+    try {
+      originHost = new URL(origin).host;
+    } catch {
+      return NextResponse.json({ error: "Requisição inválida." }, { status: 403, headers });
+    }
+    // Railway terminates public HTTPS before forwarding to Next.js. Compare
+    // the browser Origin with the incoming Host, not the reconstructed URL.
+    const requestHost = request.headers.get("host");
+    if (!requestHost || originHost !== requestHost) {
+      return NextResponse.json({ error: "Requisição inválida." }, { status: 403, headers });
+    }
+  }
   const auth = await requireAdmin(request);
   if (auth.response) return auth.response;
   let body: unknown;
