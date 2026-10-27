@@ -22,8 +22,8 @@ async function main() {
   if (!/^[a-z0-9._-]{3,50}$/.test(username)) {
     throw new Error("ADMIN_USERNAME must be 3-50 characters: letters, numbers, dot, underscore or hyphen.");
   }
-  if (initialPassword.length < 12) {
-    throw new Error("ADMIN_INITIAL_PASSWORD must contain at least 12 characters.");
+  if (initialPassword.length < 6) {
+    throw new Error("ADMIN_INITIAL_PASSWORD must contain at least 6 characters.");
   }
 
   const [{ PrismaPg }, { PrismaClient }, { hashPassword }] = await Promise.all([
