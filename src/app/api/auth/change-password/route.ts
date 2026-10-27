@@ -23,19 +23,18 @@ function secureCookie(request: NextRequest) {
 export async function POST(request: NextRequest) {
   const origin = request.headers.get("origin");
   if (origin) {
-    // Railway terminates public HTTPS before forwarding to the app. The
-    // upstream request origin can therefore differ from the public origin.
-    // APP_BASE_URL must be the canonical public URL (scheme + host).
-    const allowedOrigins = new Set<string>([request.nextUrl.origin]);
-    const appBaseUrl = process.env.APP_BASE_URL;
-    if (appBaseUrl) {
-      try {
-        allowedOrigins.add(new URL(appBaseUrl).origin);
-      } catch {
-        return NextResponse.json({ error: "Configuração de origem inválida." }, { status: 500 });
-      }
+    let originHost: string;
+    try {
+      originHost = new URL(origin).host;
+    } catch {
+      return NextResponse.json({ error: "Requisição inválida." }, { status: 403 });
     }
-    if (!allowedOrigins.has(origin)) {
+
+    // Match the browser's Origin against the incoming Host, as the login
+    // endpoint does. This avoids comparing against the internal URL that
+    // Next.js may reconstruct behind Railway's reverse proxy.
+    const requestHost = request.headers.get("host");
+    if (!requestHost || originHost !== requestHost) {
       return NextResponse.json({ error: "Requisição inválida." }, { status: 403 });
     }
   }
