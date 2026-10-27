@@ -138,8 +138,6 @@ export function AdminCashierManager() {
         {editingId && <button type="button" className="secondary-button" disabled={busy} onClick={resetForm}>Cancelar edição</button>}
       </div>
     </form>
-    {error && <p role="alert" className="note-inline">{error}</p>}
-    {notice && <p role="status" className="note-inline">{notice}</p>}
     <h3>Cambistas cadastrados</h3>
     {loading ? <p>Carregando cambistas…</p> : cashiers.length === 0 ? <p>Nenhum cambista cadastrado.</p> : <div className="admin-round-list">
       {cashiers.map((cashier) => <article className="round-option" key={cashier.id}>
