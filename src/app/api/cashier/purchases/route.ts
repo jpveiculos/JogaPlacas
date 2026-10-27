@@ -12,9 +12,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Acesso não permitido." }, { status: 403, headers });
   }
 
-  const query = (request.nextUrl.searchParams.get("q") ?? "").trim().slice(0, 100);
-  if (query.length < 2) {
-    return NextResponse.json({ purchases: [], message: "Digite pelo menos 2 caracteres para pesquisar." }, { headers });
+  const query = (request.nextUrl.searchParams.get("q") ?? "").trim().toUpperCase().slice(0, 40);
+  if (!/^JP-[A-Z0-9]{8,32}$/.test(query)) {
+    return NextResponse.json({ purchases: [], message: "Informe o código completo do recibo (ex.: JP-AB12CD34)." }, { headers });
   }
 
   try {
@@ -22,11 +22,7 @@ export async function GET(request: NextRequest) {
     const where = {
       cashierId: user.id,
       createdAt: { gte: since },
-      OR: [
-        { id: query },
-        { receiptCode: { contains: query, mode: "insensitive" as const } },
-        { participations: { some: { lines: { some: { plateDisplay: { contains: query, mode: "insensitive" as const } } } } } },
-      ],
+      receiptCode: query,
     };
     const purchases = await authPrisma.purchase.findMany({
       where,
