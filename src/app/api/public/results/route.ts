@@ -16,18 +16,26 @@ function maskUsername(username: string): string {
 export async function GET(request: NextRequest) {
   try {
     const beforeParam = request.nextUrl.searchParams.get("before");
-    let before: Date | undefined;
+    let before: { resultAt: Date; id: string } | undefined;
     if (beforeParam !== null) {
-      before = new Date(beforeParam);
-      if (Number.isNaN(before.getTime())) {
+      const separator = beforeParam.indexOf("|");
+      const resultAt = new Date(separator >= 0 ? beforeParam.slice(0, separator) : "");
+      const id = separator >= 0 ? beforeParam.slice(separator + 1) : "";
+      if (Number.isNaN(resultAt.getTime()) || !id) {
         return NextResponse.json({ error: "Cursor de histórico inválido." }, { status: 400, headers: { "Cache-Control": "no-store" } });
       }
+      before = { resultAt, id };
     }
     const where = {
       status: "COMPLETED" as const,
       resultLegacyPlate: { not: null },
       resultMercosurPlate: { not: null },
-      ...(before ? { resultAt: { lt: before } } : {}),
+      ...(before ? {
+        OR: [
+          { resultAt: { lt: before.resultAt } },
+          { resultAt: before.resultAt, id: { lt: before.id } },
+        ],
+      } : {}),
     };
     const [rounds, winnerLines] = await Promise.all([
       authPrisma.round.findMany({
@@ -65,7 +73,7 @@ export async function GET(request: NextRequest) {
         id: round.id, code: round.code, resultAt: round.resultAt.toISOString(),
         legacyPlate: round.resultLegacyPlate!, mercosurPlate: round.resultMercosurPlate!,
       })),
-      nextBefore: hasMore && last ? last.resultAt.toISOString() : null,
+      nextBefore: hasMore && last ? `${last.resultAt.toISOString()}|${last.id}` : null,
       winners: winnerLines.map((line) => ({
         id: line.id,
         displayName: line.participation.purchase.player?.username
