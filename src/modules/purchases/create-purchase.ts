@@ -80,7 +80,7 @@ export async function createPurchase(
   if (new Set(input.participations.map((item) => item.roundId)).size !== input.participations.length) {
     throw new PurchaseServiceError("Each participation must reference a distinct round", "INVALID_PURCHASE");
   }
-  const paymentMethod = input.paymentMethod === "CASH" ? PaymentMethod.CASH : PaymentMethod.PIX;\n  if (paymentMethod === PaymentMethod.CASH && (!input.cashierId || input.playerId)) {\n    throw new PurchaseServiceError("Cash sales must be created by an authenticated cashier", "INVALID_ACTOR");\n  }\n  const paymentMethod = input.paymentMethod === "CASH" ? PaymentMethod.CASH : PaymentMethod.PIX;
+  const paymentMethod = input.paymentMethod === "CASH" ? PaymentMethod.CASH : PaymentMethod.PIX;
   if (paymentMethod === PaymentMethod.CASH && (!input.cashierId || input.playerId)) {
     throw new PurchaseServiceError("Cash sales must be created by an authenticated cashier", "INVALID_ACTOR");
   }
