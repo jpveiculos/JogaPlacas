@@ -8,65 +8,78 @@ export function AreaShell({ title, username, description, compact = false, child
     <main className={compact ? "area-page area-page-compact" : "area-page"}>
       <header
         className="area-header"
-        style={compact ? { position: "relative", alignItems: "center", minHeight: 76 } : undefined}
+        style={{
+          position: "relative",
+          display: "grid",
+          gridTemplateColumns: "minmax(0, 1fr) auto minmax(0, 1fr)",
+          gridTemplateRows: compact ? "76px" : "76px auto",
+          alignItems: "center",
+          columnGap: 10,
+          rowGap: compact ? 0 : 12,
+          paddingBottom: 24,
+        }}
       >
-        {compact && (
-          <span
-            className="account-name"
+        <span
+          className="account-name"
+          style={{
+            gridColumn: "1",
+            gridRow: "1",
+            justifySelf: "start",
+            maxWidth: "100%",
+            overflowWrap: "anywhere",
+            zIndex: 2,
+          }}
+        >
+          {username}
+        </span>
+        <a
+          href="/"
+          aria-label="Joga Placa — página inicial"
+          className="area-centered-logo"
+          style={{
+            gridColumn: "2",
+            gridRow: "1",
+            display: "block",
+            lineHeight: 0,
+            margin: 0,
+            zIndex: 1,
+          }}
+        >
+          <img
+            src="/images/brand/joga-placa-logo.jpg"
+            alt="Joga Placa"
             style={{
-              position: "absolute",
-              left: 0,
-              top: "50%",
-              transform: "translateY(-50%)",
-              maxWidth: "25%",
-              overflowWrap: "anywhere",
-              zIndex: 2,
-            }}
-          >
-            {username}
-          </span>
-        )}
-        <div className="area-header-branding" style={compact ? { flex: "1 1 100%", minWidth: 0 } : undefined}>
-          <a
-            href="/"
-            aria-label="Joga Placa — página inicial"
-            className={compact ? "area-centered-logo" : "home-brand home-wordmark"}
-            style={compact ? {
-              position: "absolute",
-              left: "50%",
-              top: "50%",
-              transform: "translate(-50%, -50%)",
               display: "block",
-              lineHeight: 0,
-              margin: 0,
-              zIndex: 1,
-            } : undefined}
-          >
-            <img
-              src="/images/brand/joga-placa-logo.jpg"
-              alt="Joga Placa"
-              style={compact ? {
-                display: "block",
-                width: "auto",
-                height: "clamp(48px, 11vw, 76px)",
-                maxWidth: "38vw",
-                objectFit: "contain",
-                transform: "none",
-                filter: "none",
-              } : undefined}
-            />
-          </a>
-          {!compact && (
-            <>
-              <h1 className="area-title">{title}</h1>
-              {description && <p className="area-description">{description}</p>}
-            </>
-          )}
-        </div>
-        <div className="account-controls" style={compact ? { width: "auto", flex: "0 0 auto", justifyContent: "flex-end", marginLeft: "auto", position: "relative", zIndex: 2, gap: 10 } : undefined}>
-          {!compact && <span className="account-name">{username}</span>}
+              width: "auto",
+              height: "clamp(48px, 11vw, 76px)",
+              maxWidth: "38vw",
+              objectFit: "contain",
+              transform: "none",
+              filter: "none",
+            }}
+          />
+        </a>
+        <div
+          className="account-controls"
+          style={{
+            gridColumn: "3",
+            gridRow: "1",
+            justifySelf: "end",
+            width: "auto",
+            minWidth: 0,
+            position: "relative",
+            zIndex: 2,
+            gap: 10,
+          }}
+        >
           <LogoutButton />
         </div>
+        {!compact && (
+          <div style={{ gridColumn: "1 / -1", gridRow: "2", minWidth: 0 }}>
+            <h1 className="area-title">{title}</h1>
+            {description && <p className="area-description">{description}</p>}
+          </div>
+        )}
       </header>
       <section className="area-content">{children}</section>
     </main>
