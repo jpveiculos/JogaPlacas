@@ -103,7 +103,6 @@ export function ThermalReceipt({
           <div className="thermal-receipt-code-copy">
             <span className="thermal-receipt-label">CÓDIGO DO RECIBO</span>
             <strong className="thermal-receipt-code">{receiptCode}</strong>
-            <span className="thermal-receipt-payment">{paymentLabel}</span>
           </div>
           {effectiveQrUrl ? (
             <img className="thermal-receipt-qr" style={qrStyle} src={effectiveQrUrl} alt={`QR Code do recibo ${receiptCode}`} />
@@ -140,7 +139,7 @@ export function ThermalReceipt({
         <footer className="thermal-receipt-footer">
           <strong>GUARDE ESTE COMPROVANTE</strong>
           <span>Consulte o resultado pelo código do recibo.</span>
-          <span>Este recibo confirma somente o pagamento e as apostas listadas.</span>
+          <span>Este recibo é um comprovante de pagamento e contém suas apostas.</span>
           <span className="thermal-receipt-footer-code">{receiptCode}</span>
         </footer>
       </article>
