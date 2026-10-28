@@ -6,7 +6,7 @@ export function AreaShell({ title, username, description, compact = false, child
   return (
     <main className={compact ? "area-page area-page-compact" : "area-page"}>
       <header className="area-header">
-        <div className="area-header-branding"><a href="/" className="home-brand home-wordmark" aria-label="Joga Placas — página inicial"><span className="wordmark-joga">JOGA</span><span className="wordmark-placas">PLACAS</span></a>{!compact && <><h1 className="area-title">{title}</h1>{description && <p className="area-description">{description}</p>}</>}</div>
+        <div className="area-header-branding"><a href="/" className="home-brand home-wordmark" aria-label="Joga Placas — página inicial"><img src="/images/brand/joga-placa-logo.jpg" alt="Joga Placa" /></a>{!compact && <><h1 className="area-title">{title}</h1>{description && <p className="area-description">{description}</p>}</>}</div>
         <div className="account-controls">{!compact && <span className="account-name">{username}</span>}<LogoutButton /></div>
       </header>
       <section className="area-content">{children}</section>
