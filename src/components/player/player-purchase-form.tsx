@@ -12,6 +12,7 @@ type CreatedPurchase = {
   participations: Array<{ roundId: string; totalCents: number; lines: Array<{ plateDisplay: string; totalCents: number; allocationCents: Record<string, number> }> }>;
 };
 type PlateFormat = "LEGACY" | "MERCOSUR";
+type PlayerPaymentMethod = "PIX" | "WALLET";
 
 function sanitizePlateInput(value: string, format: PlateFormat): string {
   const chars = value.toUpperCase().replace(/[^A-Z0-9]/g, "").split("");
@@ -52,6 +53,8 @@ export function PlayerPurchaseForm() {
   const legacyInputRef = useRef<HTMLInputElement>(null);
   const mercosurInputRef = useRef<HTMLInputElement>(null);
   const [stake, setStake] = useState("1,00");
+  const [paymentMethod, setPaymentMethod] = useState<PlayerPaymentMethod>("PIX");
+  const [walletBalanceCents, setWalletBalanceCents] = useState<number | null>(null);
   const [loadingRounds, setLoadingRounds] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -61,6 +64,19 @@ export function PlayerPurchaseForm() {
   const [pixModalOpen, setPixModalOpen] = useState(false);
   const [receiptPurchaseId, setReceiptPurchaseId] = useState<string | null>(null);
   const idempotencyKey = useRef<string | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    fetch("/api/player/withdrawals", { cache: "no-store" })
+      .then(async (response) => {
+        const body = await response.json();
+        if (!response.ok) throw new Error(body.error ?? "Não foi possível consultar o saldo.");
+        return body.availableCents as number;
+      })
+      .then((balance) => { if (active) setWalletBalanceCents(balance); })
+      .catch(() => { if (active) setWalletBalanceCents(null); });
+    return () => { active = false; };
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -122,6 +138,9 @@ export function PlayerPurchaseForm() {
   const normalizedMercosurPlate = mercosurPlate.trim().toUpperCase().replace(/-/g, "");
   const legacyPlateValid = /^[A-Z]{3}-?\d{4}$/.test(normalizedLegacyPlate);
   const mercosurPlateValid = /^[A-Z]{3}\d[A-Z]\d{2}$/.test(normalizedMercosurPlate);
+  const plateCount = (legacyPlateValid ? 1 : 0) + (mercosurPlateValid ? 1 : 0);
+  const totalEstimate = stakeCents !== null ? stakeCents * selectedRounds.length * plateCount : 0;
+  const walletHasEnough = walletBalanceCents !== null && totalEstimate > 0 && walletBalanceCents >= totalEstimate;
   const plateLines = [
     ...(legacyPlateValid ? [{ plateDisplay: normalizedLegacyPlate.replace(/-/g, ""), stakeCents: stakeCents ?? 0 }] : []),
     ...(mercosurPlateValid ? [{ plateDisplay: normalizedMercosurPlate, stakeCents: stakeCents ?? 0 }] : []),
@@ -158,6 +177,12 @@ export function PlayerPurchaseForm() {
     }
     if (stakeCents === null) { setError("O valor mínimo por placa e rodada é R$ 1,00. Use até duas casas decimais."); return; }
     if (!selectedRounds.length) { setError("Selecione pelo menos uma rodada."); return; }
+    if (paymentMethod === "WALLET" && !walletHasEnough) {
+      setError(walletBalanceCents === null
+        ? "Não foi possível confirmar seu saldo agora. Atualize a carteira ou escolha Pix."
+        : `Saldo insuficiente. Seu saldo é ${formatMoney(walletBalanceCents)} e esta aposta custa ${formatMoney(totalEstimate)}. Escolha Pix ou adicione saldo.`);
+      return;
+    }
 
     setSubmitting(true);
     try {
@@ -165,14 +190,27 @@ export function PlayerPurchaseForm() {
         method: "POST", headers: { "content-type": "application/json" },
         body: JSON.stringify({
           idempotencyKey: idempotencyKey.current ?? (idempotencyKey.current = crypto.randomUUID()),
-          roundIds: selectedRounds, lines: plateLines,
+          roundIds: selectedRounds, lines: plateLines, paymentMethod,
         }),
       });
       const body = await response.json();
       if (!response.ok) throw new Error(body.error ?? "Não foi possível registrar a compra.");
       setPurchase(body.purchase as CreatedPurchase);
       setPixCheckout((body.pixCheckout as PixCheckout | null) ?? null);
-      setPixModalOpen(true);
+      if (body.receiptReady) {
+        setReceiptPurchaseId(body.purchase.id);
+        setPixModalOpen(false);
+        setLegacyPlate(""); setMercosurPlate(""); setSelectedRounds([]); setStake("1,00");
+        setPaymentMethod("PIX");
+        setNotice(body.message ?? "Pagamento confirmado e recibo emitido.");
+        setPurchase(null);
+        void fetch("/api/player/withdrawals", { cache: "no-store" })
+          .then((response) => response.json())
+          .then((wallet) => { if (typeof wallet.availableCents === "number") setWalletBalanceCents(wallet.availableCents); })
+          .catch(() => undefined);
+      } else {
+        setPixModalOpen(true);
+      }
       idempotencyKey.current = null;
       setNotice(body.message ?? "Compra registrada.");
     } catch (reason) {
@@ -185,6 +223,7 @@ export function PlayerPurchaseForm() {
       <span className="feature-label">Nova aposta</span>
       <h2 id="player-purchase-heading">Escolha a placa e a sequência de rodadas</h2>
       <p>Toque em uma placa ou nas duas, digite os números e escolha as rodadas.</p>
+      <p>Saldo da conta: <strong>{walletBalanceCents === null ? "consultando…" : formatMoney(walletBalanceCents)}</strong></p>
       <form onSubmit={submit} className="purchase-form">
         <div className="plate-pair" aria-label="Escolha uma ou as duas placas para apostar">
           <div className="plate-entry plate-entry-card">
@@ -204,6 +243,12 @@ export function PlayerPurchaseForm() {
           <input inputMode="decimal" value={stake} onChange={(event) => setStake(event.target.value)} placeholder="1,00" required />
         </label>
         <fieldset>
+          <legend>Forma de pagamento</legend>
+          <label className="round-option"><input type="radio" name="player-payment-method" value="PIX" checked={paymentMethod === "PIX"} onChange={() => setPaymentMethod("PIX")} /> Pix — pagar e aguardar confirmação</label>
+          <label className="round-option"><input type="radio" name="player-payment-method" value="WALLET" checked={paymentMethod === "WALLET"} onChange={() => setPaymentMethod("WALLET")} /> Saldo da conta — {walletBalanceCents === null ? "consultando saldo…" : formatMoney(walletBalanceCents)}</label>
+          {paymentMethod === "WALLET" && !walletHasEnough && <p role="alert" className="note-inline">{walletBalanceCents === null ? "Não foi possível consultar o saldo. Atualize a carteira ou escolha Pix." : `Saldo insuficiente: você tem ${formatMoney(walletBalanceCents)} e precisa de ${formatMoney(totalEstimate)}. Escolha Pix para continuar ou adicione saldo.`}</p>}
+        </fieldset>
+        <fieldset>
           <legend>Sequência de rodadas (até 10, sem pular sorteios)</legend>
           {loadingRounds ? <p>Carregando rodadas…</p> : rounds.length === 0 ? <p>Não há rodadas disponíveis para compra no momento.</p> : (
             <div className="round-options">{rounds.slice(0, 10).map((round, index) => (
@@ -216,7 +261,7 @@ export function PlayerPurchaseForm() {
           {selectedRounds.length === 10 && <small>Limite de 10 rodadas por compra atingido.</small>}
         </fieldset>
         {stakeCents !== null && selectedRounds.length > 0 && <p>Total estimado: <strong>{formatMoney(stakeCents * selectedRounds.length * plateLines.length)}</strong> ({selectedRounds.length} rodada(s)).</p>}
-        <button type="submit" disabled={submitting || loadingRounds || rounds.length === 0}>{submitting ? "Registrando…" : "Continuar para Pix"}</button>
+        <button type="submit" disabled={submitting || loadingRounds || rounds.length === 0}>{submitting ? "Registrando…" : paymentMethod === "WALLET" ? "Pagar com saldo da conta" : "Continuar para Pix"}</button>
       </form>
       {error && <p role="alert" className="note-inline">{error}</p>}
       {notice && <p role="status" className="note-inline">{notice}</p>}
