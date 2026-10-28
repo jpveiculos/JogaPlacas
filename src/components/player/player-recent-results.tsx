@@ -28,10 +28,9 @@ export function PlayerRecentResults() {
   return (
     <section className="feature-card results-card" aria-labelledby="player-results-heading">
       <span className="feature-label">Resultados</span><h2 id="player-results-heading">Últimos resultados</h2>
-      <p>Os sorteios cinza e Mercosul são independentes. Cada placa vale apenas para apostas do mesmo formato.</p>
       {loading ? <p>Carregando resultados…</p> : error ? <p role="alert" className="note-inline">{error}</p> : results.length === 0 ? (
         <p>Ainda não há resultados publicados nas últimas 24 horas.</p>
-      ) : <div className="recent-results-list">{results.map((result) => (
+      ) : <div className="recent-results-list">{results.slice(0, 10).map((result) => (
         <article className="recent-result" key={result.id}>
           <div className="recent-result-heading"><strong>Rodada {result.code}</strong><time dateTime={result.resultAt}>{formatDate(result.resultAt)}</time></div>
           <div className="result-plates">
