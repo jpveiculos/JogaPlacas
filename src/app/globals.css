@@ -857,3 +857,17 @@ p, .intro, .auth-description, .area-description, .feature-card p,
 @media (min-width:640px) {
   .plate-pair { grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:1.25rem; align-items:center; }
 }
+
+
+/* Compact horizontal round selector and explicit multi-plate queue. */
+.round-carousel{display:flex;gap:10px;overflow-x:auto;overscroll-behavior-x:contain;scroll-snap-type:x proximity;padding:2px 2px 10px;max-width:100%;-webkit-overflow-scrolling:touch}
+.round-carousel>.round-option{flex:0 0 min(78vw,260px);min-width:0;scroll-snap-align:start;min-height:100px}
+.round-carousel>.round-option span{overflow-wrap:anywhere}
+.plate-add-actions{display:grid;gap:10px}
+.purchase-form button.secondary-action{justify-self:start;min-height:42px;padding:9px 16px;border:1px solid var(--border);background:var(--surface);color:var(--text)}
+.added-plates{display:grid;gap:8px;padding:12px;border:1px solid var(--border);border-radius:12px}
+.added-plate-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--border)}
+.added-plate-row:last-child{border-bottom:0}
+.added-plate-row>span{font-weight:800;letter-spacing:.04em;overflow-wrap:anywhere}
+.purchase-form button.remove-plate-button{min-height:34px;padding:6px 10px;background:transparent;color:var(--text);border:1px solid var(--border);font-size:.86rem}
+@media(max-width:480px){.round-carousel>.round-option{flex-basis:78vw}.added-plate-row{align-items:flex-start}}
