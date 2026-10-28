@@ -1152,3 +1152,26 @@ p, .intro, .auth-description, .area-description, .feature-card p,
 .site-page-shell{padding-top:0!important}
 .site-page-shell>.site-header{margin-bottom:24px}
 @media(max-width:480px){.site-header{min-height:72px;padding:6px 10px}.site-header-brand img{height:clamp(50px,14vw,62px);max-width:76vw}.auth-layout{padding-left:10px;padding-right:10px}}
+
+
+/* Página inicial: hero e imagens proporcionais em celular, sem placa cortada. */
+.home-page .home-hero{box-sizing:border-box;grid-template-columns:minmax(0,1fr) minmax(0,.9fr);gap:clamp(18px,3vw,40px);padding:clamp(20px,4vw,44px) clamp(14px,3vw,32px) clamp(28px,5vw,52px)}
+.home-page .home-hero-art{box-sizing:border-box;width:100%;min-width:0;gap:clamp(10px,2vw,18px);padding:18px 12px 28px}
+.home-page .home-plate-card{box-sizing:border-box;width:min(100%,390px);min-width:0;padding:clamp(10px,2vw,18px);transform:none;overflow-wrap:anywhere}
+.home-page .home-plate-card strong{font-size:clamp(1.25rem,3vw,2.25rem);letter-spacing:.04em;overflow-wrap:anywhere}
+.home-page .home-plate-mercosur{justify-self:end}
+.home-page .home-hero-stamp{width:clamp(66px,8vw,96px);height:clamp(66px,8vw,96px);font-size:clamp(.7rem,1.4vw,.9rem)}
+@media(max-width:700px){
+ .home-page .site-header{min-height:72px}
+ .home-page .site-header-brand img{height:56px;max-width:min(76vw,240px)}
+ .home-page .home-hero{grid-template-columns:minmax(0,1fr);gap:12px;padding:18px 14px 28px}
+ .home-page .home-hero:before{inset:0;border-radius:20px}
+ .home-page .home-hero-copy{min-width:0}
+ .home-page .home-hero h1{font-size:clamp(2rem,8vw,2.8rem);line-height:1.05}
+ .home-page .home-hero-description{margin:12px 0;font-size:1rem;line-height:1.5}
+ .home-page .home-hero-actions{gap:8px;margin-top:16px}
+ .home-page .home-hero-art{width:100%;max-width:440px;margin:0 auto;padding:8px 8px 30px;gap:10px}
+ .home-page .home-plate-card{width:min(88%,360px);padding:10px 12px;border-width:3px;border-radius:12px}
+ .home-page .home-plate-card strong{font-size:clamp(1.35rem,6vw,2rem)}
+ .home-page .home-hero-stamp{right:0;bottom:0;width:68px;height:68px;font-size:.7rem}
+}
