@@ -140,8 +140,6 @@ export function PlayerPurchaseForm() {
   const legacyPlateValid = /^[A-Z]{3}-?\d{4}$/.test(normalizedLegacyPlate);
   const mercosurPlateValid = /^[A-Z]{3}\d[A-Z]\d{2}$/.test(normalizedMercosurPlate);
   const plateCount = (legacyPlateValid ? 1 : 0) + (mercosurPlateValid ? 1 : 0);
-  const totalEstimate = stakeCents !== null ? stakeCents * selectedRounds.length * plateCount : 0;
-  const walletHasEnough = walletBalanceCents !== null && totalEstimate > 0 && walletBalanceCents >= totalEstimate;
   const currentPlateDisplays = [
     ...(legacyPlateValid ? [normalizedLegacyPlate.replace(/-/g, "")] : []),
     ...(mercosurPlateValid ? [normalizedMercosurPlate] : []),
@@ -150,6 +148,8 @@ export function PlayerPurchaseForm() {
     ...addedPlates.map((plateDisplay) => ({ plateDisplay, stakeCents: stakeCents ?? 0 })),
     ...currentPlateDisplays.filter((plateDisplay) => !addedPlates.includes(plateDisplay)).map((plateDisplay) => ({ plateDisplay, stakeCents: stakeCents ?? 0 })),
   ];
+  const totalEstimate = stakeCents !== null ? stakeCents * selectedRounds.length * plateLines.length : 0;
+  const walletHasEnough = walletBalanceCents !== null && totalEstimate > 0 && walletBalanceCents >= totalEstimate;
   function addCurrentPlates() {
     if (!currentPlateDisplays.length) { setError("Preencha uma placa válida antes de adicionar."); return; }
     setError(""); setNotice("");
