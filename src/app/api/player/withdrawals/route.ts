@@ -32,7 +32,6 @@ export async function GET(request: NextRequest) {
 }
 
 const requestSchema = z.object({
-  amountCents: z.number().int().positive().max(100_000_000),
   pixKey: z.string().trim().min(3).max(200).refine(isPlausiblePixKey, "Informe uma chave Pix em formato de e-mail, telefone, CPF/CNPJ ou chave aleatória UUID."),
 }).strict();
 
@@ -45,7 +44,7 @@ export async function POST(request: NextRequest) {
   let payload: unknown;
   try { payload = await request.json(); } catch { return NextResponse.json({ error: "Corpo da requisição inválido." }, { status: 400, headers }); }
   const parsed = requestSchema.safeParse(payload);
-  if (!parsed.success) return NextResponse.json({ error: "Informe um valor positivo e uma chave Pix válida." }, { status: 400, headers });
+  if (!parsed.success) return NextResponse.json({ error: "Informe uma chave Pix válida." }, { status: 400, headers });
   let encryptedPixKey: string;
   try { encryptedPixKey = encryptPixKey(parsed.data.pixKey); }
   catch { return NextResponse.json({ error: "A chave de criptografia de chaves Pix não está configurada corretamente. O saque não foi solicitado." }, { status: 503, headers }); }
@@ -55,14 +54,15 @@ export async function POST(request: NextRequest) {
       await tx.$queryRawUnsafe('SELECT "id" FROM "User" WHERE "id" = $1 FOR UPDATE', user.id);
       const ledger = await tx.ledgerEntry.aggregate({ where: { userId: user.id }, _sum: { amountCents: true } });
       const available = ledger._sum.amountCents ?? 0;
-      if (parsed.data.amountCents > available) throw new Error("INSUFFICIENT_BALANCE");
+      if (available <= 0) throw new Error("INSUFFICIENT_BALANCE");
+      const amountCents = available;
       const withdrawal = await tx.withdrawal.create({ data: {
-        userId: user.id, amountCents: parsed.data.amountCents, pixKeyEncrypted: encryptedPixKey,
+        userId: user.id, amountCents, pixKeyEncrypted: encryptedPixKey,
         idempotencyKey: "withdrawal:" + randomUUID(),
       } });
       await tx.ledgerEntry.create({ data: {
         userId: user.id, withdrawalId: withdrawal.id, type: "WITHDRAWAL_RESERVE",
-        amountCents: -parsed.data.amountCents, currency: "BRL",
+        amountCents: -amountCents, currency: "BRL",
         idempotencyKey: "withdrawal-reserve:" + withdrawal.id,
         description: "Reserva de saldo para solicitação de saque " + withdrawal.id,
       } });
