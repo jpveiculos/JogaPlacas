@@ -7,7 +7,7 @@ import { CashierSalesSummary } from "@/components/cashier/cashier-sales-summary"
 export const dynamic = "force-dynamic";
 export default async function CashierPage() {
   const user = await requireRole("CASHIER");
-  return <AreaShell title="Área do cambista" username={user.username}>
+  return <AreaShell title="Área do cambista" username={user.username} compact>
     <CashierSalesSummary />
     <CashierSaleForm />
     <QuickTicketCheck compact />
