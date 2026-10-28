@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 export default async function PlayerPage() {
   const user = await requireRole("PLAYER");
   return (
-    <AreaShell title="Área do jogador" username={user.username} description="Registre uma aposta, acompanhe o rateio e veja seus jogos e resultados em plaquinhas.">
+    <AreaShell title="Área do jogador" username={user.username} compact>
       <PlayerPurchaseForm />
       <PlayerWalletWithdrawals />
       <PlayerBetHistory />
