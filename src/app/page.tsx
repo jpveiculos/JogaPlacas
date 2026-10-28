@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { BrandLogo } from "@/components/brand-logo";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
@@ -11,7 +12,7 @@ export default function HomePage() {
   return (
     <div className="home-page">
       <header className="home-header">
-        <Link href="/" className="home-brand home-wordmark" aria-label="Joga Placa — página inicial"><span className="wordmark-joga">JOGA</span><span className="wordmark-placa">PLACA</span></Link>
+        <BrandLogo className="home-brand" />
         <nav className="home-nav" aria-label="Navegação principal">
           <a href="#como-funciona">Como funciona</a>
           <Link className="home-login-button" href="/login">Entrar</Link>
@@ -57,7 +58,7 @@ export default function HomePage() {
       </section>
 
       <footer className="home-footer">
-        <Link href="/" className="home-brand home-wordmark" aria-label="Joga Placa — página inicial"><span className="wordmark-joga">JOGA</span><span className="wordmark-placa">PLACA</span></Link>
+        <BrandLogo className="home-brand" />
         <div><Link href="/termos-de-uso">Termos de uso</Link><Link href="/login">Entrar</Link></div>
         <p>Guarde o recibo impresso. A consulta é feita pelo QR Code do próprio documento.</p>
       </footer>
