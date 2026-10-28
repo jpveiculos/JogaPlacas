@@ -114,3 +114,7 @@ Esta regra substitui qualquer instrução anterior que permita ao cambista pagar
 - Exibir as placas, o botão **Adicionar mais placas** e a lista de placas adicionadas; logo em seguida, exibir o cartão **Rodadas**.
 - Depois do cartão de rodadas, exibir o valor por placa/rodada, a forma de pagamento e o botão de confirmação.
 - A alteração é somente de apresentação; preservar as regras e validações existentes de rodadas e pagamento.
+
+
+## Ajuste de texto — menu da carteira digital do jogador (2026-10-28)
+- No menu suspenso da carteira digital, a descrição deve ser exatamente: **“Toque para consultar saldo ou solicitar saque”**. Não usar “seu saldo”, pois o texto deve ser curto e evitar redundância.
