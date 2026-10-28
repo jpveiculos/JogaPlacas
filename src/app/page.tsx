@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { BrandLogo } from "@/components/brand-logo";
 import { SiteHeader } from "@/components/site-header";
 
 export const dynamic = "force-dynamic";
