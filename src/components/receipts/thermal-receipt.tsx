@@ -53,6 +53,15 @@ export function ThermalReceipt({
     timeZone: "America/Sao_Paulo",
   }).format(issuedDate);
   const date = `${dateLabel} ${timeLabel}`;
+  const drawDateTime = (value: string) => {
+    const drawDate = new Date(value);
+    if (Number.isNaN(drawDate.getTime())) return "Horário do sorteio indisponível";
+    return new Intl.DateTimeFormat("pt-BR", {
+      day: "2-digit", month: "2-digit", year: "numeric",
+      hour: "2-digit", minute: "2-digit", hourCycle: "h23",
+      timeZone: "America/Sao_Paulo",
+    }).format(drawDate);
+  };
 
   const qrStyle: CSSProperties = { width: 76, height: 76, objectFit: "contain" };
   const [generatedQrUrl, setGeneratedQrUrl] = useState<string | null>(null);
@@ -117,6 +126,7 @@ export function ThermalReceipt({
                 <strong>{money(plate.stakeCents)}</strong>
               </div>
               <span>Repetição {repetitionNumbers[index]} · {plate.plateFormat === "LEGACY" ? "Placa cinza" : "Placa Mercosul"}</span>
+              <strong className="thermal-receipt-draw-time">Sorteio: {drawDateTime(plate.resultAt)}</strong>
               <span>Rodada {plate.roundCode}</span>
             </div>
           ))}
