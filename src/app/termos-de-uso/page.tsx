@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { SiteHeader } from "@/components/site-header";
 
 export const metadata = {
   title: "Termos de uso em preparação | JogaPlacas",
@@ -6,7 +7,7 @@ export const metadata = {
 };
 
 export default function TermsPage() {
-  return <main className="page-shell"><article className="feature-card terms-page">
+  return <main className="page-shell site-page-shell"><SiteHeader /><article className="feature-card terms-page">
     <span className="feature-label">Em preparação</span>
     <h1>Termos de uso</h1>
     <p>Os termos de uso definitivos ainda estão em elaboração. Eles serão preparados após a conclusão e revisão do funcionamento da plataforma, incluindo modalidades de jogo, regras de participação, pagamentos, apuração dos resultados, créditos e resgate de prêmios, comprovantes, prazos, atendimento e demais condições aplicáveis.</p>
