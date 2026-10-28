@@ -94,7 +94,7 @@ export function ThermalReceipt({
     <div className="thermal-receipt-print-root">
       <article id={`thermal-receipt-${receiptCode}`} className="thermal-receipt" aria-label={`Recibo ${receiptCode}`}>
         <header className="thermal-receipt-header">
-          <strong className="thermal-receipt-brand">JOGA PLACAS</strong>
+          <strong className="thermal-receipt-brand">JOGA PLACA</strong>
           <span>COMPROVANTE DE APOSTA</span>
           <span>{date}</span>
         </header>
