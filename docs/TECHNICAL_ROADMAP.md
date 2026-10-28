@@ -694,3 +694,11 @@ Esta regra substitui qualquer instrução anterior que permita ao cambista pagar
 - **Correção complementar feita:** em telas de até 640px, a regra específica do cartão Nova aposta agora define `padding-top:6px`. O restante do padding, as placas e os controles não são alterados por esta regra.
 - **Arquivo de código:** `src/app/globals.css`; commit `f01ab24957be232a09020fa0a1a505c06b971455`.
 - **Estado:** aguardando deploy e inspeção visual no endereço de desenvolvimento. A compilação, isoladamente, não valida o resultado visual.
+
+## Área do cambista — menu expansível “Últimos resultados” (2026-10-28)
+
+- O componente `PlayerRecentResults` é reutilizado dentro de um elemento `details.player-collapsible-section` na página do cambista, depois do formulário de venda. Por estar antes do rodapé do `AreaShell`, fica acima do botão **Sair**, na parte inferior da página.
+- O menu usa o mesmo visual e conteúdo da área do jogador e começa recolhido. Exibe até 10 resultados publicados, com horário/código da rodada e placas cinza e Mercosul.
+- A rota autenticada `GET /api/player/results` foi ajustada para aceitar `PLAYER` e `CASHIER`, mantendo bloqueio de não autenticados, outros papéis e contas com troca de senha obrigatória. Respostas continuam privadas e sem cache.
+- Não foi criada funcionalidade de histórico de vendas, reimpressão/segunda via, consulta de recibos ou pagamento de prêmios pelo cambista.
+- **Implementado no código desta branch; não considerar validado/publicado até** confirmar testes/build, deploy Railway e funcionamento visual em celular e desktop.
