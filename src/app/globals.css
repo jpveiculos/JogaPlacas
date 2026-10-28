@@ -1127,6 +1127,7 @@ p, .intro, .auth-description, .area-description, .feature-card p,
 @media (max-width: 640px) {
   .area-page-compact .feature-card[aria-label="Nova aposta"] {
     margin-top: 0;
+    padding-top: 6px;
   }
   .area-page-compact .feature-card[aria-label="Nova aposta"] > .feature-label {
     display: block;
