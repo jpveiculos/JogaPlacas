@@ -801,7 +801,12 @@ p, .intro, .auth-description, .area-description, .feature-card p,
 
 /* Compact dual-plate entry: each plate remains separate and directly editable. */
 .plate-pair { display:grid; grid-template-columns:1fr; gap:1rem; margin-block:.5rem 1rem; }
-.plate-entry-card { position:relative; width:100%; max-width:560px; margin-inline:auto; background:transparent; border:0; box-shadow:none; outline:0; }
+.plate-pair,
+.plate-entry,
+.plate-entry-card,
+.purchase-form .plate-tap-target,
+.plate-entry-card .plate-tap-target { background:transparent!important; border-color:transparent!important; box-shadow:none!important; }
+.plate-entry-card { position:relative; width:100%; max-width:560px; margin-inline:auto; border:0!important; outline:0; }
 .plate-tap-target,
 .purchase-form .plate-tap-target,
 .plate-entry-card .plate-tap-target { display:block; width:100%; min-height:0; margin:0; padding:0; border:0; border-radius:0; background:transparent!important; color:inherit; box-shadow:none; outline-offset:3px; cursor:text; appearance:none; -webkit-appearance:none; }
