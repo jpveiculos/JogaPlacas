@@ -18,7 +18,7 @@
 
 ## Atualização de implementação — página pública e cadastro (2026-10-26)
 
-- A rota `/` já contém a página pública com apresentação, consulta de recibo, resultados públicos e link de login; não deve ser substituída pela tela de login.
+- Registro histórico de 2026-10-26: naquela etapa a home era descrita com consulta e resultados públicos. A decisão de 2026-10-28 substituiu esse comportamento; a home atual não deve ter painel geral de resultados nem busca por código.
 - Nesta branch, estão sendo adicionados os acessos visíveis a `/cadastro` e o fluxo inicial de criação de conta de jogador, com senha armazenada por hash e sessão segura.
 - **Ainda não considerar pronto para produção:** executar typecheck, lint, testes e build; testar cadastro/login no Railway; adicionar/validar limitação persistente de tentativas e controles antiabuso para cadastro público; confirmar a branch e o domínio configurados no serviço.
 - Cadastro público cria exclusivamente papel `PLAYER`. Administradores e cambistas continuam fora do cadastro público.
@@ -120,7 +120,7 @@
 - O modal Pix é uma sobreposição na mesma área/tela atual. Não redirecionar para o checkout hospedado do provedor, não abrir nova página e não apresentar link que leve para fora da área do jogador/cambista.
 - O botão **“Sair e iniciar outro jogo”** fecha apenas o modal e libera a interface para a próxima venda. A cobrança original permanece pendente no servidor, com o mesmo identificador e chave de idempotência, até confirmação, expiração, cancelamento pelo provedor ou reconciliação explícita. Fechar o modal nunca confirma nem cancela o pagamento.
 - Depois de sair do modal Pix, limpar apenas o formulário local da próxima venda; não apagar nem alterar o registro financeiro da cobrança anterior. A interface deve continuar conciliando o pagamento anterior sem bloquear a próxima venda.
-- Após confirmação autêntica do pagamento, exibir o recibo oficial em um modal sobre a mesma área. O modal deve ter **Imprimir** e **Fechar**; fechar o recibo não apaga nem recria a compra. A reimpressão usa o mesmo código e os mesmos dados oficiais.
+- Após confirmação autêntica do pagamento, exibir o recibo oficial original em um modal sobre a mesma área. O modal deve ter **Imprimir** e **Fechar**; fechar o recibo não apaga nem recria a compra. A impressão faz parte da emissão original. Depois de encerrado o fluxo, não oferecer reimpressão nem segunda via.
 - Nenhuma ação de pagamento, saída do QR, recibo ou impressão deve navegar o cambista ou jogador para outra página ou área. O link de pagamento externo do Mercado Pago não faz parte do fluxo.
 - No modal de jogo do jogador e no fluxo de venda do cambista, apresentar o gerador com ações simples **“Gerar placa”**, **“Gerar outra”** e **“Adicionar ao jogo”**. Mostrar claramente a placa sugerida e manter a escolha sob controle do usuário.
 - Mensagens e estados de pagamento devem ser claros, sem afirmar sucesso antes da confirmação do servidor/provedor.
@@ -265,7 +265,7 @@ A revisão de `prisma/schema.prisma` e das quatro migrações encontrou invarian
 - A consulta pública aceita exclusivamente o código completo do recibo com prefixo JP-. A busca por placa foi removida porque a mesma placa pode aparecer em diversas apostas e rodadas, misturando resultados e gerando confusão.
 - A consulta pública retorna todas as linhas/rodadas confirmadas do recibo informado e apresenta, por rodada, prêmio confirmado, não premiada ou estado ainda pendente conforme a apuração persistida.
 - O campo de consulta não será duplicado na área do jogador: essa área deve mostrar o histórico de jogos do próprio jogador em lista organizada, destacando visualmente os prêmios confirmados em verde.
-- O mesmo componente de consulta por recibo deve ser disponibilizado na área do cambista, que poderá consultar o recibo do cliente e apoiar a impressão/segunda via do comprovante. Não se deve expor informações privadas além das necessárias para conferir a aposta.
+- A área do cambista não disponibiliza componente de consulta por recibo, pesquisa, histórico ou segunda via. O cambista registra a nova aposta e entrega o recibo original; a consulta posterior é feita pelo jogador ou por terceiro que escaneie o QR impresso.
 
 
 ## 19. Consulta por recibo na área do cambista — 2026-10-25
@@ -279,7 +279,7 @@ A revisão de `prisma/schema.prisma` e das quatro migrações encontrou invarian
 
 ## 20. Histórico individual do jogador — implementação
 
-- A área do jogador mostra o histórico das próprias compras dos últimos 7 dias; não deve conter campo de consulta por recibo, pois essa consulta é pública e também está disponível ao cambista.
+- A área do jogador mantém o histórico das próprias compras e suas consultas pessoais conforme as regras de retenção vigentes. Não precisa de campo de busca pública por código: o QR do recibo original abre a consulta específica.
 - O histórico é obtido por endpoint autenticado e filtrado no servidor pelo ID do jogador da sessão. Nunca aceitar um ID de jogador fornecido pelo cliente como fonte de autorização.
 - Agrupar por recibo/compra, rodada e placa, mostrando valor total, situação da compra/rodada, placa escolhida e os dois resultados independentes quando a rodada estiver concluída.
 - Estados legíveis por linha: compra ainda não confirmada, aguardando resultado, apuração pendente, não premiada e prêmio confirmado.
@@ -363,18 +363,18 @@ A implementação desta arquitetura ainda está pendente; o componente térmico 
 
 - A configuração da impressora, conexão e preferências pertence ao perfil/dispositivo de cada cambista e não altera configurações globais nem outros cambistas.
 - A impressão direta é o caminho prioritário. O diálogo HTML/PDF/compartilhamento é fallback para falha, indisponibilidade ou impressora incompatível.
-- A interface deve mostrar estados claros: pronta, enviando, impressa quando houver confirmação confiável do mecanismo, ou falha com alternativa de reimpressão/fallback. Não afirmar que imprimiu se só foi enviado o comando sem confirmação confiável.
+- A interface deve mostrar estados claros: pronta, enviando, impressão solicitada quando houver retorno confiável do mecanismo, ou falha. Durante o fluxo original, pode permitir nova tentativa da ação ainda aberta; não disponibilizar reimpressão/recuperação após o encerramento do fluxo.
 - O fluxo de pagamento e a emissão do recibo não dependem do sucesso da impressão. Uma falha de impressora não desfaz uma compra paga nem emite um segundo recibo; permite reimprimir o mesmo recibo/código oficial.
 - O sistema web sozinho não garante impressão Bluetooth direta universal, especialmente em iPhone/Safari. Para cumprir o caminho prioritário em cada plataforma, selecionar integração compatível (por exemplo, aplicativo auxiliar/ponte nativa ou aplicativo do sistema) e adaptadores de protocolo. Não prometer que qualquer Bluetooth funcione sem esse suporte.
 - Não adicionar uma configuração global de protocolo. Manter as configurações por cambista/dispositivo, com perfil automático quando possível e configuração manual mínima apenas quando necessária.
-- Fallbacks, reimpressão e mudanças de impressora nunca podem gerar outro código de recibo nem alterar os dados financeiros.
+- Fallbacks e mudanças de impressora durante a emissão original nunca podem gerar outro código de recibo nem alterar os dados financeiros. Após o encerramento, não disponibilizar reimpressão ou segunda via.
 
 
 ### Plataformas de cambista e impressão móvel — 2026-10-25
 
 **Decisão de produto:** a área do cambista será utilizada em celulares Android e iOS, com prioridade de uso e otimização para Android. Não é requisito oferecer fluxo de cambista em computador.
 
-**Experiência prioritária:** após a compra e a confirmação de pagamento, exibir o recibo oficial e permitir que o cambista toque em **Imprimir** para enviar o recibo diretamente à impressora conectada. Se a impressão direta falhar ou não estiver disponível, oferecer reimpressão do mesmo recibo e alternativas (abrir/compartilhar PDF ou imprimir pelo sistema).
+**Experiência prioritária:** após a compra e a confirmação de pagamento, exibir o recibo oficial original e permitir imprimir durante o fluxo de emissão. Se a impressão direta falhar ou não estiver disponível, oferecer alternativa dentro desse mesmo fluxo (por exemplo, abrir/baixar PDF ou imprimir pelo sistema). Ao encerrar o fluxo, não oferecer reimpressão nem segunda via.
 
 **Arquitetura recomendada:** manter regras de negócio, dados de compra, emissão do recibo e layout canônico independentes da plataforma. Para impressão direta móvel, usar uma camada nativa/bridge compatível com Android e iOS; não depender exclusivamente das APIs do navegador. Priorizar Android e suportar Bluetooth Classic e BLE quando viável; para iOS, implementar o transporte que a impressora e as APIs permitirem, dando preferência a BLE compatível ou integração de fabricante quando necessária.
 
@@ -553,7 +553,7 @@ A decisão inicial de não criar uma página principal foi substituída. O domí
 - **Banner/elemento visual explicativo:** representar os formatos de placa cinza e Mercosul, como se registra a placa e as equivalências/categorias e valores de prêmio aprovados. Os valores exibidos devem vir das regras oficiais vigentes, sem inventar multiplicadores, garantias ou prêmios não configurados.
 - **Como jogar e regras essenciais:** explicar o preenchimento da placa, as categorias, as rodadas e a forma de conferir o resultado; diferenciar claramente os dois formatos de placa.
 - **Acesso à conta:** botões/áreas visíveis de “Entrar” e “Criar conta”. O cadastro público cria conta de jogador, nunca de administrador. Ao concluir cadastro, o novo jogador vai para a área do jogador; login existente também direciona o jogador à sua área. Contas de cambista e administrador são encaminhadas conforme seu papel e suas permissões.
-- **Resultados públicos:** incluir na própria página os resultados publicados da placa cinza e da placa Mercosul, em linhas claras, com rodada e data/hora de São Paulo. Preservar paginação/histórico e atualização dos resultados conforme a especificação da consulta pública.
+- **Registro histórico superado em 2026-10-28:** resultados públicos gerais na homepage foram removidos por decisão de produto. Resultados oficiais permanecem disponíveis na consulta específica do recibo via QR e nas áreas autenticadas conforme permissões; não recriar painel geral público.
 - **Ganhadores e prêmios:** apresentar os prêmios efetivamente creditados e os ganhadores públicos elegíveis, com identificação mascarada e sem expor telefone, nome real, dados de conta ou dados financeiros pessoais. Não anunciar como prêmio pago o que ainda não foi creditado.
 - **Consulta de recibo em destaque:** a home deve ter uma área de pesquisa própria, fácil de localizar e visualmente destacada — não escondida no rodapé nem misturada a links secundários — com um título direto como “Confira seu jogo” ou “Consultar recibo”, instrução curta, campo para digitar/colar o código completo `JP-...` e botão claro “Consultar”. Deve funcionar sem login e ser especialmente simples para quem recebeu o recibo impresso ao jogar com um cambista: pegar o código no recibo, digitá-lo e conferir se ganhou. No celular, o campo e o botão devem estar visíveis, legíveis e fáceis de tocar; informar como encontrar o código no recibo e apresentar um estado de carregamento, resultado encontrado ou mensagem clara de código inválido/não encontrado, sem revelar dados pessoais. Consultar somente pelo código do recibo, nunca por placa. A API pública existente continua sendo a fonte de verdade e só pode retornar os campos autorizados.
 - **Experiência mobile e acessibilidade:** conteúdo objetivo, fonte legível, alvos de toque adequados, carregamento simples e navegação clara para pessoas idosas ou pouco familiarizadas com plataformas digitais.
@@ -573,7 +573,7 @@ A página principal é uma camada de apresentação/consulta pública, não prov
 
 ### Estado de implementação
 
-A primeira implementação da página principal foi adicionada à branch `feature/dual-plate-draw`: `src/app/page.tsx` agora apresenta a página pública e redireciona sessões válidas à área correspondente por papel (incluindo troca obrigatória de senha). A home integra o componente de consulta pública do recibo e o painel de resultados/ganhadores existentes, preserva `/resultados` e usa estilos responsivos. Esta alteração ainda precisa passar por lint, typecheck, testes e build; a página não foi validada em execução real. O cadastro público de jogador, a apresentação de valores oficiais de prêmio a partir da configuração vigente e a revisão de acessibilidade visual continuam pendentes; não apresentar esses itens como implementados.
+Registro histórico da primeira implementação (branch `feature/dual-plate-draw`, superado pela decisão de 2026-10-28): a home então integrava consulta por código e painel de resultados/ganhadores. Não usar esse comportamento como requisito atual. Esta alteração ainda precisa passar por lint, typecheck, testes e build; a página não foi validada em execução real. O cadastro público de jogador, a apresentação de valores oficiais de prêmio a partir da configuração vigente e a revisão de acessibilidade visual continuam pendentes; não apresentar esses itens como implementados.
 
 
 ## Decisão vigente — cadastro mínimo, recibo digital e busca administrativa (2026-10-26)
@@ -585,7 +585,7 @@ O único cadastro de jogador exigido pela plataforma é nome de usuário e senha
 Após confirmação válida da compra/pagamento, emitir um recibo digital com código único e QR Code para consultar aquele recibo publicamente. Disponibilizar baixar e imprimir. O recibo e o QR de consulta não substituem o QR/código de pagamento Pix. Compra pendente não deve ser apresentada como paga nem gerar recibo oficial de participação confirmada.
 
 ### Cambista
-O cambista usa o mesmo princípio de venda sem cadastro do comprador: placa, parâmetros essenciais da aposta, valor e fluxo de pagamento permitido. Entrega recibo com código e QR de consulta; não coleta dados pessoais do comprador. Remover o buscador de clientes e as pesquisas por nome/telefone/WhatsApp/placa da sua área; segunda via, se necessária, deve usar código de recibo e nunca duplicar a venda.
+O cambista registra a venda sem cadastro do comprador: placa, parâmetros essenciais da aposta, valor e fluxo de pagamento permitido. Entrega o recibo original com QR de consulta; não coleta dados pessoais do comprador. Não há histórico/consulta na área do cambista nem segunda via por código ou qualquer outro meio.
 
 ### Administração
 A área ADMIN deve ter um buscador próprio de contas de jogadores para manutenção, com pesquisa por nome de usuário e apresentação dos dados mínimos necessários. Exigir autenticação/autorização no servidor, limitar resultados, auditar ações e não introduzir dados pessoais que a plataforma decidiu não coletar.
