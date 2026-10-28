@@ -264,7 +264,7 @@ export function CashierSaleForm() {
       {purchase && pixModalOpen && (
         <div className="modal-backdrop" role="presentation">
         <section className="modal-panel pix-modal" role="dialog" aria-modal="true" aria-labelledby="pix-modal-heading">
-          <h3 id="pix-modal-heading">Pix da venda</h3><p>Status: aguardando confirmação do pagamento</p><p>Total: <strong>{formatMoney(purchase.totalCents)}</strong></p>
+          <img className="pix-brand-logo" src="/images/brand/joga-placa-logo.jpg" alt="Joga Placa" /><h3 id="pix-modal-heading">Pix da venda</h3><p>Status: aguardando confirmação do pagamento</p><p>Total: <strong>{formatMoney(purchase.totalCents)}</strong></p>
           {purchase.participations.flatMap((participation) => participation.lines.map((line, index) => (
             <div key={participation.roundId + line.plateDisplay + index} className="receipt-plate-line">
               <PlateVisual format={/^[A-Z]{3}-?\d{4}$/.test(line.plateDisplay) ? "LEGACY" : "MERCOSUR"} value={line.plateDisplay} />
