@@ -53,3 +53,13 @@ Atualizado em 28/10/2026.
 - Na área do cambista, manter somente o formulário de registrar uma nova aposta. Remover histórico/resumo de vendas e opções de consulta de apostas, resultados e segunda via.
 - O cambista orienta o jogador a consultar o recibo original pelo QR Code impresso. A área do jogador continua separada e mantém seu próprio histórico de jogadas e consultas; essa alteração não modifica essa área.
 - A página pública específica do QR e a API de verificação devem continuar disponíveis para validar o código do recibo, sem incluir reemissão, regeneração ou impressão de uma nova via.
+
+
+## Resgate de prêmio pelo recibo QR — decisão de 2026-10-28
+- A página `/verificar-recibo/{receiptCode}` é a consulta pública específica do recibo. Quando o sistema oficial indicar uma participação premiada com crédito ainda não confirmado, a página deve orientar o jogador a guardar o recibo físico original e contatar o atendimento oficial para receber instruções de resgate/conferência.
+- Exibir o botão **Solicitar resgate pelo WhatsApp** somente quando houver prêmio indicado ainda sem crédito confirmado. O link abre o WhatsApp com mensagem pré-preenchida com código do recibo, código da rodada, placa/formato e valor do prêmio indicado. Não incluir senha, dados de conta, chave Pix ou outros dados sensíveis.
+- A mensagem pré-preenchida é um pedido de atendimento, não uma autorização de pagamento. O servidor e a equipe responsável devem validar o recibo, resultado, valor e estado financeiro antes de pagar. Não prometer que o valor já foi pago se não houver confirmação oficial.
+- O número do atendimento é configurado pela variável pública `NEXT_PUBLIC_PRIZE_SUPPORT_WHATSAPP`, contendo somente dígitos, com código do país e DDD (Brasil: `55 + DDD + número`). Nunca inventar ou embutir número não confirmado no código. Configurar no serviço web do Railway e fazer novo deploy para a variável pública ser incorporada ao bundle.
+- Se a variável não estiver configurada, não mostrar link quebrado nem inventar contato; mostrar aviso de que o contato ainda não foi configurado.
+- Este fluxo não oferece segunda via nem reimpressão. O recibo físico original continua sendo a referência; a página QR serve para conferir o registro oficial e iniciar o contato de resgate.
+- O fluxo operacional de prêmios de venda do cambista continua sujeito à validação ponta a ponta; a presença do botão não comprova que o pagamento do prêmio está integrado ou concluído.
