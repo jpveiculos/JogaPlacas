@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ReceiptVerification } from "@/components/receipts/receipt-verification";
+import { BrandLogo } from "@/components/brand-logo";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
@@ -15,9 +16,7 @@ export default async function VerifyReceiptPage({ params }: PageProps) {
   return (
     <main className="home-page" style={{ minHeight: "100vh", padding: "32px 16px" }}>
       <header className="home-header">
-        <Link href="/" className="home-brand" aria-label="Joga Placa — página inicial">
-          <img src="/images/brand/joga-placa-logo.jpg" alt="Joga Placa" />
-        </Link>
+        <BrandLogo className="home-brand" />
       </header>
       <section className="home-ticket-section" style={{ maxWidth: 720, margin: "32px auto" }}>
         <div className="home-section-intro">
