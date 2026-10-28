@@ -46,6 +46,7 @@ function parseStake(value: string): number | null {
 
 export function CashierSaleForm() {
   const [rounds, setRounds] = useState<AvailableRound[]>([]);
+  const [clockNow, setClockNow] = useState(() => Date.now());
   const [selectedRounds, setSelectedRounds] = useState<string[]>([]);
   const [legacyPlate, setLegacyPlate] = useState("");
   const [mercosurPlate, setMercosurPlate] = useState("");
@@ -107,6 +108,42 @@ export function CashierSaleForm() {
       document.removeEventListener("visibilitychange", refreshOnReturn);
     };
   }, []);
+
+  useEffect(() => {
+    let timer: number | undefined;
+    let active = true;
+    const scheduleNextCutoff = () => {
+      if (timer !== undefined) window.clearTimeout(timer);
+      const now = Date.now();
+      setClockNow(now);
+      const nextCutoff = rounds
+        .map((round) => new Date(round.cutoffAt).getTime())
+        .filter((cutoff) => Number.isFinite(cutoff) && cutoff > now)
+        .sort((a, b) => a - b)[0];
+      if (nextCutoff !== undefined) {
+        timer = window.setTimeout(() => {
+          if (!active) return;
+          setClockNow(Date.now());
+          scheduleNextCutoff();
+        }, Math.max(0, nextCutoff - now));
+      }
+    };
+    scheduleNextCutoff();
+    const onReturn = () => { if (document.visibilityState === "visible") scheduleNextCutoff(); };
+    document.addEventListener("visibilitychange", onReturn);
+    window.addEventListener("focus", onReturn);
+    return () => {
+      active = false;
+      if (timer !== undefined) window.clearTimeout(timer);
+      document.removeEventListener("visibilitychange", onReturn);
+      window.removeEventListener("focus", onReturn);
+    };
+  }, [rounds]);
+
+  const visibleRounds = useMemo(
+    () => rounds.filter((round) => new Date(round.cutoffAt).getTime() > clockNow),
+    [rounds, clockNow],
+  );
 
   useEffect(() => {
     if (!pixModalOpen || !purchase?.id) return;
@@ -173,7 +210,7 @@ export function CashierSaleForm() {
   }
 
   function toggleRound(id: string) {
-    const index = rounds.findIndex((round) => round.id === id);
+    const index = visibleRounds.findIndex((round) => round.id === id);
     if (index < 0) return;
     setSelectedRounds((current) => {
       const selectedIndex = current.indexOf(id);
@@ -182,10 +219,10 @@ export function CashierSaleForm() {
         return current.slice(0, selectedIndex);
       }
       if (current.length >= 10 || index !== current.length) return current;
-      const round = rounds[index]!;
+      const round = visibleRounds[index]!;
       if (current.length === 0 && round.status !== "OPEN") return current;
       if (current.length > 0) {
-        const previous = rounds.find((item) => item.id === current[current.length - 1]);
+        const previous = visibleRounds.find((item) => item.id === current[current.length - 1]);
         if (!previous || new Date(round.resultAt).getTime() - new Date(previous.resultAt).getTime() !== 30 * 60_000) {
           return current;
         }
@@ -203,6 +240,14 @@ export function CashierSaleForm() {
     }
     if (stakeCents === null) { setError("O valor mínimo por placa e rodada é R$ 1,00. Use até duas casas decimais."); return; }
     if (!selectedRounds.length) { setError("Selecione pelo menos uma rodada."); return; }
+    const activeRoundIds = new Set(visibleRounds.map((round) => round.id));
+    if (selectedRounds.some((id) => !activeRoundIds.has(id))) {
+      setSelectedRounds((current) => current.filter((id) => activeRoundIds.has(id)));
+      setError("Uma rodada encerrou enquanto você preparava a aposta. Selecione a rodada aberta atual e tente novamente.");
+      fetch("/api/cashier/rounds", { cache: "no-store" })
+        .then((response) => response.json()).then((body) => setRounds(body.rounds ?? [])).catch(() => undefined);
+      return;
+    }
 
     setSubmitting(true);
     try {
@@ -276,10 +321,10 @@ export function CashierSaleForm() {
         </fieldset>
         <fieldset>
           <legend>Rodadas</legend>
-          {loadingRounds ? <p>Carregando rodadas…</p> : rounds.length === 0 ? <p>Não há rodadas disponíveis para compra no momento.</p> : (
-            <div className="round-options round-carousel">{rounds.slice(0, 10).map((round, index) => (
+          {loadingRounds ? <p>Carregando rodadas…</p> : visibleRounds.length === 0 ? <p>Não há rodadas disponíveis para compra no momento.</p> : (
+            <div className="round-options round-carousel">{visibleRounds.slice(0, 10).map((round, index) => (
               <label key={round.id} className="round-option">
-                <input type="checkbox" checked={selectedRounds.includes(round.id)} disabled={index > selectedRounds.length || (index === 0 && round.status !== "OPEN") || (index === selectedRounds.length && selectedRounds.length > 0 && new Date(round.resultAt).getTime() - new Date(rounds[index - 1]!.resultAt).getTime() !== 30 * 60_000)} onChange={() => toggleRound(round.id)} />
+                <input type="checkbox" checked={selectedRounds.includes(round.id)} disabled={index > selectedRounds.length || (index === 0 && (round.status !== "OPEN" || new Date(round.cutoffAt).getTime() <= clockNow)) || (index === selectedRounds.length && selectedRounds.length > 0 && new Date(round.resultAt).getTime() - new Date(visibleRounds[index - 1]!.resultAt).getTime() !== 30 * 60_000)} onChange={() => toggleRound(round.id)} />
                 <span><strong>{round.code}</strong><br />Início: {formatDate(round.startsAt)}<br />Encerra: {formatDate(round.cutoffAt)}</span>
               </label>
             ))}</div>
@@ -287,7 +332,7 @@ export function CashierSaleForm() {
           {selectedRounds.length === 10 && <small>Limite: 10 rodadas.</small>}
         </fieldset>
         {stakeCents !== null && selectedRounds.length > 0 && <p>Total estimado: <strong>{formatMoney(stakeCents * selectedRounds.length * plateLines.length)}</strong> ({plateLines.length} placa(s), {selectedRounds.length} rodada(s)).</p>}
-        <button type="submit" disabled={submitting || loadingRounds || rounds.length === 0}>{submitting ? "Registrando…" : paymentMethod === "CASH" ? "Confirmar venda em dinheiro" : "Registrar venda e preparar Pix"}</button>
+        <button type="submit" disabled={submitting || loadingRounds || visibleRounds.length === 0}>{submitting ? "Registrando…" : paymentMethod === "CASH" ? "Confirmar venda em dinheiro" : "Registrar venda e preparar Pix"}</button>
       </form>
       {error && <p role="alert" className="note-inline">{error}</p>}
       {notice && <p role="status" className="note-inline">{notice}</p>}
