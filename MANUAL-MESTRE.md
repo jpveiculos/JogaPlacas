@@ -45,3 +45,7 @@ Criado em 2026-10-27 para evitar que o manual e as decisões fiquem difíceis de
 ## Área do jogador — menus recolhíveis (2026-10-28)
 - O formulário de jogo permanece visível. Carteira digital, histórico de apostas dos últimos 7 dias e últimos resultados ficam em painéis recolhíveis fechados inicialmente, com seta, título e descrição curta.
 - Regra documentada em `docs/PRODUCT_SPEC.md` e `MANUAL_TECNICO.md`; validar em dispositivos móveis e desktop após o deploy.
+
+
+## Formulário do cambista — ordem dos campos (2026-10-28)
+- O cartão **Rodadas** fica imediatamente abaixo do botão **Adicionar mais placas** (e da lista de placas já adicionadas), antes do valor e da forma de pagamento. Trata-se de uma reorganização visual; as regras de jogo e pagamento permanecem iguais.
