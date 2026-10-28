@@ -13,6 +13,12 @@ Status: manual operacional vigente na branch oficial de desenvolvimento `feature
 - **Aplicado no código desta branch:** homepage (cabeçalho e rodapé), login, cadastro, cabeçalho compartilhado das áreas autenticadas e verificação pública de recibo usam `BrandLogo`. Isso elimina as antigas versões montadas com texto nas superfícies alteradas.
 - **Ainda não declarado como concluído:** typecheck/testes/build, deploy Railway e conferência visual real em telas pequenas e grandes. Após o deploy, validar homepage, login, cadastro, jogador, cambista, administrador, rodapé e consulta de recibo; corrigir qualquer tamanho inadequado sem substituir a imagem oficial.
 
+## Atualização de regra de prêmio — 2026-10-28
+
+- Multiplicador de unidade atualizado de 9x para 6x na versão vigente `approved-v4`; os outros cinco multiplicadores permanecem inalterados.
+- O código gera snapshots das regras por linha de compra. Compras antigas com `approved-v3` preservam unidade 9x; novas compras devem registrar `approved-v4` e unidade 6x.
+- A alteração do código e da especificação foi registrada na branch `feature/public-home-registration`. Antes de considerar implantada, verificar testes de cálculo/snapshot, CI e deploy do commit exato; não alterar dados históricos nem reprocessar compras antigas.
+
 ## Produto e navegação obrigatórios — decisão vigente em 2026-10-26
 
 A plataforma tem **quatro áreas de produto**, não apenas três. A decisão inicial de não criar uma página principal pública foi substituída pela nova direção de produto registrada na especificação funcional. Não reconstruir a navegação antiga como se ainda fosse válida.
