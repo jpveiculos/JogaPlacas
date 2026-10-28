@@ -715,3 +715,13 @@ Esta regra substitui qualquer instrução anterior que permita ao cambista pagar
 ## Ajuste de interface — formulário do cambista (2026-10-28)
 - No formulário de nova aposta/venda, o cartão **Rodadas** deve aparecer imediatamente abaixo do botão **Adicionar mais placas** e da lista de placas adicionadas, antes do valor por placa/rodada e da forma de pagamento.
 - Essa é uma mudança apenas de ordem visual: manter a seleção, o limite de 10 rodadas, a validação de elegibilidade, os cálculos e o fluxo de pagamento sem alteração funcional.
+
+
+## Correção de interface — espaçamento superior de Nova Aposta (2026-10-28)
+
+- Na área do jogador, o cartão **Nova aposta** deve começar próximo ao cabeçalho e manter somente uma margem interna pequena e uniforme antes do título; não deixar uma faixa vazia excessiva acima de “NOVA APOSTA”.
+- Preservar o tamanho e a posição relativa das placas, rodadas, valor e forma de pagamento; esta alteração é de espaçamento/layout, sem mudar regras da aposta.
+- Causa identificada no código: `AreaShell` recebia a propriedade `compact`, mas a classe `area-page-compact` não era aplicada ao elemento `main`. Por isso, regras compactas existentes — inclusive as que reduzem o espaçamento do cartão — não eram ativadas.
+- Correção: a classe do layout compacto deve ser aplicada ao contêiner principal sempre que `compact` for verdadeiro. Verificar jogador e cambista porque compartilham `AreaShell`.
+- Critério de aceitação: no celular, conferir que o título “NOVA APOSTA” fica mais próximo da borda superior interna do cartão, sem a faixa vazia excessiva, e que o restante do formulário continua utilizável.
+- Estado em 2026-10-28: correção de código registrada na branch de desenvolvimento; aguardando build/deploy Railway e verificação visual no ambiente publicado. Não considerar resolvido apenas pelo commit.
