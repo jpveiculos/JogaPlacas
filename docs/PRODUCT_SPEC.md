@@ -725,3 +725,11 @@ Esta regra substitui qualquer instrução anterior que permita ao cambista pagar
 - Correção: a classe do layout compacto deve ser aplicada ao contêiner principal sempre que `compact` for verdadeiro. Verificar jogador e cambista porque compartilham `AreaShell`.
 - Critério de aceitação: no celular, conferir que o título “NOVA APOSTA” fica mais próximo da borda superior interna do cartão, sem a faixa vazia excessiva, e que o restante do formulário continua utilizável.
 - Estado em 2026-10-28: correção de código registrada na branch de desenvolvimento; aguardando build/deploy Railway e verificação visual no ambiente publicado. Não considerar resolvido apenas pelo commit.
+
+
+## Diagnóstico complementar — espaço acima de “Nova aposta” (2026-10-28)
+
+- A primeira correção ativou a classe `area-page-compact`, mas não eliminou todo o espaço visível porque o cartão continuava herdando `padding-top: 16px` da regra compacta geral `.area-page-compact .feature-card`. Zerar `margin-top` do título não reduz o preenchimento interno superior do cartão.
+- Ajuste complementar: no mobile, o cartão `.feature-card[aria-label="Nova aposta"]` recebe `padding-top: 6px`, mantendo os demais lados e os tamanhos/posições dos controles inalterados.
+- Critério de aceitação: comparar a borda superior do cartão com o início do título no celular; o título deve subir visivelmente e permanecer com margem interna mínima.
+- Situação: correção CSS commitada em `src/app/globals.css`; aguardando deploy bem-sucedido e verificação visual real. Não declarar concluído antes da confirmação.
