@@ -13,7 +13,7 @@ type Props = {
 
 export function AreaShell({ children, compact = false }: Props) {
   return (
-    <main className="area-page">
+    <main className={`area-page${compact ? " area-page-compact" : ""}`}>
       <header
         className="area-header"
         aria-label="Cabeçalho Joga Placa"
