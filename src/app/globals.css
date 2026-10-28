@@ -919,3 +919,27 @@ p, .intro, .auth-description, .area-description, .feature-card p,
  .area-page-compact .cashier-summary-tile span{font-size:.68rem}
  .area-page-compact .cashier-summary-tile strong{font-size:1rem}
 }
+
+
+/* Receipt preview: preserve a clear inner margin and keep the QR fully inside the paper. */
+.thermal-receipt-print-root{width:min(100%,390px);padding:0 10px;box-sizing:border-box}
+.thermal-receipt{width:100%;max-width:100%;padding:4mm 4mm;box-sizing:border-box;overflow:hidden}
+.thermal-receipt-code-row{grid-template-columns:minmax(0,1fr) clamp(64px,22%,76px);gap:8px;min-width:0}
+.thermal-receipt-code-copy{overflow-wrap:anywhere}
+.thermal-receipt-qr,.thermal-receipt-qr-placeholder{width:100%!important;height:auto!important;aspect-ratio:1/1;max-width:76px;justify-self:end;object-fit:contain}
+.thermal-receipt-item-heading{min-width:0;align-items:flex-start}
+.thermal-receipt-item-heading>*{min-width:0;overflow-wrap:anywhere}
+.thermal-receipt-total{gap:8px}
+.thermal-receipt-total>*{min-width:0;overflow-wrap:anywhere}
+@media(max-width:480px){
+ .receipt-modal{padding:16px!important}
+ .receipt-modal .thermal-receipt-print-root{width:100%;padding:0 4px}
+ .receipt-modal .thermal-receipt{padding:4mm 4mm}
+ .receipt-modal .thermal-receipt-code-row{grid-template-columns:minmax(0,1fr) 68px;gap:6px}
+}
+@media print{
+ .thermal-receipt-print-root{width:48mm!important;padding:0!important}
+ .thermal-receipt{width:48mm!important;max-width:48mm!important;padding:3mm 3mm!important;box-sizing:border-box!important;overflow:hidden!important}
+ .thermal-receipt-code-row{grid-template-columns:minmax(0,1fr) 18mm!important;gap:1.5mm!important}
+ .thermal-receipt-qr,.thermal-receipt-qr-placeholder{width:18mm!important;height:18mm!important;max-width:18mm!important}
+}
