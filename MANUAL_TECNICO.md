@@ -173,3 +173,14 @@ Este procedimento é obrigatório para solicitações futuras, não apenas para 
 - No celular, o hero passa a uma coluna e as placas ilustrativas usam largura limitada, texto responsivo e sem transformações que provoquem corte horizontal.
 - Critérios obrigatórios: build válido; imagem e logomarca sem corte em tela estreita; conteúdo principal visível sem uma imagem dominar a primeira tela; validar a URL publicada após o deploy.
 - Situação: código/documentação atualizados; build, deploy e inspeção visual real ainda pendentes.
+
+
+## Padrão dimensional oficial da logomarca no cabeçalho — 2026-10-28
+- Componente único: `src/components/site-header.tsx`; imagem única via `src/components/brand-logo.tsx`, arquivo `/images/brand/joga-placa-logo.jpg`.
+- Desktop/tablet: altura CSS responsiva `clamp(64px, 13vw, 80px)`; largura automática, largura máxima de 76% do cabeçalho; `object-fit: contain`.
+- Celular (até 480px): cabeçalho com altura mínima de 82px; logomarca com altura responsiva `clamp(60px, 16vw, 68px)`, largura máxima de 80% do espaço disponível.
+- Página inicial em celular: altura de 68px e largura máxima `min(80vw, 260px)` para o logo no cabeçalho.
+- O cabeçalho deve continuar fino e proporcional à marca, com a logomarca horizontalmente centralizada, sem botões, menus, ícones, título ou usuário. Nunca distorcer nem cortar a imagem; manter `object-fit: contain`.
+- Histórico consultado: as decisões anteriores registravam uma tentativa com `max-height: 100px` e, depois, proposta de cabeçalho aproximado de 76px/logo até 76px na área autenticada. O CSS compartilhado mais recente havia reduzido a imagem a 56px na página inicial móvel e 50–62px nas demais telas pequenas. Para unificar e evitar a marca pequena, o padrão atual passa a ser os valores responsivos acima.
+- Ao alterar dimensões no futuro, atualizar esta seção e o CSS compartilhado; conferir visualmente jogador, cambista, administrador e página inicial em celular e desktop.
+- Estado: padrão documentado e CSS atualizado; aguarda build/deploy e confirmação visual no site publicado.
