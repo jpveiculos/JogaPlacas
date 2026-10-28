@@ -108,3 +108,9 @@ Esta regra substitui qualquer instrução anterior que permita ao cambista pagar
 - Os painéis começam fechados para reduzir a rolagem no celular. Cada cabeçalho apresenta título, descrição curta e seta que indica o estado; tocar no cabeçalho abre/fecha o conteúdo.
 - A interação usa controles HTML nativos, com foco visível para teclado e área de toque ampla. Não duplicar os componentes internos nem alterar suas regras de saldo, saque, histórico ou resultados.
 - A mudança é visual/estrutural; não altera APIs, permissões ou regras financeiras. Testar abertura/fechamento em celular e desktop e confirmar que formulários e ações internas continuam funcionando.
+
+
+## Ordem dos campos — formulário do cambista (2026-10-28)
+- Exibir as placas, o botão **Adicionar mais placas** e a lista de placas adicionadas; logo em seguida, exibir o cartão **Rodadas**.
+- Depois do cartão de rodadas, exibir o valor por placa/rodada, a forma de pagamento e o botão de confirmação.
+- A alteração é somente de apresentação; preservar as regras e validações existentes de rodadas e pagamento.
