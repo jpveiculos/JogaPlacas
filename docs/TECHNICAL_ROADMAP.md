@@ -702,3 +702,12 @@ Esta regra substitui qualquer instrução anterior que permita ao cambista pagar
 - A rota autenticada `GET /api/player/results` foi ajustada para aceitar `PLAYER` e `CASHIER`, mantendo bloqueio de não autenticados, outros papéis e contas com troca de senha obrigatória. Respostas continuam privadas e sem cache.
 - Não foi criada funcionalidade de histórico de vendas, reimpressão/segunda via, consulta de recibos ou pagamento de prêmios pelo cambista.
 - **Implementado no código desta branch; não considerar validado/publicado até** confirmar testes/build, deploy Railway e funcionamento visual em celular e desktop.
+
+
+## Padronização global do cabeçalho — 2026-10-28
+
+- Criado o componente compartilhado `src/components/site-header.tsx`, com a imagem oficial centralizada em uma única grade de três colunas para manter o centro exato da tela.
+- Substituídos os cabeçalhos específicos da homepage, áreas autenticadas e verificação de recibo. Login, cadastro, troca de senha, consulta pública e termos de uso passam a renderizar o mesmo componente no topo.
+- A navegação da homepage foi removida do cabeçalho; os acessos continuam no conteúdo da página. O cabeçalho não contém botões, menus, usuário, ícones ou texto auxiliar. O botão Sair das áreas autenticadas continua no rodapé.
+- CSS compartilhado adicionado ao final de `src/app/globals.css` para unificar dimensões e comportamento responsivo, preservando a proporção da imagem.
+- **Validação pendente:** executar lint/typecheck/testes/build, confirmar o deploy do commit no Railway e inspecionar visualmente todas as rotas em celular e desktop. Não considerar concluído/publicado até essas verificações.
