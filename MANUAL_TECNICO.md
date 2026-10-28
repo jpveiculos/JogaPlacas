@@ -150,3 +150,18 @@ Esta regra substitui qualquer descrição anterior que permita usuário, botão 
 - Não criar cabeçalhos alternativos nem duplicar CSS específico por rota. Ajustes devem ser feitos no componente compartilhado e seus estilos globais.
 - **Checklist obrigatório após mudanças de interface:** (1) listar todas as rotas em `src/app`; (2) confirmar que todas usam o mesmo componente; (3) verificar se não sobrou cabeçalho antigo ou importação/estilo conflitante; (4) executar lint, typecheck, testes e build; (5) confirmar que o deploy do commit correto terminou com sucesso no Railway; (6) conferir cada rota em celular e desktop, incluindo centralização, altura, proporção e ausência de controles no cabeçalho; (7) registrar aqui e em `docs/TECHNICAL_ROADMAP.md` o resultado e as pendências reais.
 - **Estado em 2026-10-28:** a regra foi aplicada ao código e documentada; validação automatizada, deploy e inspeção visual de todas as rotas ainda não foram confirmados. Não declarar o trabalho concluído/publicado antes dessas verificações.
+
+
+## Procedimento permanente de manutenção do manual (2026-10-28)
+
+Toda solicitação de mudança no Joga Placas deve ser cruzada com este manual técnico antes de alterar o código e novamente depois da implementação:
+
+1. Localizar a regra existente e verificar se a solicitação já está contemplada.
+2. Se a regra existente continuar correta, atualizar a seção com o novo comportamento, implementação, evidência e estado de validação; evitar criar uma seção duplicada.
+3. Se a regra estiver incompleta, desatualizada ou contradizer a decisão mais recente, corrigir/substituir explicitamente o trecho antigo para não deixar duas instruções conflitantes.
+4. Se não houver seção pertinente, acrescentar uma seção nova com data, regra, escopo, arquivos afetados, critérios de aceite e validações pendentes.
+5. Atualizar também `docs/PRODUCT_SPEC.md` e/ou `docs/TECHNICAL_ROADMAP.md` quando a mudança alterar requisitos do produto ou o plano técnico. Manter `MANUAL-MESTRE.md` como índice/resumo das decisões importantes.
+6. Nunca registrar como concluído, testado ou publicado algo que apenas foi editado no repositório. Distinguir claramente implementação em branch, testes automatizados, deploy confirmado e inspeção visual em produção/desenvolvimento.
+7. Antes de encerrar uma tarefa, informar quais documentos foram atualizados, quais verificações foram feitas e quais permanecem pendentes.
+
+Este procedimento é obrigatório para solicitações futuras, não apenas para alterações visuais.
