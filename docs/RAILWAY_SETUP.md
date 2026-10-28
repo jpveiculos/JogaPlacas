@@ -35,3 +35,13 @@ Abra os logs da etapa Pre-deploy e leia a mensagem completa. Verifique se o banc
 - Não copie valores secretos para conversas, issues ou commits.
 - Não use este bootstrap para redefinir uma senha existente: ele não faz isso.
 - Não rode testes de integração destrutivos contra produção.
+
+
+## Atendimento oficial para resgate de prêmios via WhatsApp
+
+- Configure `NEXT_PUBLIC_PRIZE_SUPPORT_WHATSAPP` no serviço web usando o número oficial aprovado pela plataforma, somente dígitos e com código do país e DDD (Brasil: `55 + DDD + número`). Não use número fictício ou pessoal sem autorização.
+- Essa variável tem prefixo `NEXT_PUBLIC_` porque o botão é exibido no navegador; o valor será público no bundle. Ela deve conter apenas o telefone oficial de atendimento, nunca tokens ou segredos.
+- Após configurar/alterar a variável, faça um novo deploy para a aplicação incorporá-la.
+- Na página QR, o botão de resgate abre o WhatsApp com uma mensagem pré-preenchida contendo código do recibo, rodada, placa/formato e valor do prêmio indicado ainda sem crédito confirmado. O jogador precisa revisar e enviar a mensagem no WhatsApp.
+- Se o contato não estiver configurado, a página exibe um aviso e não inventa um número.
+- A mensagem não comprova o direito ao prêmio nem autoriza pagamento. A equipe deve validar os dados oficiais e registrar o pagamento no fluxo financeiro autorizado.
