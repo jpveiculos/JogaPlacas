@@ -1,5 +1,14 @@
 # Manual técnico — JogaPlacas
-Atualizado em 27/10/2026.
+Atualizado em 28/10/2026.
+
+## Procedimento obrigatório antes de qualquer trabalho
+1. Ler `MANUAL-MESTRE.md` na raiz da branch `feature/public-home-registration`.
+2. Consultar a seção pertinente de `docs/PRODUCT_SPEC.md`, fonte de verdade das decisões funcionais.
+3. Consultar este manual técnico e `docs/TECHNICAL_ROADMAP.md` para arquitetura, sequência e pendências.
+4. Confrontar a decisão solicitada com os documentos e com o código/testes atuais. Se houver contradição, não escolher silenciosamente uma versão: identificar a regra antiga, atualizar a documentação normativa e só então alterar o código.
+5. Atualizar a documentação oficial junto com as mudanças de código. Distinguir claramente o que está decidido, documentado, implementado, testado e implantado.
+6. Antes de declarar concluído, conferir CI do commit exato, testes pertinentes, build e deploy/logs quando aplicável. Não executar merge, alteração em produção, DNS/domínio, migração produtiva ou cobrança real sem autorização explícita.
+
 
 ## Fuso horário oficial das rodadas
 - Toda entrada e exibição de horário de rodada no painel administrativo deve usar o horário de Brasília, atualmente UTC−03:00.
