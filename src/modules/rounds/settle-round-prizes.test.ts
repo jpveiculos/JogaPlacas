@@ -32,17 +32,17 @@ describe("calculateLinePrizeCents", () => {
     expect(calculateLinePrizeCents(line, "AAA-0000", "ABC1K23")).toBe(2_000);
   });
 
-  it("pays R$1.20 for the approved 20-cent unit allocation at 6x", () => {
+  it("pays R$1.80 for the approved 20-cent unit allocation at 9x", () => {
     const line = base({
       unitCents: 20, tensCents: 16, hundredsCents: 16, thousandsCents: 16,
       lettersCents: 16, fullPlateCents: 16,
       ruleSnapshot: {
-        version: "approved-v2",
-        multipliers: { unit: 6, tens: 20, hundreds: 200, thousands: 2_000, letters: 2_000, fullPlate: 200_000 },
+        version: "approved-v3",
+        multipliers: { unit: 9, tens: 30, hundreds: 300, thousands: 3_000, letters: 3_000, fullPlate: 300_000 },
       },
-      ruleVersion: "approved-v2",
+      ruleVersion: "approved-v3",
     });
-    expect(calculateLinePrizeCents(line, "XYZ-9874", "ABC1K99")).toBe(120);
+    expect(calculateLinePrizeCents(line, "XYZ-9874", "ABC1K99")).toBe(180);
   });
 
   it("uses the multiplier snapshot stored with the bet, not the current default", () => {
