@@ -1162,8 +1162,8 @@ p, .intro, .auth-description, .area-description, .feature-card p,
 .home-page .home-plate-mercosur{justify-self:end}
 .home-page .home-hero-stamp{width:clamp(66px,8vw,96px);height:clamp(66px,8vw,96px);font-size:clamp(.7rem,1.4vw,.9rem)}
 @media(max-width:700px){
- .home-page .site-header{min-height:72px}
- .home-page .site-header-brand img{height:68px;max-width:min(80vw,260px)}
+ .home-page .site-header{min-height:82px}
+ .home-page .site-header-brand img{height:clamp(60px,16vw,68px);max-width:80vw}
  .home-page .home-hero{grid-template-columns:minmax(0,1fr);gap:12px;padding:18px 14px 28px}
  .home-page .home-hero:before{inset:0;border-radius:20px}
  .home-page .home-hero-copy{min-width:0}
