@@ -763,3 +763,11 @@ Esta regra substitui qualquer instrução anterior que permita ao cambista pagar
 - O mesmo componente define o alinhamento e as dimensões responsivas da marca; não criar cabeçalhos paralelos nem estilos inline específicos por página. A imagem deve manter proporção, usar `object-fit: contain` e não ser cortada.
 - **Aceite:** conferir todas as rotas em celular e desktop e confirmar logomarca centralizada, sem controles no cabeçalho, mesma altura/alinhamento e sem regressão de conteúdo.
 - **Estado em 2026-10-28:** alteração aplicada ao código e documentada; build, deploy e verificação visual real ainda precisam ser confirmados.
+
+
+## Correção responsiva da página inicial e logomarca — 2026-10-28
+- A página inicial deve importar explicitamente o componente compartilhado `BrandLogo` quando o utiliza no rodapé, evitando erro de compilação.
+- Em celular, a seção principal deve organizar texto e ilustrações em uma coluna; as placas ilustrativas precisam respeitar a largura disponível, manter proporção e não ultrapassar/cortar o viewport.
+- A logomarca no cabeçalho continua centralizada, usando o componente `SiteHeader` compartilhado e sem botões ou links no cabeçalho.
+- Aceite: build sem erro; conferir no celular a página inicial, a logomarca, as duas placas ilustrativas inteiras e o início do conteúdo sem imagem gigante cortada.
+- Estado: correção de código e documentação registrada; aguarda build, deploy e verificação visual no endereço publicado.
