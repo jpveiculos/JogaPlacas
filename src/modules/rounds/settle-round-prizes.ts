@@ -160,8 +160,12 @@ export async function settleRoundPrizes(prisma: PrismaClient, roundId: string, a
           }
           if (prize === 0) continue;
 
-          const playerId = line.participation.purchase.playerId;
-          if (!playerId) {
+          const purchase = line.participation.purchase;
+          const playerId = purchase.playerId;
+          // Only purchases made directly by an online player may be credited to a wallet.
+          // Cashier-originated purchases must always remain pending for platform support,
+          // even if legacy/inconsistent data happens to contain a playerId.
+          if (!playerId || purchase.cashierId !== null) {
             pendingManualPayouts += 1;
             continue;
           }
