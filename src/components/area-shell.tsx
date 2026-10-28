@@ -10,7 +10,23 @@ export function AreaShell({ title, username, description, compact = false, child
         className="area-header"
         style={compact ? { position: "relative", alignItems: "center", minHeight: 76 } : undefined}
       >
-        <div className="area-header-branding" style={compact ? { flex: "1 1 0", minWidth: 0 } : undefined}>
+        {compact && (
+          <span
+            className="account-name"
+            style={{
+              position: "absolute",
+              left: 0,
+              top: "50%",
+              transform: "translateY(-50%)",
+              maxWidth: "25%",
+              overflowWrap: "anywhere",
+              zIndex: 2,
+            }}
+          >
+            {username}
+          </span>
+        )}
+        <div className="area-header-branding" style={compact ? { flex: "1 1 100%", minWidth: 0 } : undefined}>
           <a
             href="/"
             aria-label="Joga Placa — página inicial"
@@ -48,7 +64,7 @@ export function AreaShell({ title, username, description, compact = false, child
           )}
         </div>
         <div className="account-controls" style={compact ? { width: "auto", flex: "0 0 auto", justifyContent: "flex-end", marginLeft: "auto", position: "relative", zIndex: 2, gap: 10 } : undefined}>
-          <span className="account-name">{username}</span>
+          {!compact && <span className="account-name">{username}</span>}
           <LogoutButton />
         </div>
       </header>
