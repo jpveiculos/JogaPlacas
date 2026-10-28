@@ -268,7 +268,7 @@ export function PlayerPurchaseForm() {
           </label>
           <label className={paymentMethod === "WALLET" ? "format-choice selected" : "format-choice"}>
             <input type="radio" name="player-payment-method" value="WALLET" checked={paymentMethod === "WALLET"} onChange={() => setPaymentMethod("WALLET")} />
-            <span><strong>Usar saldo da conta</strong></span>
+            <span><strong>Saldo da conta</strong></span>
           </label>
           <p className="player-wallet-balance payment-wallet-balance">Seu saldo disponível: <strong>{walletBalanceCents === null ? "consultando…" : formatMoney(walletBalanceCents)}</strong></p>
           {paymentMethod === "WALLET" && !walletHasEnough && <p role="alert" className="note-inline">{walletBalanceCents === null ? "Não foi possível consultar o saldo. Atualize a carteira ou escolha Pix." : `Saldo insuficiente: você tem ${formatMoney(walletBalanceCents)} e precisa de ${formatMoney(totalEstimate)}. Escolha Pix para continuar ou adicione saldo.`}</p>}
