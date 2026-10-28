@@ -47,8 +47,10 @@ function parseStake(value: string): number | null {
 export function PlayerPurchaseForm() {
   const [rounds, setRounds] = useState<AvailableRound[]>([]);
   const [selectedRounds, setSelectedRounds] = useState<string[]>([]);
-  const [plateFormat, setPlateFormat] = useState<PlateFormat>("LEGACY");
-  const [plate, setPlate] = useState("");
+  const [legacyPlate, setLegacyPlate] = useState("");
+  const [mercosurPlate, setMercosurPlate] = useState("");
+  const legacyInputRef = useRef<HTMLInputElement>(null);
+  const mercosurInputRef = useRef<HTMLInputElement>(null);
   const [stake, setStake] = useState("1,00");
   const [loadingRounds, setLoadingRounds] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -101,7 +103,7 @@ export function PlayerPurchaseForm() {
           setPixModalOpen(false);
           setPurchase(null);
           setPixCheckout(null);
-          setPlate("");
+          setLegacyPlate(""); setMercosurPlate("");
           setSelectedRounds([]);
           setStake("1,00");
           setNotice("O pagamento Pix não foi aprovado ou foi encerrado. Nenhum recibo foi emitido. Você já pode iniciar outro jogo.");
@@ -116,13 +118,14 @@ export function PlayerPurchaseForm() {
   }, [pixModalOpen, purchase?.id]);
 
   const stakeCents = useMemo(() => parseStake(stake), [stake]);
-  const normalizedPlate = plate.trim().toUpperCase();
-  const plateLooksValid = plateFormat === "LEGACY"
-    ? /^[A-Z]{3}-?\d{4}$/.test(normalizedPlate)
-    : /^[A-Z]{3}\d[A-Z]\d{2}$/.test(normalizedPlate);
-  const platePreview = plateFormat === "LEGACY"
-    ? normalizedPlate.replace(/^(\w{3})(\d{4})$/, "$1$2")
-    : normalizedPlate.replace("-", "");
+  const normalizedLegacyPlate = legacyPlate.trim().toUpperCase();
+  const normalizedMercosurPlate = mercosurPlate.trim().toUpperCase().replace(/-/g, "");
+  const legacyPlateValid = /^[A-Z]{3}-?\d{4}$/.test(normalizedLegacyPlate);
+  const mercosurPlateValid = /^[A-Z]{3}\d[A-Z]\d{2}$/.test(normalizedMercosurPlate);
+  const plateLines = [
+    ...(legacyPlateValid ? [{ plateDisplay: normalizedLegacyPlate.replace(/-/g, ""), stakeCents: stakeCents ?? 0 }] : []),
+    ...(mercosurPlateValid ? [{ plateDisplay: normalizedMercosurPlate, stakeCents: stakeCents ?? 0 }] : []),
+  ];
 
   function toggleRound(id: string) {
     const index = rounds.findIndex((round) => round.id === id);
@@ -149,10 +152,8 @@ export function PlayerPurchaseForm() {
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(""); setNotice(""); setPurchase(null); setPixCheckout(null);
-    if (!plateLooksValid) {
-      setError(plateFormat === "LEGACY"
-        ? "Placa cinza inválida. Use o formato ABC1234."
-        : "Placa Mercosul inválida. Use o formato ABC1D23 (a quinta posição aceita letras A–Z).");
+    if (!plateLines.length) {
+      setError("Digite uma placa válida em pelo menos uma das placas.");
       return;
     }
     if (stakeCents === null) { setError("O valor mínimo por placa e rodada é R$ 1,00. Use até duas casas decimais."); return; }
@@ -164,7 +165,7 @@ export function PlayerPurchaseForm() {
         method: "POST", headers: { "content-type": "application/json" },
         body: JSON.stringify({
           idempotencyKey: idempotencyKey.current ?? (idempotencyKey.current = crypto.randomUUID()),
-          roundIds: selectedRounds, lines: [{ plateDisplay: platePreview, stakeCents }],
+          roundIds: selectedRounds, lines: plateLines,
         }),
       });
       const body = await response.json();
@@ -183,16 +184,16 @@ export function PlayerPurchaseForm() {
     <section className="feature-card" aria-labelledby="player-purchase-heading">
       <span className="feature-label">Nova aposta</span>
       <h2 id="player-purchase-heading">Escolha a placa e a sequência de rodadas</h2>
-      <p>Você pode jogar nos dois formatos. Cada aposta concorre somente ao resultado do mesmo formato. O valor é dividido automaticamente entre seis categorias. Ao repetir, as rodadas são consecutivas: a primeira precisa estar aberta e cada próxima fica exatamente 30 minutos depois, sem pular sorteios. O recibo só será liberado após a confirmação do pagamento.</p>
+      <p>Toque em uma placa ou nas duas, digite os números e escolha as rodadas.</p>
       <form onSubmit={submit} className="purchase-form">
         <fieldset className="plate-format-options">
           <legend>Formato da placa</legend>
           <label className={plateFormat === "LEGACY" ? "format-choice selected" : "format-choice"}>
-            <input type="radio" name="plateFormat" value="LEGACY" checked={plateFormat === "LEGACY"} onChange={() => { setPlateFormat("LEGACY"); setPlate(""); }} />
+            <input type="radio" name="plateFormat" value="LEGACY" checked={plateFormat === "LEGACY"} onChange={() => { setPlateFormat("LEGACY"); setLegacyPlate(""); setMercosurPlate(""); }} />
             <span><strong>Placa cinza (antiga)</strong><br /><small>ABC1234</small></span>
           </label>
           <label className={plateFormat === "MERCOSUR" ? "format-choice selected" : "format-choice"}>
-            <input type="radio" name="plateFormat" value="MERCOSUR" checked={plateFormat === "MERCOSUR"} onChange={() => { setPlateFormat("MERCOSUR"); setPlate(""); }} />
+            <input type="radio" name="plateFormat" value="MERCOSUR" checked={plateFormat === "MERCOSUR"} onChange={() => { setPlateFormat("MERCOSUR"); setLegacyPlate(""); setMercosurPlate(""); }} />
             <span><strong>Placa Mercosul (nova)</strong><br /><small>ABC1D23</small></span>
           </label>
         </fieldset>
@@ -217,7 +218,7 @@ export function PlayerPurchaseForm() {
           )}
           {selectedRounds.length === 10 && <small>Limite de 10 rodadas por compra atingido.</small>}
         </fieldset>
-        {stakeCents !== null && selectedRounds.length > 0 && <p>Total estimado: <strong>{formatMoney(stakeCents * selectedRounds.length)}</strong> ({selectedRounds.length} rodada(s)).</p>}
+        {stakeCents !== null && selectedRounds.length > 0 && <p>Total estimado: <strong>{formatMoney(stakeCents * selectedRounds.length * plateLines.length)}</strong> ({selectedRounds.length} rodada(s)).</p>}
         <button type="submit" disabled={submitting || loadingRounds || rounds.length === 0}>{submitting ? "Registrando…" : "Continuar para Pix"}</button>
       </form>
       {error && <p role="alert" className="note-inline">{error}</p>}
@@ -253,7 +254,7 @@ export function PlayerPurchaseForm() {
             setReceiptPurchaseId(null);
             setPurchase(null);
             setPixCheckout(null);
-            setPlate("");
+            setLegacyPlate(""); setMercosurPlate("");
             setSelectedRounds([]);
             setStake("1,00");
             setNotice("Tela liberada para iniciar outro jogo. A cobrança anterior continua pendente até confirmação ou reconciliação.");
