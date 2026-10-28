@@ -6,15 +6,15 @@
 > Este documento também contém retratos e auditorias datados: eles descrevem o estado na data indicada e não devem ser lidos como fotografia atual se houver uma reconciliação posterior. Para estado de código, testes e pendências, consulte a seção final de reconciliação e `docs/TECHNICAL_ROADMAP.md`.
 > Esta especificação não substitui revisão técnica, testes nem validação jurídica/comercial antes de operar pagamentos e jogos em produção.
 
-## Decisão vigente — venda de cambista sem cadastro de cliente (2026-10-26)
+## Decisão vigente — venda de cambista sem cadastro de cliente (atualizada em 2026-10-28)
 
 - A venda presencial do cambista não deve exigir nome, telefone, WhatsApp, busca ou seleção de um cadastro de cliente. O recibo emitido após a confirmação válida da venda é a referência entregue ao jogador.
 - O fluxo de venda do cambista deve ser direto: selecionar/informar o formato e digitar a placa, definir os dados necessários da aposta/rodada e valor, confirmar a venda conforme o meio de pagamento permitido, e gerar o recibo com código único e QR Code para consulta pública. O QR Code do recibo não deve ser confundido com QR Code Pix; eventual cobrança Pix é um fluxo de pagamento separado.
-- A consulta de recibos antigos no painel do cambista por nome, telefone ou placa deixa de fazer parte da experiência. A recuperação/segunda via deve usar o código do recibo e respeitar a autorização do cambista e a política de validade vigente; não manter um buscador de clientes como atalho.
+- A consulta de recibos antigos no painel do cambista por nome, telefone ou placa não faz parte da experiência. A decisão posterior de 2026-10-28 também proíbe qualquer recuperação, reimpressão ou segunda via: a consulta é exclusivamente pelo QR Code do recibo físico original.
 - Não coletar nem persistir novos dados pessoais de clientes presenciais para concluir uma venda. Dados históricos já existentes não devem ser apagados em massa por uma mudança de interface: eventual limpeza/migração precisa de avaliação, retenção, auditoria e plano reversível próprios.
 - A área do cambista deve priorizar a janela de venda rápida e as ações necessárias para concluir a venda e entregar o recibo. Não exibir pesquisa por nome/WhatsApp/telefone/placa.
 - O backend deve permitir uma venda do cambista sem `customerId`, sem criar um registro artificial em `Customer`. A identidade do cambista autenticado, a integridade da compra, o pagamento, as participações, o código do recibo e os registros financeiros/auditoria continuam obrigatórios.
-- **Status da implementação:** esta é a decisão funcional vigente; a interface de venda rápida, o QR Code do recibo e a remoção completa da dependência de cliente ainda exigem implementação e testes. Não considerar o fluxo pronto apenas por remover o buscador da tela.
+- **Status da decisão:** a área do cambista deve servir somente para registrar uma nova aposta. A implementação atual precisa ser validada contra este fluxo e contra a decisão posterior que removeu histórico/consulta e segunda via da interface.
 
 ## Atualização de implementação — página pública e cadastro (2026-10-26)
 
@@ -43,7 +43,7 @@
 
 ## 1. Áreas e acesso
 - A plataforma tem quatro áreas de produto: página principal pública, área do jogador, área do cambista e área do administrador.
-- A página principal pública é a porta de entrada do domínio: apresentação do jogo, explicação de como jogar, regras e equivalências oficiais de prêmios, resultados/ganhadores públicos, consulta de recibo e opções visíveis de Entrar/Criar conta. A página inicial não deve ser substituída por uma tela de login.
+- A página principal pública é a porta de entrada do domínio: apresentação do jogo, explicação de como jogar, regras e equivalências oficiais de prêmios e opções visíveis de Entrar/Criar conta. **Não deve exibir painel geral de resultados/ganhadores nem busca de recibo por código digitado.** A consulta pública de uma compra ocorre exclusivamente pela página específica aberta ao escanear o QR Code do recibo físico.
 - Login compartilhado por usuário/senha; o servidor identifica o papel e direciona para a área autorizada. Jogador autenticado que acessar `/` é encaminhado à área do jogador; após cadastro público concluído, o novo jogador também vai para a área do jogador.
 - Senhas armazenadas somente com hash forte; sessões seguras; autorização validada no servidor.
 - Cadastro público é somente para jogador. Não permitir cadastro público de administradores; contas e credenciais administrativas devem ser provisionadas por configuração segura. A implementação do cadastro público ainda é pendente e precisa de validação e proteção contra abuso.
@@ -86,7 +86,7 @@
 - A pessoa pode gerar outra placa quantas vezes desejar antes de escolher. Cada nova geração substitui somente a sugestão exibida; não cria aposta, não reserva placa e não movimenta saldo.
 - Exibir uma ação explícita **“Adicionar ao jogo”** para incluir a placa escolhida no modal de aposta. Até essa confirmação, a placa permanece apenas como sugestão e pode ser descartada sem efeitos.
 - O gerador deve respeitar os formatos de placa aceitos pela especificação e produzir uma representação válida e normalizável pelo servidor. A geração pode ocorrer no cliente, mas toda validação necessária à aposta continua sendo feita no servidor.
-- **Recibo digital:** depois da confirmação válida, exibir recibo digital com código único e QR Code que abre a consulta pública do próprio recibo. Oferecer ações para baixar e imprimir. O QR Code do recibo identifica a consulta do bilhete e não deve ser confundido com o QR Code Pix usado para pagar. Não exigir WhatsApp para emitir, consultar, baixar ou imprimir o recibo.
+- **Recibo digital:** depois da confirmação válida, exibir o recibo original com código único e QR Code que abre a consulta pública específica daquela compra. O QR Code identifica o bilhete e não deve ser confundido com o QR Code Pix usado para pagar. A consulta pública é somente de leitura e não oferece emissão, reimpressão, recuperação ou segunda via. A possibilidade de baixar/imprimir durante a emissão original não autoriza reemitir o recibo depois de encerrado o fluxo.
 - Resultados recentes exibidos por até 24 horas; histórico próprio de apostas dos últimos 7 dias na interface. Registros financeiros completos permanecem disponíveis para auditoria administrativa.
 - A recuperação de acesso deve funcionar sem exigir e-mail ou WhatsApp como dado cadastral obrigatório; definir e testar um fluxo seguro de recuperação antes de produção, sem revelar se um usuário existe.
 
@@ -96,9 +96,8 @@
 - Gerar ou trocar sugestões não pode criar nem duplicar uma venda, confirmar pagamento, alterar valores ou registrar participação. A venda só segue o fluxo normal após a escolha explícita e a confirmação da operação.
 - **Venda rápida anônima:** o cambista informa somente a placa (ou escolhe uma sugestão do gerador), os detalhes indispensáveis da aposta/rodada e o valor, confirma a operação conforme o meio de pagamento habilitado e entrega o recibo digital/impresso com código único e QR Code de consulta. Não pedir nem gravar nome, nome de usuário, CPF, telefone ou WhatsApp do comprador; não exigir `customerId` nem criar um registro artificial de `Customer`. A venda deve permanecer ligada ao cambista autenticado, pagamento, participações, recibo e auditoria.
 - Dinheiro em espécie: cambista confirma recebimento e assume responsabilidade pelo registro. Pix: confirmar via provedor.
-- Histórico limitado às próprias operações, com situação do pagamento, resultado/prêmio e dados da rodada.
-- Painel informativo com **dois contadores separados**: (1) valor bruto acumulado das vendas confirmadas do próprio cambista e (2) valor monetário acumulado da comissão efetivamente gerada, em reais — não exibir a porcentagem como se fosse a comissão. Exemplo: vendas elegíveis de R$ 100,00 com taxa individual de 20% geram R$ 20,00 de comissão. Considerar somente vendas confirmadas e aplicar a regra de arredondamento em centavos inteiros; vendas pendentes, recusadas, canceladas ou estornadas não podem inflar os totais.
-- Remover da área do cambista as ferramentas de busca/seleção de clientes e pesquisa de vendas por nome, telefone, WhatsApp ou placa. Se a segunda via for necessária, localizar pelo código único do recibo, com autorização e sem criar outra venda. O histórico de operações próprias pode permanecer se não exigir cadastro de cliente.
+- **Escopo da interface do cambista:** somente registrar uma nova aposta/venda, concluir o fluxo de recebimento permitido e entregar o recibo original. Não exibir histórico, resumo/contadores de vendas, busca ou consulta de apostas/resultados, nem qualquer opção de segunda via ou recuperação. A decisão de limitar a interface ao registro de apostas prevalece sobre requisitos anteriores de histórico e contadores nesta área. Os registros financeiros necessários continuam existindo no backend para auditoria e administração, sem expor esses painéis ao cambista.
+- Remover da área do cambista ferramentas de busca/seleção de clientes, histórico/resumo de vendas, pesquisa de vendas e consulta de resultados. **Não existe segunda via:** não recuperar, reimprimir ou reemitir recibos por código, placa, cliente, pedido ao cambista ou qualquer outro caminho. O recibo físico original e seu QR Code são a referência de consulta.
 
 ## 7. Administração
 - Painel financeiro por período, distinguindo vendas diretas, vendas de cambistas, pagamentos confirmados, pendências, cancelamentos, estornos, comissões, prêmios, saques, tarifas e resultado líquido. Não confundir vendas com valores líquidos recebidos.
@@ -657,9 +656,25 @@ Não existe um método único que funcione com literalmente toda impressora Blue
 ### Requisitos de usabilidade e segurança
 - Informar claramente os caminhos disponíveis no dispositivo e não simular conexão ou sucesso quando a impressora não foi detectada.
 - Permitir tentar novamente, escolher outra impressora, baixar o recibo e fechar a tela em caso de falha.
-- Imprimir somente recibos de compra confirmada; reimpressão usa o mesmo código e nunca cria nova venda.
+- Durante a emissão original, imprimir somente recibos de compra confirmada. Não implementar reimpressão/segunda via após o fluxo original ser encerrado; a consulta posterior é somente pelo QR Code do recibo físico original.
 - Validar em dispositivos reais representativos: Android + impressoras BLE e Classic/SPP, iPhone/iPad com modelos compatíveis com o ecossistema Apple, e desktop com impressora instalada. Registrar marca/modelo, SO, navegador, protocolo e resultado.
 - Não declarar “compatível com qualquer impressora” até existir matriz de testes; a meta é máxima compatibilidade com fallback, não uma garantia tecnicamente impossível de universalidade absoluta.
 
 ### Estado
 Esta é a direção aprovada para arquitetura e produto. O componente térmico atual prepara um recibo HTML de 58 mm e usa window.print(); ainda não implementa pareamento Bluetooth direto, detecção de capacidades, adaptador nativo nem QR de recibo garantidamente real. A compatibilidade Bluetooth ampla e a validação física continuam pendentes.
+
+
+## Decisão vigente — consulta somente pelo QR Code e sem segunda via (2026-10-28)
+
+Esta decisão substitui qualquer instrução anterior deste documento que permita painel geral de resultados públicos, busca pública de recibos por código digitado ou recuperação/segunda via de recibo.
+
+- A página inicial pública não exibe resultados/ganhadores gerais nem campo para digitar código de recibo.
+- A consulta pública acontece somente quando a câmera do celular lê o QR Code impresso no recibo original e abre a rota específica `/verificar-recibo/{receiptCode}`.
+- A rota de verificação pode ser acessada sem login, pois precisa abrir diretamente pela câmera, mas apresenta exclusivamente a compra/recibo identificado pelo código único e seus dados oficiais vinculados. Não aceita placas, rodadas ou resultados fornecidos pelo usuário como fonte de verdade.
+- A consulta é somente de leitura. Não há segunda via, recuperação, reimpressão ou reemissão por QR, código, placa, pedido ao cambista ou suporte. A geração e impressão fazem parte apenas do fluxo original da compra confirmada; depois de encerrado, o recibo físico original não pode ser substituído.
+- A área do cambista contém somente o fluxo de registrar uma nova aposta/venda e entregar o recibo original. Não mostra busca, consulta, histórico, resumo/contadores de vendas ou resultados.
+- A área do jogador permanece separada e mantém seu próprio histórico e suas consultas autenticadas. Esta decisão não remove nem altera o histórico do jogador.
+- A API específica de verificação do recibo permanece disponível para alimentar a página QR; APIs/rotas gerais de resultados públicos e busca pública por código digitado não fazem parte do produto.
+- Não apagar dados históricos nem alterar o banco de produção como parte dessa mudança. Remoção de interface/rotas e retenção de dados são assuntos distintos; qualquer migração de dados exige plano próprio e autorização.
+
+**Precedência documental:** esta seção é a decisão funcional mais recente para consulta de recibos, página inicial e área do cambista. Se um parágrafo anterior ou documento histórico disser o contrário, aplicar esta decisão e corrigir o trecho conflitante antes de novas implementações.
