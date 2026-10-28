@@ -1054,3 +1054,14 @@ p, .intro, .auth-description, .area-description, .feature-card p,
 @media(min-width:640px){
   .purchase-form .round-carousel>.round-option{flex-basis:46%}
 }
+
+
+/* Botão de saque acessível em telas de toque: área clicável confortável e feedback claro. */
+.feature-card .admin-round-create button[type="submit"]{
+  display:flex;align-items:center;justify-content:center;width:100%;min-height:52px;
+  padding:14px 18px;border:1px solid #3b82a0;border-radius:14px;
+  font-size:1rem;font-weight:800;line-height:1.25;cursor:pointer;
+  touch-action:manipulation;transition:background-color .15s ease,opacity .15s ease;
+}
+.feature-card .admin-round-create button[type="submit"]:disabled{cursor:not-allowed;opacity:.65}
+.feature-card .admin-round-create button[type="submit"]:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
