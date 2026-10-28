@@ -14,7 +14,6 @@ const labels: Record<Withdrawal["status"], string> = { PENDING: "Pendente", APPR
 export function PlayerWalletWithdrawals() {
   const [availableCents, setAvailableCents] = useState(0);
   const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
-  const [amount, setAmount] = useState("");
   const [pixKey, setPixKey] = useState("");
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -37,17 +36,14 @@ export function PlayerWalletWithdrawals() {
 
   async function requestWithdrawal(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault(); setError(""); setNotice("");
-    const value = Number(amount.replace(",", "."));
-    if (!Number.isFinite(value) || value <= 0 || !Number.isSafeInteger(Math.round(value * 100))) {
-      setError("Informe um valor válido para o saque."); return;
-    }
+    if (availableCents <= 0) { setError("Não há saldo disponível para sacar."); return; }
     setBusy(true);
     try {
-      const response = await fetch("/api/player/withdrawals", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ amountCents: Math.round(value * 100), pixKey: pixKey.trim() }) });
+      const response = await fetch("/api/player/withdrawals", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ pixKey: pixKey.trim() }) });
       const body = await response.json();
       if (!response.ok) throw new Error(body.error ?? "Não foi possível solicitar o saque.");
       setNotice("Solicitação registrada. O valor foi reservado e não poderá ser usado em novas apostas enquanto o saque estiver pendente. Se o saque for rejeitado, o valor volta ao saldo disponível.");
-      setAmount(""); setPixKey(""); await load();
+      setPixKey(""); await load();
     } catch (reason) { setError(reason instanceof Error ? reason.message : "Falha ao solicitar o saque."); }
     finally { setBusy(false); }
   }
@@ -56,9 +52,8 @@ export function PlayerWalletWithdrawals() {
     <span className="feature-label">Carteira digital</span>
     <h2 id="player-wallet-withdrawals-heading">Saldo e saques</h2>
     <p className="wallet-balance">{loading ? "Consultando saldo…" : money(availableCents)} <small>disponível</small></p>
-    <p>Informe sua chave Pix e o valor do saque. Ao solicitar, o valor fica reservado até o administrador conferir os dados e realizar o pagamento Pix manualmente. O status muda de pendente para pago após a confirmação do administrador. A chave é armazenada criptografada.</p>
     <form className="admin-round-create" onSubmit={requestWithdrawal}>
-      <label>Valor do saque (R$)<input inputMode="decimal" value={amount} onChange={(event) => setAmount(event.target.value)} placeholder="0,00" required /></label>
+      <p className="wallet-withdrawal-full-balance">O saque será do saldo total disponível: <strong>{loading ? "consultando…" : money(availableCents)}</strong>.</p>
       <label>Chave Pix<input value={pixKey} onChange={(event) => setPixKey(event.target.value)} maxLength={200} autoComplete="off" required /></label>
       <button type="submit" disabled={loading || busy || availableCents <= 0}>{busy ? "Solicitando…" : "Solicitar saque"}</button>
     </form>
