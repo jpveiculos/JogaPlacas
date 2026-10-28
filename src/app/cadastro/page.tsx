@@ -11,6 +11,7 @@ export default function RegisterPage() {
   return (
     <main className="auth-page">
       <section className="auth-card" aria-labelledby="register-title">
+        <a href="/" className="home-brand home-wordmark auth-wordmark" aria-label="Joga Placas — página inicial"><span className="wordmark-joga">JOGA</span><span className="wordmark-placas">PLACAS</span></a>
         <p className="eyebrow">Cadastro de jogador</p>
         <h1 id="register-title">Crie sua conta</h1>
         <p className="auth-description">Escolha seu usuário e uma senha segura para acessar sua área de jogador.</p>
