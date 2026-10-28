@@ -1134,3 +1134,8 @@ p, .intro, .auth-description, .area-description, .feature-card p,
     line-height: 1.2;
   }
 }
+
+
+/* Compacta o espaço acima do formulário do cambista em telas pequenas. */
+.area-content-compact{padding-top:8px}
+.cashier-sale-card{padding-top:10px}
