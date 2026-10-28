@@ -40,3 +40,8 @@ Criado em 2026-10-27 para evitar que o manual e as decisões fiquem difíceis de
 - A lista retornada pelas APIs de rodadas deve conter apenas rodadas elegíveis. A filtragem visual no cliente melhora a experiência, mas não substitui a validação autoritativa no servidor.
 - **Regra obrigatória para aposta e pagamento:** antes de registrar a compra/venda e antes de iniciar ou confirmar qualquer pagamento Pix, o servidor deve revalidar, no mesmo fluxo transacional, que a primeira rodada continua aberta e que todas as rodadas selecionadas ainda aceitam apostas. Se alguma rodada tiver encerrado, recusar a operação sem registrar aposta nem gerar cobrança válida e devolver erro claro em português; o cliente deve atualizar a lista e pedir que a pessoa selecione rodadas válidas novamente. Não confiar no relógio do dispositivo nem somente no estado do carrossel.
 - A consulta a cada 2 segundos foi ajustada no código dos dois formulários. A validação ponta a ponta de concorrência entre encerramento e criação de cobrança precisa ser testada e confirmada antes de considerar o fluxo homologado.
+
+
+## Área do jogador — menus recolhíveis (2026-10-28)
+- O formulário de jogo permanece visível. Carteira digital, histórico de apostas dos últimos 7 dias e últimos resultados ficam em painéis recolhíveis fechados inicialmente, com seta, título e descrição curta.
+- Regra documentada em `docs/PRODUCT_SPEC.md` e `MANUAL_TECNICO.md`; validar em dispositivos móveis e desktop após o deploy.
