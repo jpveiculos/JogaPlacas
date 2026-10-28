@@ -6,7 +6,7 @@ export function AreaShell({ title, username, description, children }: Props) {
   return (
     <main className="area-page">
       <header className="area-header">
-        <div><p className="eyebrow">Joga Placas</p><h1 className="area-title">{title}</h1><p className="area-description">{description}</p></div>
+        <div className="area-header-branding"><a href="/" className="home-brand home-wordmark" aria-label="Joga Placas — página inicial"><span className="wordmark-joga">JOGA</span><span className="wordmark-placas">PLACAS</span></a><h1 className="area-title">{title}</h1><p className="area-description">{description}</p></div>
         <div className="account-controls"><span className="account-name">{username}</span><LogoutButton /></div>
       </header>
       <section className="area-content">{children}</section>
