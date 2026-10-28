@@ -17,6 +17,7 @@ const requestSchema = z.object({
   idempotencyKey: z.string().trim().min(16).max(200),
   roundIds: z.array(z.string().trim().min(1).max(100)).min(1).max(10),
   lines: z.array(lineSchema).min(1).max(100),
+  paymentMethod: z.enum(["PIX", "WALLET"]).default("PIX"),
 }).strict();
 
 export async function POST(request: NextRequest) {
@@ -50,6 +51,7 @@ export async function POST(request: NextRequest) {
     const purchase = await createPendingPixPurchase(authPrisma, {
       idempotencyKey: parsed.data.idempotencyKey,
       playerId: user.id,
+      paymentMethod: parsed.data.paymentMethod,
       repetitions: parsed.data.roundIds.length,
       participations: parsed.data.roundIds.map((roundId) => ({
         roundId,
@@ -61,6 +63,28 @@ export async function POST(request: NextRequest) {
         })),
       })),
     });
+
+    if (parsed.data.paymentMethod === "WALLET") {
+      if (purchase.status !== "CONFIRMED" || purchase.paymentMethod !== "WALLET" || !purchase.receiptCode || !purchase.confirmedAt) {
+        return NextResponse.json({ error: "Não foi possível confirmar o pagamento com saldo. Atualize a carteira e tente novamente." }, { status: 409, headers: { "Cache-Control": "no-store" } });
+      }
+      return NextResponse.json({
+        purchase: {
+          id: purchase.id, receiptCode: purchase.receiptCode, status: purchase.status,
+          paymentStatus: "CONFIRMED", totalCents: purchase.totalCents, currency: purchase.currency,
+          participations: purchase.participations.map((participation) => ({
+            roundId: participation.roundId, totalCents: participation.totalCents,
+            lines: participation.lines.map((line) => ({
+              plateDisplay: line.plateDisplay,
+              totalCents: line.unitCents + line.tensCents + line.hundredsCents + line.thousandsCents + line.lettersCents + line.fullPlateCents,
+              allocationCents: { unit: line.unitCents, tens: line.tensCents, hundreds: line.hundredsCents, thousands: line.thousandsCents, letters: line.lettersCents, fullPlate: line.fullPlateCents },
+            })),
+          })),
+        },
+        paymentActionRequired: false, receiptReady: true,
+        message: "Pagamento realizado com o saldo da conta. O valor foi debitado e o recibo oficial está disponível.",
+      }, { status: 201, headers: { "Cache-Control": "no-store" } });
+    }
 
     let pixCheckout: { copyPaste: string | null; qrCodeBase64: string | null; ticketUrl: string | null } | null = null;
     const payment = purchase.payment;
@@ -137,7 +161,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     if (error instanceof PurchaseServiceError) {
       const status = error.code === "INVALID_ACTOR" ? 403
-        : error.code === "IDEMPOTENCY_CONFLICT" ? 409
+        : error.code === "INSUFFICIENT_BALANCE" || error.code === "IDEMPOTENCY_CONFLICT" ? 409
           : error.code === "ROUND_UNAVAILABLE" ? 409
             : error.code === "INVALID_IDEMPOTENCY_KEY" ? 400 : 400;
       return NextResponse.json({ error: error.message, code: error.code }, { status, headers: { "Cache-Control": "no-store" } });
