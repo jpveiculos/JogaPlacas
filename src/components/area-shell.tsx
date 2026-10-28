@@ -11,7 +11,7 @@ type Props = {
   children: ReactNode;
 };
 
-export function AreaShell({ children }: Props) {
+export function AreaShell({ children, compact = false }: Props) {
   return (
     <main className="area-page">
       <header
@@ -55,7 +55,7 @@ export function AreaShell({ children }: Props) {
           />
         </a>
       </header>
-      <section className="area-content">{children}</section>
+      <section className={`area-content${compact ? " area-content-compact" : ""}`}>{children}</section>
       <footer
         className="area-logout-footer"
         style={{ display: "flex", justifyContent: "center", padding: "24px 0 32px" }}
