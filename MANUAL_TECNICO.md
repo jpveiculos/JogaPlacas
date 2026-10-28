@@ -1,5 +1,12 @@
-# Manual técnico — JogaPlacas
+# Manual técnico — Joga Placa
 Atualizado em 28/10/2026.
+
+## Identidade oficial e aplicação global da marca
+- Nome público correto: **Joga Placa** (singular). `JogaPlacas` permanece apenas como identificador técnico do repositório GitHub.
+- Cabeçalho compartilhado em todas as áreas autenticadas: logomarca original centralizada, usuário conectado no canto esquerdo e botão Sair no canto direito.
+- A logomarca deve permanecer sem itálico, inclinação, filtros ou efeitos.
+- Aplicar a marca também na página pública, nos modais de cobrança Pix (QR Code e copia e cola), na verificação pública de recibo e nos recibos impressos/digitais.
+- Toda alteração de marca deve ser acompanhada de revisão de títulos, metadados, textos acessíveis, rodapé, fluxo Pix, recibos e documentação. Não renomear o repositório técnico sem revisão separada de URLs e deploy.
 
 ## Procedimento obrigatório antes de qualquer trabalho
 1. Ler `MANUAL-MESTRE.md` na raiz da branch `feature/public-home-registration`.
