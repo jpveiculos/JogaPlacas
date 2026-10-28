@@ -678,3 +678,15 @@ Esta decisão substitui qualquer instrução anterior deste documento que permit
 - Não apagar dados históricos nem alterar o banco de produção como parte dessa mudança. Remoção de interface/rotas e retenção de dados são assuntos distintos; qualquer migração de dados exige plano próprio e autorização.
 
 **Precedência documental:** esta seção é a decisão funcional mais recente para consulta de recibos, página inicial e área do cambista. Se um parágrafo anterior ou documento histórico disser o contrário, aplicar esta decisão e corrigir o trecho conflitante antes de novas implementações.
+
+
+## Decisão vigente — instruções para resgate de prêmio via WhatsApp (2026-10-28)
+
+- Quando a página específica do recibo aberta pelo QR mostrar uma participação premiada cujo crédito ainda não esteja confirmado, apresentar instruções claras para guardar o recibo físico original e contatar o atendimento oficial para conferir o prêmio e receber instruções de resgate.
+- Apresentar o botão **Solicitar resgate pelo WhatsApp**. O botão abre o contato oficial configurado e preenche uma mensagem com o código do recibo, código da rodada, placa e formato (cinza/Mercosul) e valor oficial indicado. Para recibos com mais de uma rodada/linha premiada pendente, incluir cada item relevante na mesma mensagem.
+- O número oficial deve vir da variável de ambiente `NEXT_PUBLIC_PRIZE_SUPPORT_WHATSAPP`, somente dígitos, incluindo código do país e DDD. Não usar número fictício, pessoal ou não aprovado. O valor real deve ser definido pelo responsável da plataforma no ambiente de deploy, nunca commitado no repositório.
+- Se o contato ainda não estiver configurado, exibir aviso neutro de que o atendimento não está configurado; não exibir um botão que leve a lugar nenhum.
+- A mensagem de WhatsApp solicita atendimento e validação; não confirma por si só que o prêmio é devido ou pago. A equipe deve conferir o registro oficial, resultado, valor, recibo e estado financeiro antes de liberar qualquer pagamento. A página só pode afirmar crédito/pagamento confirmado se houver registro oficial de crédito.
+- Não solicitar ou inserir senhas, chaves Pix, credenciais, CPF ou outros dados sensíveis na mensagem automática. Não solicitar dados pessoais desnecessários para consultar o recibo.
+- Este fluxo não altera a proibição de segunda via/reimpressão e não transforma o WhatsApp em mecanismo automático de pagamento. O recibo físico original continua necessário como comprovante do jogador.
+- O prazo de resgate manual de prêmios e o tratamento de falhas técnicas de crédito online seguem regras distintas já descritas nesta especificação; a inclusão do botão não altera esses prazos nem encerra obrigações financeiras.
