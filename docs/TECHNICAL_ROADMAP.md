@@ -61,7 +61,7 @@ Não apagar registros históricos de `Customer` nem modificar a base de dados de
 4. Implementar autenticação, sessões seguras, papéis, propriedade dos registros, limites de tentativa e auditoria.
 5. Implementar compra e participações com cutoff no servidor, idempotência e concorrência real no PostgreSQL.
 6. Implementar carteira/livro-razão, prêmios, saques, vendas em espécie e comissões com invariantes transacionais.
-7. Implementar as quatro áreas de produto, incluindo página principal pública com apresentação, cadastro/login, resultados/ganhadores e consulta de recibo, além das áreas autenticadas de jogador, cambista e administrador.
+7. Implementar as quatro áreas de produto conforme a decisão vigente: homepage de apresentação/cadastro/login sem resultados gerais nem busca por código; área do jogador com histórico próprio; área do cambista somente para registrar nova aposta/venda; área administrativa conforme permissões. A consulta pública de recibo é exclusivamente pela página específica aberta via QR.
 8. Implementar e validar a integração Pix/Mercado Pago em ambiente de desenvolvimento/homologação; **a habilitação operacional, credenciais de produção e qualquer cobrança real ficam bloqueadas até a fase final e autorização explícita**. Código de integração já existe nesta branch, mas isso não equivale a validação ponta a ponta nem autorização de produção.
 9. Testar ponta a ponta, segurança, concorrência, reconciliação, backup/restauração e recuperação.
 10. Revisar configuração do novo servidor e variáveis de ambiente; preparar implantação e rollback sem tocar no site atual.
@@ -69,7 +69,7 @@ Não apagar registros históricos de `Customer` nem modificar a base de dados de
 
 ## Atualização — página pública e cadastro (2026-10-26)
 
-- A página pública existe em `src/app/page.tsx` e apresenta consulta de recibos e resultados públicos. A rota raiz já é a porta de entrada para visitantes; usuários autenticados são encaminhados conforme seu papel.
+- Registro histórico de 2026-10-26, superado em 2026-10-28: a página inicial era descrita com consulta de recibos e resultados públicos. A decisão atual remove essas funções gerais; verificar o código atual antes de usar esse registro.
 - A branch `feature/public-home-registration` adiciona os botões de cadastro, a página `/cadastro` e a API `POST /api/auth/register`, criando somente usuários PLAYER e iniciando sessão após cadastro.
 - Próximas validações obrigatórias: `npm run typecheck`, `npm run lint`, `npm test`, `npm run db:validate` e `npm run build`; revisar proteção antiabuso/limitação de cadastro; validar visualmente e funcionalmente no Railway; confirmar que o serviço e o domínio usam a branch correta. Não publicar em produção antes disso.
 
@@ -351,7 +351,7 @@ Decisão funcional confirmada: todos os horários apresentados na interface, no 
 
 
 ## Decisão e pendências do recibo para repetição — 2026-10-25
-Decisão funcional: uma compra com 1 a 10 rodadas consecutivas gera um único recibo oficial e uma única sequência de impressão térmica. O recibo usa Purchase.receiptCode como código estável da compra e lista cada participação em ordem, com índice da repetição, código da rodada, placa/formato e valor; o total do recibo deve corresponder ao total confirmado da compra. Um único QR Code consulta a compra completa, não cada repetição separadamente. Reimpressão reaproveita o código e não altera estados financeiros; falha física de impressão não cancela pagamento.
+Registro histórico da decisão de recibo em 2026-10-27: uma compra com 1 a 10 rodadas usa um único recibo original e QR Code para consulta da compra completa. A decisão posterior de 2026-10-28 proíbe reimpressão/segunda via após o fluxo original ser encerrado; a falha física de impressão não cancela o pagamento, mas não autoriza recuperar ou reemitir o recibo.
 
 Estado atual e limites: src/components/receipts/thermal-receipt.tsx é um componente de apresentação que só renderiza com status CONFIRMED e formato válido do código. Ele recebe os dados e o QR Code da camada chamadora; o QR ainda pode ser apenas um espaço reservado. Não foi concluída a integração ponta a ponta entre confirmação real de pagamento, emissão do código, carregamento das participações, resolução do QR e impressão pelo fluxo do cambista.
 
@@ -361,7 +361,7 @@ Testes pendentes antes de considerar o fluxo pronto:
 - total impresso igual à soma das participações/linhas confirmadas;
 - preservação literal dos formatos de placa cinza e Mercosul;
 - recibo não renderizado para pagamento pendente/cancelado/estornado;
-- reimpressão com o mesmo código, sem efeitos financeiros;
+- emissão original/alternativa de impressão ainda dentro do fluxo de emissão, sem efeitos financeiros adicionais; não oferecer reimpressão após encerrar o fluxo;
 - QR Code levando à consulta da compra completa e somente dados autorizados;
 - integração real com a tela do cambista e com o provedor de pagamento após confirmação assinada e idempotente.
 
@@ -397,7 +397,7 @@ Implementação parcial do recibo — 2026-10-25: o componente térmico agora id
 
 - O histórico do jogador oferece a ação de consultar/imprimir recibo somente para compras cujo estado esteja `CONFIRMED`.
 - A interface consulta `GET /api/player/purchases/[purchaseId]/receipt`; o servidor repete a verificação de sessão, titularidade e confirmação de compra e pagamento. Não confiar apenas na condição visual.
-- Os dados retornados pelo servidor alimentam o componente térmico de 58 mm, com linhas agrupadas por código de rodada e um único código de recibo para a compra inteira. A reimpressão não cria compra nem movimentação financeira.
+- Os dados retornados pelo servidor alimentam o componente térmico de 58 mm, com linhas agrupadas por código de rodada e um único código de recibo para a compra inteira. A emissão original não cria compra nem movimentação financeira adicional. A decisão atual não permite reimpressão/segunda via após o fluxo ser encerrado.
 - QR Code real ainda não está integrado; o componente mantém o espaço reservado. A consulta pública pelo código já existe, mas a navegação QR ponta a ponta depende de URL de destino definida e geração local confiável do QR.
 - A integração de pagamento não está ativa: sem confirmação autêntica do provedor, o recibo oficial permanece indisponível. Testes da CI devem confirmar esta alteração antes de considerar a etapa validada.
 
@@ -427,14 +427,14 @@ Ao atualizar este manual, comparar primeiro o HEAD da branch de trabalho com cad
 
 ## Nova direção de produto: página principal pública — 2026-10-26
 
-A decisão antiga que limitava a experiência a três áreas e rejeitava uma página principal foi substituída. A primeira implementação da home pública já está na branch `feature/dual-plate-draw`: apresenta o jogo, explica o uso do recibo, integra a consulta pública pelo código `JP-...` e incorpora o painel público de resultados/ganhadores, reaproveitando componentes e APIs existentes. A home verifica a sessão no servidor e redireciona usuários autenticados à área correspondente por papel. Os estilos responsivos foram adicionados, mas ainda exigem validação visual e de acessibilidade. Lint, typecheck, testes e build não foram confirmados para este commit; cadastro público de jogador e apresentação dinâmica dos valores oficiais de prêmio continuam pendentes. Requisitos e critérios completos estão em `docs/PRODUCT_SPEC.md`, seção “Página principal pública e entrada no produto”.
+Registro histórico da implementação na branch `feature/dual-plate-draw`, superado pela decisão de 2026-10-28: a home então integrava consulta pública por código e painel geral de resultados/ganhadores. Esses elementos não são requisitos atuais e não devem ser reintroduzidos. A home verifica a sessão no servidor e redireciona usuários autenticados à área correspondente por papel. Os estilos responsivos foram adicionados, mas ainda exigem validação visual e de acessibilidade. Lint, typecheck, testes e build não foram confirmados para este commit; cadastro público de jogador e apresentação dinâmica dos valores oficiais de prêmio continuam pendentes. Requisitos e critérios completos estão em `docs/PRODUCT_SPEC.md`, seção “Página principal pública e entrada no produto”.
 
 
 ## Regra vigente — cadastro mínimo, recibo digital e pesquisa administrativa (2026-10-26)
 
 - Cadastro de jogador: somente nome de usuário e senha. Nome completo, CPF, telefone, WhatsApp e e-mail não são requisitos e não devem ser pedidos durante a aposta. Atualizar formulários, schemas, validações e testes para refletir essa regra sem quebrar contas históricas desnecessariamente.
 - Área do jogador: a aposta deve pedir placa e parâmetros essenciais (valor, rodada/repetição e meio de pagamento). Após confirmação autêntica, gerar recibo digital único com QR Code de consulta pública e ações de baixar/imprimir. QR do recibo não é QR de pagamento. Compra pendente não pode parecer confirmada.
-- Área do cambista: implementar venda rápida anônima sem `customerId` e sem criação de `Customer`; placa, parâmetros essenciais, valor e fluxo de pagamento permitido. Retirar pesquisa por nome/telefone/WhatsApp/placa e seleção de clientes. Segunda via por código de recibo somente, sem duplicar venda.
+- Área do cambista: venda rápida anônima sem `customerId` e sem criação de `Customer`; placa, parâmetros essenciais, valor e fluxo de pagamento permitido. Retirar pesquisa, histórico, consulta de resultados e seleção de clientes. Não há segunda via por código ou qualquer outro meio.
 - Área administrativa: adicionar busca restrita de contas de jogadores por nome de usuário e dados mínimos de manutenção, com paginação, autorização ADMIN no servidor e auditoria. Não criar dados pessoais ausentes.
 - **Dependências técnicas:** inspecionar e adaptar schema Prisma, contratos de API, `create-purchase.ts`, rotas de compra, componentes do jogador/cambista, emissão/consulta de recibo e testes. O serviço de compra atual possui dependências do cliente e fluxo de pagamento PIX pendente; remover apenas a interface antiga antes de substituir o fluxo deixaria a venda incompleta. Não marcar a tarefa concluída até testes de autorização, venda anônima, pagamento, recibo, QR, download/impressão, ausência de PII e regressão dos registros históricos.
 - Não apagar clientes históricos em massa nem migrar banco real como parte da limpeza de interface. Planejar eventual retenção/remoção separadamente, com revisão e plano reversível. Nenhum deploy ou ativação de pagamento real autorizado por esta decisão.
@@ -454,7 +454,7 @@ A decisão antiga que limitava a experiência a três áreas e rejeitava uma pá
 - Implementar webhook idempotente, estado de pagamento persistente e atualização da interface sem exigir recarregamento manual; prever consulta de estado enquanto a confirmação chega.
 - Implementar confirmação de espécie com sessão/role de cambista, proteção contra CSRF, vínculo à venda em andamento, timestamp do servidor, trilha de auditoria e idempotência.
 - A atribuição do código de recibo e a confirmação devem ser consistentes; QR de recibo deve resolver para consulta pública autorizada apenas após confirmação. Impressão/download reutiliza o mesmo recibo e nunca cria nova venda.
-- Testar pagamento aprovado, pendente, recusado, expirado, evento duplicado, evento fora de ordem, valor divergente, webhook inválido, botão de espécie repetido, sessão sem permissão, falha de impressão e reimpressão.
+- Testar pagamento aprovado, pendente, recusado, expirado, evento duplicado, evento fora de ordem, valor divergente, webhook inválido, botão de espécie repetido, sessão sem permissão e falha de impressão durante a emissão original; verificar que não existe fluxo de reimpressão/segunda via após encerrar.
 - **Status:** regra definida; integração ponta a ponta não confirmada. Não habilitar cobrança real nem alegar que o recibo automático está pronto até a CI e testes de integração demonstrarem o comportamento. Nenhum deploy ou alteração de banco de produção é autorizado por esta decisão.
 
 
@@ -463,10 +463,10 @@ A decisão antiga que limitava a experiência a três áreas e rejeitava uma pá
 **Critério obrigatório para o fluxo do cambista** (e padrão de comportamento para o jogador):
 
 1. Tela de cobrança Pix com botão sempre acessível para sair/fechar, inclusive quando QR/copia-e-cola não carregarem ou a cobrança ficar pendente. Fechar a tela não muda o estado financeiro, não cancela automaticamente a cobrança e não emite recibo.
-2. Tela do recibo com ações separadas: **Imprimir**, **Baixar recibo** e **Sair/Fechar recibo**. A ação de sair é um caminho de recuperação independente das ações de impressão e download.
+2. Tela do recibo original com ações **Imprimir** e **Sair/Fechar recibo**; opção de download/alternativa de impressão pode existir somente dentro do fluxo original. A ação de sair encerra o fluxo e não oferece recuperação posterior.
 3. Após a solicitação de impressão ser aceita e o diálogo de impressão retornar, fechar a tela do recibo e limpar o estado temporário da venda para que a interface esteja pronta para o próximo jogo. Após o navegador aceitar/iniciar o download, fazer a mesma limpeza. O clique isolado não basta: esperar a ação ter sido iniciada/aceita. Se imprimir/baixar falhar ou a impressão for cancelada, manter o recibo na tela com opção de tentar de novo ou sair.
 4. O botão Sair fecha o recibo e limpa a tela sem alterar a compra confirmada. Limpar somente os campos/estado temporários da interface; não apagar histórico nem alterar dados persistidos.
-5. Reimpressão e download usam o mesmo código de recibo e não repetem a venda nem movimentações financeiras. Não alegar que uma página web detecta a impressão física real: validar o retorno do diálogo do navegador e manter a saída manual como alternativa.
+5. Alternativas de impressão/download durante o fluxo original usam o mesmo código de recibo e não repetem a venda nem movimentações financeiras. Depois de encerrar o fluxo, não oferecer reimpressão ou segunda via. Não alegar que uma página web detecta a impressão física real: validar o retorno do diálogo do navegador.
 
 **Auditoria do estado atual:**
 - Existe botão para sair da tela Pix em `src/components/player/player-purchase-form.tsx` (“Sair e iniciar outro jogo”); ele fecha a janela e limpa campos locais, mas preserva a cobrança anterior como pendente.
@@ -481,7 +481,7 @@ A decisão antiga que limitava a experiência a três áreas e rejeitava uma pá
 - O componente compartilhado `ThermalReceipt` agora oferece ações separadas de **Imprimir recibo**, **Baixar recibo** e **Sair / Fechar recibo**. Sair e baixar limpam o estado/modal do recibo por meio do callback do componente; o arquivo baixado é HTML independente com estilos e conteúdo do recibo, não um PDF.
 - As ações ficam fora da área impressa e não aparecem no papel. A área do jogador usa o botão do próprio recibo para fechar o modal, removendo a necessidade de depender de um botão externo abaixo do conteúdo.
 - A tela Pix do jogador já tinha “Sair e iniciar outro jogo”; ela continua apenas fechando a tela e limpando os campos locais, sem afirmar que isso cancela o pagamento pendente.
-- **Limite ainda aberto:** o fluxo de impressão não fecha automaticamente o recibo, porque os navegadores não distinguem de forma confiável impressão física concluída de diálogo cancelado; fechar no evento `afterprint` também fecharia quando o usuário cancela. O botão de saída manual permanece como recuperação. Validar se a experiência pode ser melhorada sem perder a opção de tentar novamente após cancelamento.
+- **Limite técnico:** o fluxo de impressão não fecha automaticamente o recibo porque navegadores não distinguem de forma confiável impressão física concluída de diálogo cancelado. Durante o fluxo original, permitir tentar novamente ou sair; após sair/encerrar, não disponibilizar recuperação nem segunda via.
 - O recibo ainda pode mostrar placeholder no lugar do QR real. O fluxo de cambista (venda anônima, cobrança Pix/confirmar dinheiro, emissão e limpeza de tela) continua não implementado ponta a ponta. CI dos commits recentes está em execução; não considerar validado até os jobs terminarem.
 
 
@@ -505,7 +505,7 @@ O texto do painel administrativo que dizia que “não existe integração ativa
 3. Testar o fluxo do jogador ponta a ponta em homologação: compra pendente → QR/copia-e-cola → notificação autenticada → confirmação única → recibo pronto; também assinatura inválida, valor/referência divergentes, evento duplicado/fora de ordem, recusa, expiração, reembolso e pagamento após cutoff. Não é necessário movimentar dinheiro real.
 4. **Correção aplicada em 2026-10-27:** o webhook deixa o evento sem `processedAt` enquanto executa a reconciliação e marca como processado só após concluir o caminho de confirmação ou registrar a necessidade de reconciliação manual. Falhas permanecem reprocessáveis. Commit `27bb05b14a1a36c2c93d9534bfe15564b6f7b95d`. Ainda requer testes de concorrência, retry e duplicidade.
 5. Verificar estados de reembolso/estorno após uma compra já confirmada. O código atual fecha somente pagamentos ainda PENDING no ramo de estado negativo; não presumir que uma notificação de reembolso reverte automaticamente uma compra já confirmada.
-6. Implementar o fluxo prioritário ainda ausente do cambista: venda sem cadastro de cliente, escolha Pix ou espécie, confirmação de espécie auditada/idempotente, recibo com código único e QR de consulta, e recuperação sem duplicar venda.
+6. Validar o fluxo do cambista: venda sem cadastro de cliente, escolha Pix ou espécie, confirmação de espécie auditada/idempotente e emissão original do recibo com código único e QR de consulta. Não implementar recuperação ou segunda via.
 7. Completar os módulos administrativos faltantes (gestão de contas, regras/configurações financeiras, comissões e relatórios), conforme a especificação funcional.
 8. Validar QR real do recibo, download/impressão e comportamento de saída/limpeza da tela; a cobrança Pix e o QR do recibo são artefatos diferentes.
 9. Confirmar o agendamento externo do scheduler no ambiente de desenvolvimento e a navegação da página pública/cadastro, sem tratar deploy bem-sucedido como prova de todos os fluxos.
@@ -516,7 +516,7 @@ O texto do painel administrativo que dizia que “não existe integração ativa
 
 ### Correções incrementais — 2026-10-27
 - **Webhook Pix:** o registro do evento deixou de ser marcado como processado antes da confirmação transacional. Eventos ainda não processados podem ser retomados após falha; eventos já processados são reconhecidos como duplicados. Commit: `27bb05b14a1a36c2c93d9534bfe15564b6f7b95d`.
-- **Consulta de vendas do cambista:** a API e a interface agora exigem o código completo do recibo, em vez de buscar por placa ou por trecho do identificador. Isso alinha a recuperação de segunda via à regra funcional e reduz a exposição de vendas por pesquisa ampla. Commits: `303b85caa591ad47c217bf5788d36c083a42032c` e `03726a137cd89bfe43304f5e8716614efc8ce255`.
+- **Registro histórico superado em 2026-10-28:** commits antigos adicionaram consulta de vendas por código completo para recuperar segunda via. Essa funcionalidade foi removida por decisão posterior; não restaurar a rota nem a interface de consulta.
 - **Validação:** o GitHub não retornou status checks nem execuções de Actions para o commit da correção do webhook consultado. Portanto, essas alterações estão registradas no repositório, mas não são declaradas testadas ou publicadas.
 - **Próximo gap funcional do cambista:** a tela existente ainda prepara vendas por Pix; recebimento em dinheiro com confirmação auditada/idempotente e QR Code real do recibo continuam pendentes. Não substituir o fluxo atual sem implementar uma transição de estado atômica.
 
