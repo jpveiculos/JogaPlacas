@@ -1175,6 +1175,45 @@ p, .intro, .auth-description, .area-description, .feature-card p,
 
 
 /* Homepage: infográfico comparativo das duas placas. */
+
+/* Correção do hero em desktop: impedir que texto e botões ultrapassem a coluna.
+   O breakpoint móvel existente permanece responsável pelo layout do celular. */
+@media (min-width: 701px) {
+  .home-page .home-hero {
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr);
+    align-items: start;
+    gap: clamp(20px, 3vw, 40px);
+  }
+  .home-page .home-hero-copy,
+  .home-page .home-hero-art {
+    min-width: 0;
+    max-width: 100%;
+  }
+  .home-page .home-hero-description,
+  .home-page .home-small-note {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+  .home-page .home-hero-actions {
+    align-items: stretch;
+    gap: 10px;
+  }
+  .home-page .home-hero-actions > a {
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    text-align: center;
+  }
+  .home-page .home-how-infographic {
+    margin-top: 18px;
+    padding: 8px;
+  }
+  .home-page .home-how-infographic figcaption {
+    font-size: clamp(.78rem, .9vw, .92rem);
+    overflow-wrap: anywhere;
+  }
+}
+
 .home-how-infographic{width:100%;margin:28px 0 8px;padding:12px;border:1px solid #d7e3ef;border-radius:20px;background:#07172b;box-shadow:0 16px 42px rgb(7 23 43 / 12%)}
 .home-how-infographic img{display:block;width:100%;height:auto;max-width:100%;border-radius:12px;object-fit:contain}
 .home-how-infographic figcaption{padding:10px 8px 2px;color:#d6e6f8;text-align:center;font-size:.95rem;line-height:1.5}
