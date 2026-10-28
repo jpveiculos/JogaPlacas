@@ -791,7 +791,7 @@ p, .intro, .auth-description, .area-description, .feature-card p,
   overflow:hidden;
 }
 .plate-image.plate-mercosur .plate-characters{top:61%}
-.plate-image.plate-legacy .plate-characters{top:49%}
+.plate-image.plate-legacy .plate-characters{top:62%}
 
 .home-brand img{display:block;width:auto;height:44px;max-width:min(230px,42vw);object-fit:contain}
 .home-footer .home-brand img{height:38px}
