@@ -13,7 +13,7 @@ export default function HomePage() {
   return (
     <div className="home-page">
       <header className="home-header">
-        <Link href="/" className="home-brand" aria-label="Joga Placa — página inicial"><img src="/images/brand/joga-placa-logo.jpg" alt="Joga Placa" /></Link>
+        <Link href="/" className="home-brand home-wordmark" aria-label="Joga Placas — página inicial"><span className="wordmark-joga">JOGA</span><span className="wordmark-placas">PLACAS</span></Link>
         <nav className="home-nav" aria-label="Navegação principal">
           <a href="#como-funciona">Como funciona</a>
           <a href="#consulta-recibo">Consultar recibo</a>
@@ -80,7 +80,7 @@ export default function HomePage() {
       </section>
 
       <footer className="home-footer">
-        <Link href="/" className="home-brand"><img src="/images/brand/joga-placa-logo.jpg" alt="Joga Placa" /></Link>
+        <Link href="/" className="home-brand home-wordmark" aria-label="Joga Placas — página inicial"><span className="wordmark-joga">JOGA</span><span className="wordmark-placas">PLACAS</span></Link>
         <div><Link href="/termos-de-uso">Termos de uso</Link><Link href="/login">Entrar</Link></div>
         <p>Consulte sempre seu recibo e as informações oficiais publicadas.</p>
       </footer>
