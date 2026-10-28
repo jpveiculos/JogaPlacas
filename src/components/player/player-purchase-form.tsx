@@ -161,6 +161,14 @@ export function PlayerPurchaseForm() {
   );
 
   useEffect(() => {
+    const activeIds = new Set(visibleRounds.map((round) => round.id));
+    setSelectedRounds((current) => {
+      const next = current.filter((id) => activeIds.has(id));
+      return next.length === current.length ? current : next;
+    });
+  }, [visibleRounds]);
+
+  useEffect(() => {
     if (!pixModalOpen || !purchase?.id) return;
     let active = true;
     const checkPayment = async () => {
