@@ -11,7 +11,7 @@ export type PrizeCategory = (typeof PRIZE_CATEGORIES)[number];
 export type PrizeMultipliers = Record<PrizeCategory, number>;
 
 export const APPROVED_PRIZE_MULTIPLIERS: PrizeMultipliers = {
-  unit: 9,
+  unit: 6,
   tens: 30,
   hundreds: 300,
   thousands: 3_000,
@@ -42,7 +42,7 @@ export function readPrizeMultipliers(ruleVersion: string, snapshot: unknown): Pr
 }
 
 /** Stable version identifier for the currently approved multipliers. */
-export const CURRENT_PRIZE_RULE_VERSION = "approved-v3";
+export const CURRENT_PRIZE_RULE_VERSION = "approved-v4";
 
 /** Build the server-owned snapshot stored with every new purchase line. */
 export function createCurrentPrizeRuleSnapshot(): {
