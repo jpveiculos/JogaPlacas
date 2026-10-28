@@ -53,7 +53,7 @@ export function PlayerWalletWithdrawals() {
     <h2 id="player-wallet-withdrawals-heading">Saldo e saques</h2>
     <p className="wallet-balance">{loading ? "Consultando saldo…" : money(availableCents)} <small>disponível</small></p>
     <form className="admin-round-create" onSubmit={requestWithdrawal}>
-      <p className="wallet-withdrawal-full-balance">O saque será do saldo total disponível: <strong>{loading ? "consultando…" : money(availableCents)}</strong>.</p>
+      <p className="wallet-withdrawal-full-balance">O saque será do saldo total disponível.</p>
       <label>Chave Pix<input value={pixKey} onChange={(event) => setPixKey(event.target.value)} maxLength={200} autoComplete="off" required /></label>
       <button type="submit" disabled={loading || busy || availableCents <= 0}>{busy ? "Solicitando…" : "Solicitar saque"}</button>
     </form>
