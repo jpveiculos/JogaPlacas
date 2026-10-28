@@ -252,7 +252,7 @@ export function PlayerPurchaseForm() {
         </div>
         <p className="player-wallet-balance">Saldo da conta: <strong>{walletBalanceCents === null ? "consultando…" : formatMoney(walletBalanceCents)}</strong></p>
         <div className="plate-add-actions">
-          <button type="button" className="secondary-action" onClick={addCurrentPlates}>Adicionar placa</button>
+          <button type="button" className="secondary-action" onClick={addCurrentPlates}>Adicionar mais placas</button>
           {addedPlates.length > 0 && <div className="added-plates" aria-live="polite">
             <strong>Placas adicionadas ({addedPlates.length})</strong>
             {addedPlates.map((plate, index) => <div className="added-plate-row" key={plate + "-" + index}><span>{plate}</span><button type="button" className="remove-plate-button" onClick={() => removeAddedPlate(plate)} aria-label={`Remover placa ${plate}`}>Remover</button></div>)}
@@ -261,14 +261,20 @@ export function PlayerPurchaseForm() {
         <label>Valor total por placa e rodada (R$)
           <input inputMode="decimal" value={stake} onChange={(event) => setStake(event.target.value)} placeholder="1,00" required />
         </label>
-        <fieldset>
+        <fieldset className="plate-format-options">
           <legend>Forma de pagamento</legend>
-          <label className="round-option"><input type="radio" name="player-payment-method" value="PIX" checked={paymentMethod === "PIX"} onChange={() => setPaymentMethod("PIX")} /> Pix — pagar e aguardar confirmação</label>
-          <label className="round-option"><input type="radio" name="player-payment-method" value="WALLET" checked={paymentMethod === "WALLET"} onChange={() => setPaymentMethod("WALLET")} /> Saldo da conta — {walletBalanceCents === null ? "consultando saldo…" : formatMoney(walletBalanceCents)}</label>
+          <label className={paymentMethod === "PIX" ? "format-choice selected" : "format-choice"}>
+            <input type="radio" name="player-payment-method" value="PIX" checked={paymentMethod === "PIX"} onChange={() => setPaymentMethod("PIX")} />
+            <span><strong>Pix</strong></span>
+          </label>
+          <label className={paymentMethod === "WALLET" ? "format-choice selected" : "format-choice"}>
+            <input type="radio" name="player-payment-method" value="WALLET" checked={paymentMethod === "WALLET"} onChange={() => setPaymentMethod("WALLET")} />
+            <span><strong>Saldo da conta</strong></span>
+          </label>
           {paymentMethod === "WALLET" && !walletHasEnough && <p role="alert" className="note-inline">{walletBalanceCents === null ? "Não foi possível consultar o saldo. Atualize a carteira ou escolha Pix." : `Saldo insuficiente: você tem ${formatMoney(walletBalanceCents)} e precisa de ${formatMoney(totalEstimate)}. Escolha Pix para continuar ou adicione saldo.`}</p>}
         </fieldset>
         <fieldset>
-          <legend>Sequência de rodadas (até 10, sem pular sorteios)</legend>
+          <legend>Rodadas</legend>
           {loadingRounds ? <p>Carregando rodadas…</p> : rounds.length === 0 ? <p>Não há rodadas disponíveis para compra no momento.</p> : (
             <div className="round-options round-carousel">{rounds.slice(0, 10).map((round, index) => (
               <label key={round.id} className="round-option">
