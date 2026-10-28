@@ -5,8 +5,8 @@ const logo = "/images/brand/joga-placa-logo.jpg";
 
 export const metadata: Metadata = {
   title: {
-    default: "Joga Placas",
-    template: "%s | Joga Placas",
+    default: "Joga Placa",
+    template: "%s | Joga Placa",
   },
   description: "Plataforma Joga Placa: apostas, recibos e consulta de resultados das placas cinza e Mercosul.",
   applicationName: "Joga Placa",
@@ -24,13 +24,13 @@ export const metadata: Metadata = {
     type: "website",
     locale: "pt_BR",
     siteName: "Joga Placa",
-    title: "Joga Placas",
+    title: "Joga Placa",
     description: "Consulte recibos e acompanhe os resultados publicados.",
     images: [{ url: logo, alt: "Logomarca Joga Placa" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Joga Placas",
+    title: "Joga Placa",
     description: "Consulte recibos e acompanhe os resultados publicados.",
     images: [logo],
   },
