@@ -2,6 +2,16 @@
 
 Status: manual operacional vigente na branch oficial de desenvolvimento `feature/public-home-registration`, revisado em 2026-10-27. A especificação funcional em `docs/PRODUCT_SPEC.md` é a fonte de verdade para comportamento; decisões arquiteturais em `docs/ADR-001-FOUNDATION.md` e `docs/TARGET_DOMAIN_MODEL.md` complementam o manual. Este documento contém registros cronológicos de inspeções: quando um registro antigo divergir da seção “Estado consolidado da implementação”, prevalece a seção consolidada, sem apagar o histórico. Entradas datadas descrevem o estado observado na data indicada; antes de agir, conferir o código atual desta branch. Não usar branches históricas nem `main` como fonte de implementação.
 
+## Identidade visual — padronização da logomarca (2026-10-28)
+
+**Regra técnica vigente:** a arte oficial única é `/images/brand/joga-placa-logo.jpg`, a mesma imagem usada no cabeçalho das áreas autenticadas. A homepage, login, cadastro, cabeçalhos/rodapés que exibam a marca, verificação de recibo e demais áreas do site devem usar essa imagem; não reconstruir o logotipo com texto estilizado nem manter variantes visuais por página.
+
+- Componente reutilizável: `src/components/brand-logo.tsx`. Usar este componente em vez de copiar o caminho do arquivo ou duplicar o HTML da marca.
+- Variações permitidas: somente tamanho, alinhamento e espaço ao redor. Preservar a proporção com `object-fit: contain`, comportamento responsivo e sem recorte/deformação. Manter `alt="Joga Placa"` e link para `/` quando o logo for clicável.
+- Metadados, favicon, ícone Apple e imagem Open Graph/Twitter já referenciam o mesmo arquivo no `src/app/layout.tsx`; conservar essa consistência.
+- **Aplicado no código desta branch:** homepage (cabeçalho e rodapé), login, cadastro, cabeçalho compartilhado das áreas autenticadas e verificação pública de recibo usam `BrandLogo`. Isso elimina as antigas versões montadas com texto nas superfícies alteradas.
+- **Ainda não declarado como concluído:** typecheck/testes/build, deploy Railway e conferência visual real em telas pequenas e grandes. Após o deploy, validar homepage, login, cadastro, jogador, cambista, administrador, rodapé e consulta de recibo; corrigir qualquer tamanho inadequado sem substituir a imagem oficial.
+
 ## Produto e navegação obrigatórios — decisão vigente em 2026-10-26
 
 A plataforma tem **quatro áreas de produto**, não apenas três. A decisão inicial de não criar uma página principal pública foi substituída pela nova direção de produto registrada na especificação funcional. Não reconstruir a navegação antiga como se ainda fosse válida.
