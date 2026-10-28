@@ -209,17 +209,6 @@ export function CashierSaleForm() {
     <section className="feature-card" aria-labelledby="player-purchase-heading">
       <h2 id="player-purchase-heading" className="cashier-form-heading">Nova venda</h2>
       <form onSubmit={submit} className="purchase-form">
-        <fieldset className="plate-format-options">
-          <legend>Forma de pagamento</legend>
-          <label className={paymentMethod === "PIX" ? "format-choice selected" : "format-choice"}>
-            <input type="radio" name="cashierPaymentMethod" value="PIX" checked={paymentMethod === "PIX"} onChange={() => setPaymentMethod("PIX")} />
-            <span><strong>Pix</strong></span>
-          </label>
-          <label className={paymentMethod === "CASH" ? "format-choice selected" : "format-choice"}>
-            <input type="radio" name="cashierPaymentMethod" value="CASH" checked={paymentMethod === "CASH"} onChange={() => setPaymentMethod("CASH")} />
-            <span><strong>Dinheiro</strong></span>
-          </label>
-        </fieldset>
         <div className="plate-pair" aria-label="Escolha uma ou as duas placas para apostar">
           <div className="plate-entry plate-entry-card">
             <button type="button" className="plate-tap-target" aria-label="Digitar placa cinza antiga" onClick={() => legacyInputRef.current?.focus()}>
@@ -235,12 +224,23 @@ export function CashierSaleForm() {
           </div>
         </div>
         <div className="plate-add-actions">
-          <button type="button" className="secondary-action" onClick={addCurrentPlates}>Adicionar placa</button>
+          <button type="button" className="secondary-action" onClick={addCurrentPlates}>Adicionar mais placas</button>
           {addedPlates.length > 0 && <div className="added-plates" aria-live="polite">
             <strong>Placas adicionadas ({addedPlates.length})</strong>
             {addedPlates.map((plate, index) => <div className="added-plate-row" key={plate + "-" + index}><span>{plate}</span><button type="button" className="remove-plate-button" onClick={() => removeAddedPlate(plate)} aria-label={`Remover placa ${plate}`}>Remover</button></div>)}
           </div>}
         </div>
+        <fieldset className="plate-format-options">
+          <legend>Forma de pagamento</legend>
+          <label className={paymentMethod === "PIX" ? "format-choice selected" : "format-choice"}>
+            <input type="radio" name="cashierPaymentMethod" value="PIX" checked={paymentMethod === "PIX"} onChange={() => setPaymentMethod("PIX")} />
+            <span><strong>Pix</strong></span>
+          </label>
+          <label className={paymentMethod === "CASH" ? "format-choice selected" : "format-choice"}>
+            <input type="radio" name="cashierPaymentMethod" value="CASH" checked={paymentMethod === "CASH"} onChange={() => setPaymentMethod("CASH")} />
+            <span><strong>Dinheiro</strong></span>
+          </label>
+        </fieldset>
         <label>Valor total por placa e rodada (R$)
           <input inputMode="decimal" value={stake} onChange={(event) => setStake(event.target.value)} placeholder="1,00" required />
         </label>
