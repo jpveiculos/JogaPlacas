@@ -3,6 +3,7 @@
 import { FormEvent, useState } from "react";
 import Link from "next/link";
 import { PlateVisual } from "@/components/plates/plate-visual";
+import { SiteHeader } from "@/components/site-header";
 
 type TicketResult = {
   id: string;
@@ -56,7 +57,8 @@ export default function ConsultaPage() {
   }
 
   return (
-    <main className="page-shell">
+    <main className="page-shell site-page-shell">
+      <SiteHeader />
       <section className="feature-card" aria-labelledby="ticket-check-heading">
         <span className="feature-label">Consulta pública</span>
         <h1 id="ticket-check-heading">Consultar recibo e resultados</h1>
