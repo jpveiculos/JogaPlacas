@@ -165,3 +165,11 @@ Toda solicitação de mudança no Joga Placas deve ser cruzada com este manual t
 7. Antes de encerrar uma tarefa, informar quais documentos foram atualizados, quais verificações foram feitas e quais permanecem pendentes.
 
 Este procedimento é obrigatório para solicitações futuras, não apenas para alterações visuais.
+
+
+## Correção responsiva da página inicial — 2026-10-28
+- Corrigir qualquer uso de `BrandLogo` sem importação explícita na página inicial.
+- O cabeçalho deve continuar sendo `SiteHeader`, com a imagem oficial centralizada e nenhum controle extra.
+- No celular, o hero passa a uma coluna e as placas ilustrativas usam largura limitada, texto responsivo e sem transformações que provoquem corte horizontal.
+- Critérios obrigatórios: build válido; imagem e logomarca sem corte em tela estreita; conteúdo principal visível sem uma imagem dominar a primeira tela; validar a URL publicada após o deploy.
+- Situação: código/documentação atualizados; build, deploy e inspeção visual real ainda pendentes.
