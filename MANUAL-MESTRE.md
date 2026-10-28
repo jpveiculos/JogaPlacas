@@ -49,3 +49,9 @@ Criado em 2026-10-27 para evitar que o manual e as decisões fiquem difíceis de
 
 ## Formulário do cambista — ordem dos campos (2026-10-28)
 - O cartão **Rodadas** fica imediatamente abaixo do botão **Adicionar mais placas** (e da lista de placas já adicionadas), antes do valor e da forma de pagamento. Trata-se de uma reorganização visual; as regras de jogo e pagamento permanecem iguais.
+
+
+## Cabeçalho visual único — 2026-10-28
+- Regra obrigatória: todas as páginas usam `src/components/site-header.tsx`; somente a logomarca oficial centralizada, sem botões, menu, ícones, usuário ou outros elementos no cabeçalho.
+- Links da página pública ficam no conteúdo; botão Sair fica no rodapé das áreas autenticadas.
+- Ver detalhes e critério de aceite em `docs/PRODUCT_SPEC.md` e `docs/TECHNICAL_ROADMAP.md`, na seção de padronização global do cabeçalho.
