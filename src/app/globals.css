@@ -766,7 +766,7 @@ p, .intro, .auth-description, .area-description, .feature-card p,
   background:transparent!important;
   flex:none;
 }
-.plate-image.plate-legacy{width:min(89%,320px);margin-inline:auto}
+.plate-image.plate-legacy{width:min(100%,360px);margin-inline:auto}
 .plate-image .plate-image-art{
   display:block;
   width:100%;
