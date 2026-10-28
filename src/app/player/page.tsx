@@ -16,7 +16,7 @@ export default async function PlayerPage() {
         <summary>
           <span className="player-collapsible-label">Carteira digital</span>
           <span className="player-collapsible-title">Saldo e saques</span>
-          <span className="player-collapsible-hint">Toque para consultar seu saldo ou solicitar saque</span>
+          <span className="player-collapsible-hint">Toque para consultar saldo ou solicitar saque</span>
         </summary>
         <PlayerWalletWithdrawals />
       </details>
