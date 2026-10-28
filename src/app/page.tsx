@@ -41,7 +41,7 @@ export default function HomePage() {
         </div>
         <figure className="home-how-infographic">
           <img
-            src="/images/brand/como-funciona-duas-placas.png"
+            src="/images/brand/como-funciona-duas-placas.PNG"
             alt="Infográfico comparando a placa cinza e a placa Mercosul e explicando as seis categorias de prêmio."
             loading="lazy"
             decoding="async"
