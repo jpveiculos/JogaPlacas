@@ -1065,3 +1065,59 @@ p, .intro, .auth-description, .area-description, .feature-card p,
 }
 .feature-card .admin-round-create button[type="submit"]:disabled{cursor:not-allowed;opacity:.65}
 .feature-card .admin-round-create button[type="submit"]:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+
+
+/* Área do jogador: conteúdo posterior ao formulário em painéis recolhíveis acessíveis. */
+.player-collapsible-section{
+  margin:16px 0;
+  border:1px solid var(--border,#2b394c);
+  border-radius:18px;
+  background:var(--card,#141c28);
+  overflow:hidden;
+}
+.player-collapsible-section>summary{
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  min-height:82px;
+  padding:16px 48px 16px 16px;
+  cursor:pointer;
+  list-style:none;
+  touch-action:manipulation;
+}
+.player-collapsible-section>summary::-webkit-details-marker{display:none}
+.player-collapsible-section>summary::after{
+  content:"";
+  position:absolute;
+  right:19px;
+  top:50%;
+  width:10px;
+  height:10px;
+  border-right:3px solid var(--accent,#55d4ef);
+  border-bottom:3px solid var(--accent,#55d4ef);
+  transform:translateY(-70%) rotate(45deg);
+  transition:transform .16s ease;
+}
+.player-collapsible-section[open]>summary::after{
+  transform:translateY(-25%) rotate(225deg);
+}
+.player-collapsible-section>summary:focus-visible{
+  outline:3px solid var(--accent,#55d4ef);
+  outline-offset:-3px;
+}
+.player-collapsible-label{
+  color:var(--accent,#55d4ef);
+  font-size:.78rem;
+  font-weight:800;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+.player-collapsible-title{font-size:1.2rem;font-weight:800;line-height:1.25}
+.player-collapsible-hint{font-size:.88rem;line-height:1.35;color:var(--muted,#a5b1c2)}
+.player-collapsible-section[open]>section.feature-card{
+  margin:0;
+  border:0;
+  border-top:1px solid var(--border,#2b394c);
+  border-radius:0;
+}
