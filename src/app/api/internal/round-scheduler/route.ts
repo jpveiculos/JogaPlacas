@@ -58,7 +58,10 @@ function resultSlots(from: Date, through: Date): Date[] {
     }
   }
   while (cursor.getTime() <= through.getTime()) {
-    slots.push(new Date(cursor));
+    // Never create a brand-new round after its cutoff. Existing due rounds are
+    // still processed below, but a fresh installation must not create a round
+    // whose sales window has already ended.
+    if (cursor.getTime() - MINUTE_MS > from.getTime()) slots.push(new Date(cursor));
     cursor = new Date(cursor.getTime() + HALF_HOUR_MS);
   }
   return slots;
@@ -85,12 +88,18 @@ export async function POST(request: NextRequest) {
   let drawn = 0;
   let failures = 0;
 
-  // Create a rolling 48-hour schedule. Unique round codes make retries idempotent.
-  for (const resultAt of resultSlots(now, horizon)) {
+  // Keep a rolling 48-hour schedule so every 30-minute slot, including tomorrow's
+  // matching time, is already scheduled. One Round stores both independent draws.
+  const slots = resultSlots(now, horizon);
+  const existingRounds = await authPrisma.round.findMany({
+    where: { code: { in: slots.map(roundCode) } },
+    select: { code: true },
+  });
+  const existingCodes = new Set(existingRounds.map((round) => round.code));
+  for (const resultAt of slots) {
     const code = roundCode(resultAt);
+    if (existingCodes.has(code)) continue;
     try {
-      const existing = await authPrisma.round.findUnique({ where: { code }, select: { id: true } });
-      if (existing) continue;
       const previous = await authPrisma.round.findFirst({
         where: { resultAt: { lt: resultAt }, status: { not: "CANCELLED" } },
         orderBy: { resultAt: "desc" },
@@ -110,6 +119,7 @@ export async function POST(request: NextRequest) {
         });
       }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
       created += 1;
+      existingCodes.add(code);
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") continue;
       failures += 1;
