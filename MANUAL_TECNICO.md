@@ -36,9 +36,11 @@ Atualizado em 27/10/2026.
 
 
 ## Consulta de recibos e área do cambista
-- O QR Code impresso no recibo abre `/verificar-recibo/{receiptCode}`, para consultar o registro oficial, a situação do pagamento, as rodadas e os resultados vinculados à compra.
-- A consulta é somente de leitura: não permite emitir, reimprimir nem recuperar um recibo perdido.
+- O QR Code impresso no recibo abre a página específica `/verificar-recibo/{receiptCode}`, que consulta o registro oficial, a situação do pagamento, as rodadas e os resultados vinculados àquela compra.
+- A página específica do QR não exige login, pois precisa abrir diretamente pela câmera do celular, mas não é um painel geral de resultados: só mostra os dados associados ao código único presente no recibo escaneado.
+- Remover a página geral de resultados públicos, a busca pública por código digitado e a API geral de resultados públicos. A conferência do recibo deve começar pelo QR Code impresso.
+- A consulta do recibo é somente de leitura: não permite emitir, reimprimir nem recuperar um recibo perdido.
 - Não oferecer segunda via de recibo por placa, código, pedido ao cambista ou qualquer outro fluxo. Se o recibo impresso for perdido, não há recuperação nem reemissão.
 - Na área do cambista, manter somente o formulário de registrar uma nova aposta. Remover histórico/resumo de vendas e opções de consulta de apostas, resultados e segunda via.
 - O cambista orienta o jogador a consultar o recibo original pelo QR Code impresso. A área do jogador continua separada e mantém seu próprio histórico de jogadas e consultas; essa alteração não modifica essa área.
-- A consulta pública pelo QR/código do recibo não deve oferecer botão ou endpoint de reemissão, regeneração ou impressão de uma nova via.
+- A página pública específica do QR e a API de verificação devem continuar disponíveis para validar o código do recibo, sem incluir reemissão, regeneração ou impressão de uma nova via.
