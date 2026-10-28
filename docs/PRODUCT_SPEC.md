@@ -710,3 +710,8 @@ Esta regra substitui qualquer instrução anterior que permita ao cambista pagar
 - Recolher inicialmente todo o conteúdo abaixo do formulário em três menus expansíveis com seta e identificação clara: **Carteira digital / Saldo e saques**, **Suas apostas / Histórico dos últimos 7 dias** e **Resultados / Últimos resultados**.
 - O cabeçalho de cada painel deve explicar brevemente o que existe dentro. Tocar nele abre ou fecha o conteúdo, sem navegar para outra página.
 - A alteração organiza a interface e economiza rolagem, sem remover conteúdo ou modificar as regras funcionais dos componentes.
+
+
+## Ajuste de interface — formulário do cambista (2026-10-28)
+- No formulário de nova aposta/venda, o cartão **Rodadas** deve aparecer imediatamente abaixo do botão **Adicionar mais placas** e da lista de placas adicionadas, antes do valor por placa/rodada e da forma de pagamento.
+- Essa é uma mudança apenas de ordem visual: manter a seleção, o limite de 10 rodadas, a validação de elegibilidade, os cálculos e o fluxo de pagamento sem alteração funcional.
