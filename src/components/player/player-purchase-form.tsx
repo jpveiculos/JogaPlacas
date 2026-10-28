@@ -206,7 +206,7 @@ export function PlayerPurchaseForm() {
         <fieldset>
           <legend>Sequência de rodadas (até 10, sem pular sorteios)</legend>
           {loadingRounds ? <p>Carregando rodadas…</p> : rounds.length === 0 ? <p>Não há rodadas disponíveis para compra no momento.</p> : (
-            <div className="round-options">{rounds.map((round, index) => (
+            <div className="round-options">{rounds.slice(0, 10).map((round, index) => (
               <label key={round.id} className="round-option">
                 <input type="checkbox" checked={selectedRounds.includes(round.id)} disabled={index > selectedRounds.length || (index === 0 && round.status !== "OPEN") || (index === selectedRounds.length && selectedRounds.length > 0 && new Date(round.resultAt).getTime() - new Date(rounds[index - 1]!.resultAt).getTime() !== 30 * 60_000)} onChange={() => toggleRound(round.id)} />
                 <span><strong>{round.code}</strong><br />Início: {formatDate(round.startsAt)}<br />Encerramento: {formatDate(round.cutoffAt)}</span>
