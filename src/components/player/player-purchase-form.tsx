@@ -81,16 +81,46 @@ export function PlayerPurchaseForm() {
 
   useEffect(() => {
     let active = true;
-    fetch("/api/player/rounds", { cache: "no-store" })
-      .then(async (response) => {
+    let refreshing = false;
+    const refreshRounds = async (showLoading = false) => {
+      if (refreshing) return;
+      refreshing = true;
+      if (showLoading) setLoadingRounds(true);
+      try {
+        const response = await fetch("/api/player/rounds", { cache: "no-store" });
         const body = await response.json();
         if (!response.ok) throw new Error(body.error ?? "Não foi possível carregar as rodadas.");
-        return body.rounds as AvailableRound[];
-      })
-      .then((items) => { if (active) setRounds(items); })
-      .catch((reason: unknown) => { if (active) setError(reason instanceof Error ? reason.message : "Erro ao carregar rodadas."); })
-      .finally(() => { if (active) setLoadingRounds(false); });
-    return () => { active = false; };
+        const items = body.rounds as AvailableRound[];
+        if (!active) return;
+        setRounds(items);
+        setSelectedRounds((current) => {
+          const availableIds = new Set(items.map((round) => round.id));
+          const next = current.filter((id) => availableIds.has(id));
+          return next.length === current.length ? current : next;
+        });
+        setError("");
+      } catch (reason) {
+        if (active) setError(reason instanceof Error ? reason.message : "Erro ao atualizar as rodadas.");
+      } finally {
+        refreshing = false;
+        if (active) setLoadingRounds(false);
+      }
+    };
+    void refreshRounds(true);
+    const timer = window.setInterval(() => {
+      if (document.visibilityState === "visible") void refreshRounds();
+    }, 15000);
+    const refreshOnReturn = () => {
+      if (document.visibilityState === "visible") void refreshRounds();
+    };
+    window.addEventListener("focus", refreshOnReturn);
+    document.addEventListener("visibilitychange", refreshOnReturn);
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+      window.removeEventListener("focus", refreshOnReturn);
+      document.removeEventListener("visibilitychange", refreshOnReturn);
+    };
   }, []);
 
   useEffect(() => {
