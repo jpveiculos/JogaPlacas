@@ -6,12 +6,12 @@ Status: manual operacional vigente na branch oficial de desenvolvimento `feature
 
 A plataforma tem **quatro áreas de produto**, não apenas três. A decisão inicial de não criar uma página principal pública foi substituída pela nova direção de produto registrada na especificação funcional. Não reconstruir a navegação antiga como se ainda fosse válida.
 
-1. **Página principal pública (`/`)**: página de apresentação do Joga Placas, explicação objetiva de como jogar e das regras, banner/elemento visual explicativo de placas e equivalências de prêmios, destaques de prêmios efetivamente confirmados, resultados públicos recentes, ganhadores elegíveis, consulta de recibo/código e acesso visível a **Entrar** e **Criar conta**.
-2. **Área do jogador**: apostas, pagamentos, recibos, resultados pessoais, histórico e carteira conforme a especificação. Depois de entrar ou concluir o cadastro, o jogador é encaminhado diretamente para essa área.
-3. **Área do cambista**: vendas para clientes, recebimentos, recibos, histórico e comissões; sem carteira própria nem saques.
+1. **Página principal pública (`/`)**: apresentação do Joga Placas, explicação de como jogar e das regras, equivalências de prêmios e acesso visível a **Entrar** e **Criar conta**. Pela decisão mais recente de 2026-10-28, não exibe painel geral de resultados/ganhadores nem busca de recibo por código digitado.
+2. **Área do jogador**: apostas, pagamentos, recibos, resultados pessoais, histórico e carteira conforme a especificação. Depois de entrar ou concluir o cadastro, o jogador é encaminhado diretamente para essa área; o histórico e as consultas pessoais permanecem.
+3. **Área do cambista**: somente registro de nova aposta/venda, recebimento permitido e entrega do recibo original; sem histórico, pesquisa, consulta de resultados, contadores de venda, segunda via, carteira própria ou saques.
 4. **Área do administrador**: gestão de usuários, rodadas, regras, resultados, financeiro, comissões, saques e auditoria.
 
-A página principal é a porta de entrada para pessoas que recebem o link em grupos ou outros locais da internet; não deve apresentar uma tela de login como primeira impressão. Os resultados e ganhadores antes descritos como página pública isolada devem ser incorporados à experiência da página principal. Pode-se preservar `/resultados` como endereço compatível/atalho para a seção pública de resultados, mas o conteúdo de resultados também deve estar acessível na página principal sem login.
+A página principal é a porta de entrada para pessoas que recebem o link em grupos ou outros locais da internet; não deve apresentar uma tela de login como primeira impressão. A consulta pública de recibo só ocorre pela leitura do QR Code do recibo físico original, que abre uma página específica daquela compra. Não manter uma página geral de resultados nem um campo público para digitar código de recibo.
 
 **Redirecionamento e acesso:** visitante sem sessão acessando `/` vê a apresentação pública. Após login, o servidor identifica o papel e encaminha à área permitida; jogador autenticado que voltar a `/` deve ser encaminhado à área do jogador, sem fluxo de navegação que o leve de volta à página de apresentação. O cadastro público, quando implementado, deve terminar com a conta criada e encaminhar o novo jogador à área do jogador. A página principal não concede privilégios nem substitui autorização no servidor. Não criar cadastro público de administrador; contas administrativas são provisionadas de forma segura. Regras de cadastro, validação, prevenção de abuso e ativação de conta precisam ser implementadas e testadas antes de abrir o cadastro ao público.
 
@@ -19,9 +19,9 @@ A página principal é a porta de entrada para pessoas que recebem o link em gru
 
 O modelo operacional do cambista passa a ser semelhante ao de uma venda por bilhete: não pedir nome, telefone, WhatsApp nem selecionar/cadastrar um cliente. O cambista informa a placa e os dados estritamente necessários da aposta, registra a venda e entrega um recibo identificável por código único e QR Code. O QR Code do recibo é para localizar/consultar o bilhete; não é automaticamente o QR Code de cobrança Pix.
 
-A busca de compras por nome, telefone ou placa deve sair da interface do cambista e ser removida como fluxo de produto. A segunda via, se mantida, deve ser localizada pelo código do recibo e protegida por autorização. O backend de compras deve aceitar venda com `cashierId` e sem `customerId`; não criar clientes artificiais. A compra, o pagamento/recebimento, a rodada, as linhas, a emissão do recibo, o código único e a auditoria continuam sujeitos às validações existentes.
+A busca de compras por nome, telefone ou placa deve sair da interface do cambista e ser removida como fluxo de produto. Pela decisão posterior de 2026-10-28, não existe segunda via nem recuperação por código: o QR Code serve apenas para consultar o recibo original. O backend de compras deve aceitar venda com `cashierId` e sem `customerId`; não criar clientes artificiais. A compra, o pagamento/recebimento, a rodada, as linhas, a emissão original do recibo, o código único e a auditoria continuam sujeitos às validações existentes.
 
-**Gap identificado na inspeção:** `src/app/cashier/page.tsx` atualmente mostra consulta rápida de recibo e `CashierPurchaseHistory`; este último oferece busca por código, nome, telefone e placa. `src/modules/purchases/create-purchase.ts` rejeita venda de cambista sem `customerId`. Portanto, remover apenas o componente de pesquisa deixaria o cambista sem o fluxo de venda pedido. É necessário implementar e testar o fluxo de venda rápida e seu endpoint, com geração do QR Code do recibo, antes de considerar a área concluída.
+**Registro histórico da inspeção (2026-10-26; não representa a decisão atual):** naquela data, a página do cambista mostrava consulta rápida e histórico de compras. A decisão de 2026-10-28 remove esses recursos: a área deve conter somente o registro de nova aposta/venda. A existência do fluxo de venda rápida, da emissão original e do QR deve ser validada por testes; não reintroduzir consulta ou segunda via para compensar lacunas.
 
 Não apagar registros históricos de `Customer` nem modificar a base de dados de produção como parte desta limpeza sem plano de migração, avaliação de retenção e autorização explícita.
 
@@ -621,3 +621,17 @@ Esta atualização registra as alterações recentes na branch `feature/public-h
 ### Situação da verificação
 - As alterações desta atualização foram registradas na branch `feature/public-home-registration`; não foi confirmada nesta etapa a conclusão de CI, typecheck, lint, suíte de testes, build, deploy nem teste manual no ambiente Railway.
 - O status geral é **implementação parcial em validação**, não pronto para operação financeira. Prioridades imediatas: corrigir e validar a montagem de múltiplas placas; testar a rolagem de rodadas; auditar a contabilidade do saldo e concorrência; reproduzir e verificar a correção de “Requisição inválida”; depois validar Mercado Pago em homologação.
+
+
+## Decisão vigente — QR exclusivo, sem resultados gerais e sem segunda via (2026-10-28)
+
+Esta seção prevalece sobre instruções anteriores e registros históricos deste roadmap que descrevam resultados públicos gerais, busca de recibo digitando código, histórico do cambista ou reimpressão/recuperação.
+
+- A homepage apresenta o produto e os acessos de entrada/cadastro, sem painel geral de resultados/ganhadores e sem busca pública por código.
+- O QR impresso no recibo original abre `/verificar-recibo/{receiptCode}` sem login. A página mostra somente os dados oficiais da compra identificada pelo código único, incluindo participações/rodadas e estados/resultados oficiais associados.
+- Não oferecer segunda via, reimpressão, recuperação ou reemissão de recibo por QR, código, placa, consulta ao cambista ou suporte. O fluxo de impressão/entrega ocorre somente na emissão original da compra confirmada.
+- A área do cambista fica restrita ao registro de nova aposta/venda e à entrega do recibo original. Não manter histórico, contadores/resumo de vendas, pesquisa ou consulta de apostas/resultados.
+- A área do jogador permanece separada; seu histórico e consultas pessoais continuam conforme a especificação funcional.
+- Remover/manter removidas as rotas e APIs gerais de resultados públicos e a busca pública por código. Preservar a rota e API específicas de verificação por QR.
+- Não confundir remoção de UI/rotas com exclusão de dados históricos; não executar migração nem apagar dados sem plano e autorização.
+- **Validação obrigatória:** conferir o gerador do QR no recibo real, o endereço HTTPS gerado, a abertura pela câmera de um celular, o escopo de dados exibido e a ausência de funções de reemissão. Código commitado não prova teste nem deploy.
