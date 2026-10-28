@@ -1145,12 +1145,12 @@ p, .intro, .auth-description, .area-description, .feature-card p,
 /* Cabeçalho oficial único: mesmas dimensões e aparência em todas as páginas e áreas. */
 .site-header{box-sizing:border-box;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;width:100%;min-height:84px;margin:0 auto;padding:8px clamp(12px,3vw,24px);background:#0d111a;border-bottom:1px solid rgba(148,163,184,.22)}
 .site-header-brand{grid-column:2;display:flex;align-items:center;justify-content:center;width:max-content;max-width:80vw;margin:0;text-decoration:none}
-.site-header-brand img{display:block;width:min(52vw,240px);height:auto;max-width:80vw;max-height:80px;object-fit:contain}
+.site-header-brand img{display:block;width:240px;height:auto;max-width:80vw;max-height:80px;object-fit:contain}
 .auth-layout{width:min(100%,1120px);min-height:100vh;margin:0 auto;padding:0 clamp(12px,3vw,24px) 28px;box-sizing:border-box}
 .auth-layout .auth-card{margin:clamp(18px,4vh,40px) auto 0}
 .site-page-shell{padding-top:0!important}
 .site-page-shell>.site-header{margin-bottom:24px}
-@media(max-width:700px){.site-header{min-height:82px;padding:6px 10px}.site-header-brand img{width:min(52vw,220px);height:auto;max-width:80vw;max-height:68px}}
+@media(max-width:700px){.site-header{min-height:82px;padding:6px 10px}.site-header-brand img{width:220px;height:auto;max-width:80vw;max-height:68px}}
 @media(max-width:480px){.auth-layout{padding-left:10px;padding-right:10px}}
 
 
