@@ -4,8 +4,8 @@ import { ReceiptVerification } from "@/components/receipts/receipt-verification"
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
-  title: "Verificação de recibo | Joga Placas",
-  description: "Verifique no sistema oficial do Joga Placas se um recibo está registrado e se o pagamento foi confirmado.",
+  title: "Verificação de recibo | Joga Placa",
+  description: "Verifique no sistema oficial do Joga Placa se um recibo está registrado e se o pagamento foi confirmado.",
 };
 
 type PageProps = { params: Promise<{ receiptCode: string }> };
@@ -15,8 +15,8 @@ export default async function VerifyReceiptPage({ params }: PageProps) {
   return (
     <main className="home-page" style={{ minHeight: "100vh", padding: "32px 16px" }}>
       <header className="home-header">
-        <Link href="/" className="home-brand" aria-label="Joga Placas — página inicial">
-          <img src="/images/brand/joga-placa-logo.jpg" alt="Joga Placas" />
+        <Link href="/" className="home-brand" aria-label="Joga Placa — página inicial">
+          <img src="/images/brand/joga-placa-logo.jpg" alt="Joga Placa" />
         </Link>
       </header>
       <section className="home-ticket-section" style={{ maxWidth: 720, margin: "32px auto" }}>
@@ -26,7 +26,7 @@ export default async function VerifyReceiptPage({ params }: PageProps) {
           <p>Esta página consulta diretamente o registro oficial. Compare o código, o valor e as placas abaixo com o recibo impresso.</p>
         </div>
         <ReceiptVerification receiptCode={receiptCode} />
-        <p style={{ marginTop: 24 }}><Link href="/">Voltar à página inicial do Joga Placas</Link></p>
+        <p style={{ marginTop: 24 }}><Link href="/">Voltar à página inicial do Joga Placa</Link></p>
       </section>
     </main>
   );
