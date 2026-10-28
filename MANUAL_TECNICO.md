@@ -118,3 +118,7 @@ Esta regra substitui qualquer instrução anterior que permita ao cambista pagar
 
 ## Ajuste de texto — menu da carteira digital do jogador (2026-10-28)
 - No menu suspenso da carteira digital, a descrição deve ser exatamente: **“Toque para consultar saldo ou solicitar saque”**. Não usar “seu saldo”, pois o texto deve ser curto e evitar redundância.
+
+
+## Ajuste de layout — rodadas na área do jogador (2026-10-28)
+- No formulário de aposta da área do jogador, exibir o carrossel/cards de rodadas imediatamente abaixo do botão **Adicionar mais placas**. O restante dos campos de valor e forma de pagamento fica depois das rodadas.
