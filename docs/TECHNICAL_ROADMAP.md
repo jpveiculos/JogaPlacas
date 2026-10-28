@@ -658,3 +658,12 @@ Esta regra substitui qualquer instrução anterior que permita ao cambista pagar
 - **Proibir baixa manual de prêmio pelo cambista em todos os caminhos:** interface, API, permissões, ações administrativas delegadas ou endpoints alternativos. Se houver endpoint antigo de baixa/pagamento de prêmio acessível ao papel CASHIER, removê-lo ou negar acesso e adicionar teste de autorização. A reconciliação administrativa de falhas de crédito online permanece exclusiva a ADMIN e não deve ser usada para pagar prêmios de clientes sem carteira.
 - Não confundir prêmio com comissão do cambista, confirmação de recebimento da venda, pagamento de saque do jogador ou reconciliação de crédito de carteira.
 - Não apagar registros financeiros históricos nem alterar dados de produção nesta mudança. Revisar código e testes antes de afirmar que a proibição técnica está completa.
+
+
+## Execução da regra de prêmio exclusivamente pela plataforma — 2026-10-28
+
+- **Implementado no código:** apuração não credita carteira automaticamente para compras originadas por cambista (`cashierId` preenchido); endpoint ADMIN de reconciliação de crédito de carteira lista e corrige apenas compras online sem cambista.
+- **Conferido no código:** área do cambista apresenta apenas o formulário de venda; não foi encontrado fluxo dedicado de pagamento/baixa de prêmio no papel CASHIER nos endpoints inspecionados.
+- **Implementado anteriormente:** página pública de recibo oferece orientação e botão de WhatsApp para prêmios pendentes, condicionado ao número oficial configurado.
+- **Pendente antes de encerrar a tarefa:** implementar fluxo ADMIN para registrar/auditar pagamento de prêmio presencial realizado pela plataforma e fazer a página QR refletir esse pagamento sem confundi-lo com crédito de carteira. Isso exige modelagem financeira e migração versionada, rota ADMIN, testes de autorização/idempotência e apresentação no QR.
+- **Não validado:** testes, typecheck, build, integração PostgreSQL, CI e deploy. Nenhuma alteração de produção foi feita.
