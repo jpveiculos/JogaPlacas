@@ -1172,3 +1172,10 @@ p, .intro, .auth-description, .area-description, .feature-card p,
  .home-page .home-plate-card strong{font-size:clamp(1.35rem,6vw,2rem)}
  .home-page .home-hero-stamp{right:0;bottom:0;width:68px;height:68px;font-size:.7rem}
 }
+
+
+/* Homepage: infográfico comparativo das duas placas. */
+.home-how-infographic{width:100%;margin:28px 0 8px;padding:12px;border:1px solid #d7e3ef;border-radius:20px;background:#07172b;box-shadow:0 16px 42px rgb(7 23 43 / 12%)}
+.home-how-infographic img{display:block;width:100%;height:auto;max-width:100%;border-radius:12px;object-fit:contain}
+.home-how-infographic figcaption{padding:10px 8px 2px;color:#d6e6f8;text-align:center;font-size:.95rem;line-height:1.5}
+@media(max-width:700px){.home-how-infographic{margin:20px 0 6px;padding:6px;border-radius:14px}.home-how-infographic figcaption{font-size:.85rem}}
