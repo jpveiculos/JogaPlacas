@@ -131,3 +131,9 @@ Esta regra substitui qualquer instrução anterior que permita ao cambista pagar
 
 ## Ajuste de espaçamento — formulário Nova aposta (2026-10-28)
 - Em telas móveis, remover o espaço superior excessivo antes do título “Nova aposta” nos formulários de jogo do jogador e do cambista, mantendo o cabeçalho/logo e o restante do layout preservados.
+
+
+## Correção de espaçamento — formulário do cambista (2026-10-28)
+- A propriedade `compact` do `AreaShell` agora reduz o espaço entre o cabeçalho e o conteúdo apenas nas páginas que a solicitam.
+- O card “Nova aposta” da área do cambista recebe uma classe específica com padding superior reduzido, evitando alterar o espaçamento dos demais cards do site.
+- A alteração visual só deve ser considerada concluída após uma implantação bem-sucedida no Railway e conferência na página publicada.
