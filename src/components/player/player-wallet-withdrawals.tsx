@@ -42,7 +42,7 @@ export function PlayerWalletWithdrawals() {
       const response = await fetch("/api/player/withdrawals", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ pixKey: pixKey.trim() }) });
       const body = await response.json();
       if (!response.ok) throw new Error(body.error ?? "Não foi possível solicitar o saque.");
-      setNotice("Solicitação registrada. O valor foi reservado e não poderá ser usado em novas apostas enquanto o saque estiver pendente. Se o saque for rejeitado, o valor volta ao saldo disponível.");
+      setNotice("Saque solicitado com sucesso. A solicitação ficará pendente de análise do administrador. O pagamento só será realizado depois que o administrador conferir os dados e aprovar o saque. Enquanto estiver pendente, o valor fica reservado; se for recusado, volta ao saldo disponível.");
       setPixKey(""); await load();
     } catch (reason) { setError(reason instanceof Error ? reason.message : "Falha ao solicitar o saque."); }
     finally { setBusy(false); }
