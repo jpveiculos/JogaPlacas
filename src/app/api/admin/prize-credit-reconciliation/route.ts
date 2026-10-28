@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
         participation: { is: {
           status: "CONFIRMED",
           round: { is: { status: "COMPLETED", resultLegacyPlate: { not: null }, resultMercosurPlate: { not: null } } },
-          purchase: { is: { status: "CONFIRMED", playerId: { not: null } } },
+          purchase: { is: { status: "CONFIRMED", playerId: { not: null }, cashierId: null } },
         } },
       },
       select: {
@@ -99,7 +99,7 @@ export async function POST(request: NextRequest) {
       const purchase = line.participation.purchase;
       const round = line.participation.round;
       const playerId = purchase.playerId;
-      if (!playerId || !purchase.player || purchase.status !== "CONFIRMED" ||
+      if (!playerId || purchase.cashierId !== null || !purchase.player || purchase.status !== "CONFIRMED" ||
           line.participation.status !== "CONFIRMED" || round.status !== "COMPLETED" ||
           !round.resultLegacyPlate || !round.resultMercosurPlate) throw new Error("NOT_ELIGIBLE");
       if (line.prizeCents === null || line.prizeCents <= 0) throw new Error("NO_PRIZE");
