@@ -122,3 +122,8 @@ Esta regra substitui qualquer instrução anterior que permita ao cambista pagar
 
 ## Ajuste de layout — rodadas na área do jogador (2026-10-28)
 - No formulário de aposta da área do jogador, exibir o carrossel/cards de rodadas imediatamente abaixo do botão **Adicionar mais placas**. O restante dos campos de valor e forma de pagamento fica depois das rodadas.
+
+
+## Ajuste visual — cards compactos de rodadas (2026-10-28)
+- Os cards horizontais de rodadas nos formulários do jogador e do cambista devem usar altura compacta (cerca de 56–58 px), com padding e tipografia reduzidos para liberar espaço vertical em telas pequenas.
+- Preservar leitura do código, horários, seleção por toque, rolagem horizontal e regras de elegibilidade; este ajuste é somente visual.
