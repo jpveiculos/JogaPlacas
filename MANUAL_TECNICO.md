@@ -100,3 +100,11 @@ Esta regra substitui qualquer instrução anterior que permita ao cambista pagar
 - A lista retornada pelas APIs de rodadas deve conter apenas rodadas elegíveis. A filtragem visual no cliente melhora a experiência, mas não substitui a validação autoritativa no servidor.
 - **Regra obrigatória para aposta e pagamento:** antes de registrar a compra/venda e antes de iniciar ou confirmar qualquer pagamento Pix, o servidor deve revalidar, no mesmo fluxo transacional, que a primeira rodada continua aberta e que todas as rodadas selecionadas ainda aceitam apostas. Se alguma rodada tiver encerrado, recusar a operação sem registrar aposta nem gerar cobrança válida e devolver erro claro em português; o cliente deve atualizar a lista e pedir que a pessoa selecione rodadas válidas novamente. Não confiar no relógio do dispositivo nem somente no estado do carrossel.
 - A consulta a cada 2 segundos foi ajustada no código dos dois formulários. A validação ponta a ponta de concorrência entre encerramento e criação de cobrança precisa ser testada e confirmada antes de considerar o fluxo homologado.
+
+
+## Área do jogador — seções recolhíveis (2026-10-28)
+- O formulário principal de compra permanece sempre visível.
+- Todo o conteúdo abaixo dele fica em três painéis recolhíveis nativos (`details/summary`): **Carteira digital — Saldo e saques**, **Suas apostas — Histórico dos últimos 7 dias** e **Resultados — Últimos resultados**.
+- Os painéis começam fechados para reduzir a rolagem no celular. Cada cabeçalho apresenta título, descrição curta e seta que indica o estado; tocar no cabeçalho abre/fecha o conteúdo.
+- A interação usa controles HTML nativos, com foco visível para teclado e área de toque ampla. Não duplicar os componentes internos nem alterar suas regras de saldo, saque, histórico ou resultados.
+- A mudança é visual/estrutural; não altera APIs, permissões ou regras financeiras. Testar abertura/fechamento em celular e desktop e confirmar que formulários e ações internas continuam funcionando.
