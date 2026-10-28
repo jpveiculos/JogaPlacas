@@ -667,3 +667,12 @@ Esta regra substitui qualquer instrução anterior que permita ao cambista pagar
 - **Implementado anteriormente:** página pública de recibo oferece orientação e botão de WhatsApp para prêmios pendentes, condicionado ao número oficial configurado.
 - **Pendente antes de encerrar a tarefa:** implementar fluxo ADMIN para registrar/auditar pagamento de prêmio presencial realizado pela plataforma e fazer a página QR refletir esse pagamento sem confundi-lo com crédito de carteira. Isso exige modelagem financeira e migração versionada, rota ADMIN, testes de autorização/idempotência e apresentação no QR.
 - **Não validado:** testes, typecheck, build, integração PostgreSQL, CI e deploy. Nenhuma alteração de produção foi feita.
+
+
+## Correção executada — espaçamento de Nova Aposta (2026-10-28)
+
+- **Problema reproduzido por inspeção do código:** as regras CSS de layout compacto para `.area-page-compact` já existiam, mas `src/components/area-shell.tsx` não aplicava essa classe ao elemento `main`, embora recebesse `compact=true`. As regras de compactação do cartão não eram ativadas, mantendo espaço superior maior do que o solicitado.
+- **Alteração implementada:** o elemento principal agora recebe `area-page-compact` quando a propriedade `compact` está ativa. Isso permite que as regras responsivas existentes reduzam o padding do cartão e o espaço antes do título, sem alterar os dados ou as regras da aposta.
+- **Arquivos:** `src/components/area-shell.tsx`; especificação funcional atualizada em `docs/PRODUCT_SPEC.md`.
+- **Alcance:** jogador e cambista usam o mesmo `AreaShell`; revisar ambos após deploy para evitar regressão no layout compacto.
+- **Estado:** código e documentação commitados na branch `feature/public-home-registration`. Build, deploy e inspeção visual no Railway ainda precisam ser confirmados; até lá, a correção não está validada como publicada.
