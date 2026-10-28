@@ -230,6 +230,9 @@ export function CashierSaleForm() {
             {addedPlates.map((plate, index) => <div className="added-plate-row" key={plate + "-" + index}><span>{plate}</span><button type="button" className="remove-plate-button" onClick={() => removeAddedPlate(plate)} aria-label={`Remover placa ${plate}`}>Remover</button></div>)}
           </div>}
         </div>
+        <label>Valor total por placa e rodada (R$)
+          <input inputMode="decimal" value={stake} onChange={(event) => setStake(event.target.value)} placeholder="1,00" required />
+        </label>
         <fieldset className="plate-format-options">
           <legend>Forma de pagamento</legend>
           <label className={paymentMethod === "PIX" ? "format-choice selected" : "format-choice"}>
@@ -241,9 +244,6 @@ export function CashierSaleForm() {
             <span><strong>Dinheiro</strong></span>
           </label>
         </fieldset>
-        <label>Valor total por placa e rodada (R$)
-          <input inputMode="decimal" value={stake} onChange={(event) => setStake(event.target.value)} placeholder="1,00" required />
-        </label>
         <fieldset>
           <legend>Rodadas</legend>
           {loadingRounds ? <p>Carregando rodadas…</p> : rounds.length === 0 ? <p>Não há rodadas disponíveis para compra no momento.</p> : (
