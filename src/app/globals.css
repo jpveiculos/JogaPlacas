@@ -748,13 +748,12 @@ p, .intro, .auth-description, .area-description, .feature-card p,
 }
 
 
-/* Plate artwork is a real public image; characters scale with the plate itself. */
+/* Both plate formats share the same responsive display frame. */
 .plate-visual.plate-image{
   position:relative;
   display:block;
   width:min(100%,360px);
-  /* Keep each plate's natural image ratio so taller artwork is never cropped. */
-  aspect-ratio:auto;
+  aspect-ratio:2.65 / 1;
   container-type:inline-size;
   min-height:0!important;
   height:auto;
@@ -765,13 +764,13 @@ p, .intro, .auth-description, .area-description, .feature-card p,
   box-shadow:none!important;
   background:transparent!important;
   flex:none;
+  margin-inline:auto;
 }
-.plate-image.plate-legacy{width:min(100%,360px);margin-inline:auto}
 .plate-image .plate-image-art{
   display:block;
   width:100%;
-  height:auto;
-  object-fit:contain;
+  height:100%;
+  object-fit:fill;
 }
 .plate-image .plate-characters{
   position:absolute;
