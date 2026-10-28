@@ -1,9 +1,9 @@
 import type { ReactNode } from "react";
 import { LogoutButton } from "@/components/auth/logout-button";
 
-type Props = { title: string; username: string; description?: string; compact?: boolean; children: ReactNode };
+type Props = { title: string; username: string; description?: string; compact?: boolean; logoOnlyHeader?: boolean; logoutAtBottom?: boolean; children: ReactNode };
 
-export function AreaShell({ title, username, description, compact = false, children }: Props) {
+export function AreaShell({ title, username, description, compact = false, logoOnlyHeader = false, logoutAtBottom = false, children }: Props) {
   return (
     <main className={compact ? "area-page area-page-compact" : "area-page"}>
       <header
@@ -19,7 +19,7 @@ export function AreaShell({ title, username, description, compact = false, child
           paddingBottom: 24,
         }}
       >
-        <span
+        {!logoOnlyHeader && <span
           className="account-name"
           style={{
             gridColumn: "1",
@@ -31,7 +31,7 @@ export function AreaShell({ title, username, description, compact = false, child
           }}
         >
           {username}
-        </span>
+        </span>}
         <a
           href="/"
           aria-label="Joga Placa — página inicial"
@@ -59,7 +59,7 @@ export function AreaShell({ title, username, description, compact = false, child
             }}
           />
         </a>
-        <div
+        {!logoOnlyHeader && <div
           className="account-controls"
           style={{
             gridColumn: "3",
@@ -73,7 +73,7 @@ export function AreaShell({ title, username, description, compact = false, child
           }}
         >
           <LogoutButton />
-        </div>
+        </div>}
         {!compact && (
           <div style={{ gridColumn: "1 / -1", gridRow: "2", minWidth: 0 }}>
             <h1 className="area-title">{title}</h1>
@@ -82,6 +82,11 @@ export function AreaShell({ title, username, description, compact = false, child
         )}
       </header>
       <section className="area-content">{children}</section>
+      {logoutAtBottom && (
+        <footer className="area-logout-footer" style={{ display: "flex", justifyContent: "center", padding: "24px 0 32px" }}>
+          <LogoutButton />
+        </footer>
+      )}
     </main>
   );
 }
