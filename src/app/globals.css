@@ -1121,3 +1121,16 @@ p, .intro, .auth-description, .area-description, .feature-card p,
   border-top:1px solid var(--border,#2b394c);
   border-radius:0;
 }
+
+
+/* Reduz o espaço superior antes do título da aposta em telas móveis. */
+@media (max-width: 640px) {
+  .area-page-compact .feature-card[aria-label="Nova aposta"] {
+    margin-top: 0;
+  }
+  .area-page-compact .feature-card[aria-label="Nova aposta"] > .feature-label {
+    display: block;
+    margin-top: 0;
+    line-height: 1.2;
+  }
+}
