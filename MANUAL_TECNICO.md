@@ -76,3 +76,13 @@ Esta regra substitui qualquer instrução anterior que permita ao cambista pagar
 - **Proibir baixa manual de prêmio pelo cambista em todos os caminhos:** interface, API, permissões, ações administrativas delegadas ou endpoints alternativos. Se houver endpoint antigo de baixa/pagamento de prêmio acessível ao papel CASHIER, removê-lo ou negar acesso e adicionar teste de autorização. A reconciliação administrativa de falhas de crédito online permanece exclusiva a ADMIN e não deve ser usada para pagar prêmios de clientes sem carteira.
 - Não confundir prêmio com comissão do cambista, confirmação de recebimento da venda, pagamento de saque do jogador ou reconciliação de crédito de carteira.
 - Não apagar registros financeiros históricos nem alterar dados de produção nesta mudança. Revisar código e testes antes de afirmar que a proibição técnica está completa.
+
+
+## Implementação aplicada — bloqueio de crédito automático para venda de cambista (2026-10-28)
+
+- Em `src/modules/rounds/settle-round-prizes.ts`, o crédito automático agora exige compra de jogador online sem `cashierId`. Compra originada por cambista permanece pendente para atendimento da plataforma, mesmo se houver dado legado/inconsistente com `playerId`.
+- Em `src/app/api/admin/prize-credit-reconciliation/route.ts`, a lista e a ação de reconciliação corretiva filtram explicitamente `cashierId: null`. Esse recurso ADMIN continua reservado à correção de crédito na carteira de jogadores online; não é fluxo de pagamento de prêmio de recibo presencial.
+- A área do cambista foi conferida: `src/app/cashier/page.tsx` apresenta somente o formulário de venda; não foi encontrado endpoint de pagamento/baixa de prêmio destinado ao papel CASHIER nos caminhos de API inspecionados.
+- A página QR e o botão de WhatsApp já existem, mas a configuração do contato oficial depende de `NEXT_PUBLIC_PRIZE_SUPPORT_WHATSAPP`.
+- **Ainda pendente para concluir integralmente o ciclo:** um fluxo administrativo oficial para registrar e auditar o pagamento de prêmio presencial feito pela plataforma e refletir esse estado na página QR. O esquema atual usa `prizeCreditedAt` para crédito em carteira; não se deve reutilizar esse campo para fingir que houve crédito online quando o prêmio foi pago por outro meio.
+- **Validação:** alterações de código foram gravadas na branch; testes, typecheck, build e integração PostgreSQL não foram executados nesta sessão. Nenhum deploy foi realizado.
