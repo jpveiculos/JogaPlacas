@@ -1,6 +1,5 @@
 import { AreaShell } from "@/components/area-shell";
 import { requireRole } from "@/lib/auth/require-role";
-import { QuickTicketCheck } from "@/components/results/quick-ticket-check";
 import { CashierPurchaseHistory } from "@/components/cashier/cashier-purchase-history";
 import { CashierSaleForm } from "@/components/cashier/cashier-sale-form";
 import { CashierSalesSummary } from "@/components/cashier/cashier-sales-summary";
@@ -10,7 +9,6 @@ export default async function CashierPage() {
   return <AreaShell title="Área do cambista" username={user.username} compact>
     <CashierSalesSummary />
     <CashierSaleForm />
-    <QuickTicketCheck compact />
     <CashierPurchaseHistory />
   </AreaShell>;
 }
