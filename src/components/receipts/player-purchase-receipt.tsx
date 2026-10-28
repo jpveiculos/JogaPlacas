@@ -18,6 +18,7 @@ type ReceiptData = {
 const paymentLabels: Record<string, string> = {
   PIX: "Pix confirmado",
   CASH: "Dinheiro recebido",
+  WALLET: "Saldo da conta debitado",
   CARD: "Cartão confirmado",
 };
 
