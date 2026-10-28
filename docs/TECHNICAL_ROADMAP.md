@@ -724,5 +724,5 @@ Esta regra substitui qualquer instrução anterior que permita ao cambista pagar
 
 - A mensagem principal da página pública em `src/app/page.tsx` é **“Seu jogo de placas.”**
 - A seção logo abaixo chama-se **“Como funciona”** e esclarece que uma única aposta na placa concorre automaticamente às seis categorias: unidade, dezena, centena, milhar, três letras e placa inteira.
-- O infográfico comparando placa cinza e Mercosul deve ficar em `public/images/brand/como-funciona-duas-placas.png` e é referenciado no JSX por `/images/brand/como-funciona-duas-placas.png`. O CSS mantém a proporção, largura responsiva e sem corte.
+- O infográfico comparando placa cinza e Mercosul deve ficar em `public/images/brand/como-funciona-duas-placas.PNG` e é referenciado no JSX por `/images/brand/como-funciona-duas-placas.PNG`. O CSS mantém a proporção, largura responsiva e sem corte.
 - **Dependência de arquivo:** a imagem ainda precisa ser adicionada ao caminho acima no repositório antes que apareça no site. Não declarar a seção visual concluída nem validar deploy até confirmar o arquivo e o build.
