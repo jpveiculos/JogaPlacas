@@ -718,3 +718,11 @@ Esta regra substitui qualquer instrução anterior que permita ao cambista pagar
 - A navegação da homepage foi removida do cabeçalho; os acessos continuam no conteúdo da página. O cabeçalho não contém botões, menus, usuário, ícones ou texto auxiliar. O botão Sair das áreas autenticadas continua no rodapé.
 - CSS compartilhado adicionado ao final de `src/app/globals.css` para unificar dimensões e comportamento responsivo, preservando a proporção da imagem.
 - **Validação pendente:** executar lint/typecheck/testes/build, confirmar o deploy do commit no Railway e inspecionar visualmente todas as rotas em celular e desktop. Não considerar concluído/publicado até essas verificações.
+
+
+## Homepage pública — título e infográfico de funcionamento (2026-10-28)
+
+- A mensagem principal da página pública em `src/app/page.tsx` é **“Seu jogo de placas.”**
+- A seção logo abaixo chama-se **“Como funciona”** e esclarece que uma única aposta na placa concorre automaticamente às seis categorias: unidade, dezena, centena, milhar, três letras e placa inteira.
+- O infográfico comparando placa cinza e Mercosul deve ficar em `public/images/brand/como-funciona-duas-placas.png` e é referenciado no JSX por `/images/brand/como-funciona-duas-placas.png`. O CSS mantém a proporção, largura responsiva e sem corte.
+- **Dependência de arquivo:** a imagem ainda precisa ser adicionada ao caminho acima no repositório antes que apareça no site. Não declarar a seção visual concluída nem validar deploy até confirmar o arquivo e o build.
