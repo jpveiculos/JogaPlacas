@@ -96,9 +96,11 @@ export function calculateLinePrizeCents(line: SettlementLine, legacyResult: stri
 }
 
 /**
- * Idempotently settles confirmed lines in a completed round. Direct player prizes
- * are credited in the same transaction. Cashier/customer awards remain pending
- * for manual reconciliation because Customer has no wallet in the current schema.
+ * Idempotently settles confirmed lines in a completed round. Online player prizes
+ * are credited to that player's wallet in the same transaction. Awards for physical
+ * cashier sales without a linked player wallet remain pending until the customer
+ * claims through the receipt QR/official platform support; a cashier must never pay
+ * or mark a prize as paid. Platform support/admin handles the authorized payout.
  */
 export async function settleRoundPrizes(prisma: PrismaClient, roundId: string, actorId: string) {
   for (let attempt = 0; ; attempt += 1) {
