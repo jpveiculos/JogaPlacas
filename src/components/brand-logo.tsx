@@ -20,7 +20,7 @@ export function BrandLogo({
         src="/images/brand/joga-placa-logo.jpg"
         alt="Joga Placa"
         className={imageClassName}
-        style={{ display: "block", width: "100%", height: "auto", objectFit: "contain", ...imageStyle }}
+        style={{ display: "block", objectFit: "contain", ...imageStyle }}
       />
     </Link>
   );
