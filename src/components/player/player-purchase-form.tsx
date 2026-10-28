@@ -233,7 +233,7 @@ export function PlayerPurchaseForm() {
   }
 
   return (
-    <section className="feature-card" aria-labelledby="player-purchase-heading">
+    <section className="feature-card" aria-label="Nova aposta">
       <span className="feature-label">Nova aposta</span>
       <form onSubmit={submit} className="purchase-form">
         <div className="plate-pair" aria-label="Escolha uma ou as duas placas para apostar">
