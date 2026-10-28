@@ -250,7 +250,7 @@ export function CashierSaleForm() {
             <div className="round-options round-carousel">{rounds.slice(0, 10).map((round, index) => (
               <label key={round.id} className="round-option">
                 <input type="checkbox" checked={selectedRounds.includes(round.id)} disabled={index > selectedRounds.length || (index === 0 && round.status !== "OPEN") || (index === selectedRounds.length && selectedRounds.length > 0 && new Date(round.resultAt).getTime() - new Date(rounds[index - 1]!.resultAt).getTime() !== 30 * 60_000)} onChange={() => toggleRound(round.id)} />
-                <span><strong>{round.code}</strong><br />Início: {formatDate(round.startsAt)}<br />Encerramento: {formatDate(round.cutoffAt)}</span>
+                <span><strong>{round.code}</strong><br />Início: {formatDate(round.startsAt)}<br />Encerra: {formatDate(round.cutoffAt)}</span>
               </label>
             ))}</div>
           )}
