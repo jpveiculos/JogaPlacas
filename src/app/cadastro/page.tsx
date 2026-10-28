@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { RegisterForm } from "@/components/auth/register-form";
-import { BrandLogo } from "@/components/brand-logo";
+import { SiteHeader } from "@/components/site-header";
 
 export const metadata: Metadata = {
   title: "Criar conta | Joga Placas",
@@ -10,9 +10,9 @@ export const metadata: Metadata = {
 
 export default function RegisterPage() {
   return (
-    <main className="auth-page">
+    <main className="auth-layout">
+      <SiteHeader />
       <section className="auth-card" aria-labelledby="register-title">
-        <BrandLogo className="home-brand auth-wordmark" />
         <p className="eyebrow">Cadastro de jogador</p>
         <h1 id="register-title">Crie sua conta</h1>
         <p className="auth-description">Escolha seu usuário e uma senha segura para acessar sua área de jogador.</p>
