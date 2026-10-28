@@ -17,6 +17,15 @@ export default function HomePage() {
       <section className="home-hero" aria-labelledby="home-title">
         <div className="home-hero-copy">
           <p className="home-eyebrow">Joga Placa</p>
+        <figure className="home-how-infographic">
+          <img
+            src="/images/brand/como-funciona-duas-placas.PNG"
+            alt="Infográfico comparando a placa cinza e a placa Mercosul e explicando as seis categorias de prêmio."
+            loading="lazy"
+            decoding="async"
+          />
+          <figcaption>Uma única placa por aposta; participação automática nas seis categorias, conforme o resultado e as regras vigentes.</figcaption>
+        </figure>
           <h1 id="home-title">Seu jogo de <span>placas.</span></h1>
           <p className="home-hero-description">Jogue uma placa e concorra automaticamente a seis prêmios. Se acertar a unidade, dezena, centena, milhar, as três letras ou a placa inteira, você ganha conforme as regras oficiais.</p>
           <div className="home-hero-actions">
@@ -39,15 +48,6 @@ export default function HomePage() {
           <h2 id="home-how-title">Como funciona</h2>
           <p>Uma única aposta na placa participa automaticamente das seis categorias de prêmio. Veja o exemplo abaixo para entender os formatos cinza e Mercosul.</p>
         </div>
-        <figure className="home-how-infographic">
-          <img
-            src="/images/brand/como-funciona-duas-placas.PNG"
-            alt="Infográfico comparando a placa cinza e a placa Mercosul e explicando as seis categorias de prêmio."
-            loading="lazy"
-            decoding="async"
-          />
-          <figcaption>Uma única placa por aposta; participação automática nas seis categorias, conforme o resultado e as regras vigentes.</figcaption>
-        </figure>
         <div className="home-steps">
           <article><span>01</span><h3>Faça sua aposta</h3><p>Participe pela sua conta, quando disponível, ou jogue presencialmente com um cambista autorizado.</p></article>
           <article><span>02</span><h3>Guarde o recibo</h3><p>Confira se o recibo foi emitido e mantenha o código iniciado por JP- para consultar sua aposta.</p></article>
