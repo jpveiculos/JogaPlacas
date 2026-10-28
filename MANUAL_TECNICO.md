@@ -127,3 +127,7 @@ Esta regra substitui qualquer instrução anterior que permita ao cambista pagar
 ## Ajuste visual — cards compactos de rodadas (2026-10-28)
 - Os cards horizontais de rodadas nos formulários do jogador e do cambista devem usar altura compacta (cerca de 56–58 px), com padding e tipografia reduzidos para liberar espaço vertical em telas pequenas.
 - Preservar leitura do código, horários, seleção por toque, rolagem horizontal e regras de elegibilidade; este ajuste é somente visual.
+
+
+## Ajuste de espaçamento — formulário Nova aposta (2026-10-28)
+- Em telas móveis, remover o espaço superior excessivo antes do título “Nova aposta” nos formulários de jogo do jogador e do cambista, mantendo o cabeçalho/logo e o restante do layout preservados.
