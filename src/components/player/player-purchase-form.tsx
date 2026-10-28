@@ -250,7 +250,6 @@ export function PlayerPurchaseForm() {
             <input ref={mercosurInputRef} className="plate-number-overlay-input" aria-label="Número da placa Mercosul" value={mercosurPlate} onChange={(event) => setMercosurPlate(sanitizePlateInput(event.target.value, "MERCOSUR"))} inputMode="text" placeholder="ABC1D23" maxLength={7} autoComplete="off" />
           </div>
         </div>
-        <p className="player-wallet-balance">Saldo da conta: <strong>{walletBalanceCents === null ? "consultando…" : formatMoney(walletBalanceCents)}</strong></p>
         <div className="plate-add-actions">
           <button type="button" className="secondary-action" onClick={addCurrentPlates}>Adicionar mais placas</button>
           {addedPlates.length > 0 && <div className="added-plates" aria-live="polite">
@@ -271,6 +270,7 @@ export function PlayerPurchaseForm() {
             <input type="radio" name="player-payment-method" value="WALLET" checked={paymentMethod === "WALLET"} onChange={() => setPaymentMethod("WALLET")} />
             <span><strong>Saldo da conta</strong></span>
           </label>
+          <p className="player-wallet-balance payment-wallet-balance">Seu saldo disponível: <strong>{walletBalanceCents === null ? "consultando…" : formatMoney(walletBalanceCents)}</strong></p>
           {paymentMethod === "WALLET" && !walletHasEnough && <p role="alert" className="note-inline">{walletBalanceCents === null ? "Não foi possível consultar o saldo. Atualize a carteira ou escolha Pix." : `Saldo insuficiente: você tem ${formatMoney(walletBalanceCents)} e precisa de ${formatMoney(totalEstimate)}. Escolha Pix para continuar ou adicione saldo.`}</p>}
         </fieldset>
         <fieldset>
