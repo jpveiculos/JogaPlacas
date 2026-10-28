@@ -68,14 +68,14 @@ export function CashierPurchaseHistory() {
 
   return (
     <article className="feature-card">
-      <span className="feature-label">Consulta e segunda via</span>
-      <h2>Localizar uma compra</h2>
-      <p>Localize uma venda pelo código completo do recibo para conferir o pagamento e reimprimir o comprovante. Fechar a janela do Pix não cancela a compra.</p>
+      <span className="feature-label">Recuperação de recibo</span>
+      <h2>Perdeu o recibo? Emitir segunda via</h2>
+      <p>Pesquise uma venda feita por este cambista usando o código completo do recibo ou a placa completa que foi apostada. A busca fica limitada às vendas dos últimos 7 dias. Confira a data, o valor e as placas antes de abrir ou imprimir a segunda via.</p>
       <form onSubmit={search} className="cashier-purchase-search">
-        <label htmlFor="cashier-purchase-query">Código completo do recibo</label>
+        <label htmlFor="cashier-purchase-query">Código do recibo ou placa completa</label>
         <div className="cashier-purchase-search-row">
-          <input id="cashier-purchase-query" value={query} onChange={(event) => setQuery(event.target.value)} maxLength={100} minLength={11} required placeholder="JP-AB12CD34" />
-          <button type="submit" disabled={loading || !/^JP-[A-Z0-9]{8,32}$/i.test(query.trim())}>{loading ? "Pesquisando…" : "Pesquisar"}</button>
+          <input id="cashier-purchase-query" value={query} onChange={(event) => setQuery(event.target.value.toUpperCase())} maxLength={100} minLength={7} required placeholder="JP-AB12CD34 ou ABC-1234" autoComplete="off" />
+          <button type="submit" disabled={loading || !(/^JP-[A-Z0-9]{8,32}$/i.test(query.trim()) || /^[A-Z]{3}-?\d{4}$/i.test(query.trim()) || /^[A-Z]{3}\d[A-Z]\d{2}$/i.test(query.trim().replaceAll("-", "")))}>{loading ? "Pesquisando…" : "Buscar segunda via"}</button>
         </div>
       </form>
       {error && <p className="note-inline" role="status">{error}</p>}
