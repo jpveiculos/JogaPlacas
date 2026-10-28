@@ -6,6 +6,17 @@
 > Este documento também contém retratos e auditorias datados: eles descrevem o estado na data indicada e não devem ser lidos como fotografia atual se houver uma reconciliação posterior. Para estado de código, testes e pendências, consulte a seção final de reconciliação e `docs/TECHNICAL_ROADMAP.md`.
 > Esta especificação não substitui revisão técnica, testes nem validação jurídica/comercial antes de operar pagamentos e jogos em produção.
 
+## Identidade visual — logomarca oficial obrigatória (2026-10-28)
+
+- Usar a mesma imagem oficial já existente no cabeçalho das áreas autenticadas: `/images/brand/joga-placa-logo.jpg`.
+- A regra vale para todas as superfícies relevantes do produto: página inicial pública, cabeçalho e rodapé quando houver, login, cadastro, verificação pública de recibo e cabeçalhos das áreas de jogador, cambista e administrador, além de outras telas que exibam a marca.
+- Não recriar a logomarca usando texto, fontes ou combinações de spans em algumas páginas enquanto outras usam a imagem. O nome textual no título, metadados e conteúdo acessível pode permanecer, mas a marca visual deve vir do mesmo arquivo.
+- Reutilizar o componente compartilhado `src/components/brand-logo.tsx`; não duplicar o caminho da imagem em componentes/páginas. Se houver necessidade de variação, ajustar somente o tamanho e o espaço de apresentação, sem trocar a arte.
+- O logo deve ser responsivo, manter a proporção, usar `object-fit: contain` e nunca ser cortado, esticado ou substituído por uma versão improvisada. Acessibilidade: texto alternativo “Joga Placa” e link para a página inicial quando a marca funcionar como navegação.
+- Favicons, ícones de aplicativo e imagens de compartilhamento também devem apontar para a mesma arte oficial, salvo decisão documentada posterior.
+- **Critério de aceite:** verificar visualmente em celular e desktop a homepage, login, cadastro, áreas autenticadas, rodapé e verificação de recibo; confirmar que todas exibem a mesma imagem, sem deformação nem corte.
+- **Estado da implementação em 2026-10-28:** o componente compartilhado foi introduzido e aplicado à homepage (cabeçalho/rodapé), login, cadastro, cabeçalho das áreas autenticadas e verificação de recibo nesta branch. A compilação, o deploy e a validação visual em ambiente publicado ainda precisam ser confirmados.
+
 ## Decisão vigente — venda de cambista sem cadastro de cliente (atualizada em 2026-10-28)
 
 - A venda presencial do cambista não deve exigir nome, telefone, WhatsApp, busca ou seleção de um cadastro de cliente. O recibo emitido após a confirmação válida da venda é a referência entregue ao jogador.
