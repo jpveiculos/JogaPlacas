@@ -50,6 +50,7 @@ export function PlayerPurchaseForm() {
   const [selectedRounds, setSelectedRounds] = useState<string[]>([]);
   const [legacyPlate, setLegacyPlate] = useState("");
   const [mercosurPlate, setMercosurPlate] = useState("");
+  const [addedPlates, setAddedPlates] = useState<string[]>([]);
   const legacyInputRef = useRef<HTMLInputElement>(null);
   const mercosurInputRef = useRef<HTMLInputElement>(null);
   const [stake, setStake] = useState("1,00");
@@ -119,7 +120,7 @@ export function PlayerPurchaseForm() {
           setPixModalOpen(false);
           setPurchase(null);
           setPixCheckout(null);
-          setLegacyPlate(""); setMercosurPlate("");
+          setLegacyPlate(""); setMercosurPlate(""); setAddedPlates([]);
           setSelectedRounds([]);
           setStake("1,00");
           setNotice("O pagamento Pix não foi aprovado ou foi encerrado. Nenhum recibo foi emitido. Você já pode iniciar outro jogo.");
@@ -141,10 +142,23 @@ export function PlayerPurchaseForm() {
   const plateCount = (legacyPlateValid ? 1 : 0) + (mercosurPlateValid ? 1 : 0);
   const totalEstimate = stakeCents !== null ? stakeCents * selectedRounds.length * plateCount : 0;
   const walletHasEnough = walletBalanceCents !== null && totalEstimate > 0 && walletBalanceCents >= totalEstimate;
-  const plateLines = [
-    ...(legacyPlateValid ? [{ plateDisplay: normalizedLegacyPlate.replace(/-/g, ""), stakeCents: stakeCents ?? 0 }] : []),
-    ...(mercosurPlateValid ? [{ plateDisplay: normalizedMercosurPlate, stakeCents: stakeCents ?? 0 }] : []),
+  const currentPlateDisplays = [
+    ...(legacyPlateValid ? [normalizedLegacyPlate.replace(/-/g, "")] : []),
+    ...(mercosurPlateValid ? [normalizedMercosurPlate] : []),
   ];
+  const plateLines = [
+    ...addedPlates.map((plateDisplay) => ({ plateDisplay, stakeCents: stakeCents ?? 0 })),
+    ...currentPlateDisplays.filter((plateDisplay) => !addedPlates.includes(plateDisplay)).map((plateDisplay) => ({ plateDisplay, stakeCents: stakeCents ?? 0 })),
+  ];
+  function addCurrentPlates() {
+    if (!currentPlateDisplays.length) { setError("Preencha uma placa válida antes de adicionar."); return; }
+    setError(""); setNotice("");
+    setAddedPlates((current) => [...current, ...currentPlateDisplays.filter((plate) => !current.includes(plate))]);
+    setLegacyPlate(""); setMercosurPlate("");
+  }
+  function removeAddedPlate(plate: string) {
+    setAddedPlates((current) => current.filter((item) => item !== plate));
+  }
 
   function toggleRound(id: string) {
     const index = rounds.findIndex((round) => round.id === id);
@@ -200,7 +214,7 @@ export function PlayerPurchaseForm() {
       if (body.receiptReady) {
         setReceiptPurchaseId(body.purchase.id);
         setPixModalOpen(false);
-        setLegacyPlate(""); setMercosurPlate(""); setSelectedRounds([]); setStake("1,00");
+        setLegacyPlate(""); setMercosurPlate(""); setAddedPlates([]); setSelectedRounds([]); setStake("1,00");
         setPaymentMethod("PIX");
         setNotice(body.message ?? "Pagamento confirmado e recibo emitido.");
         setPurchase(null);
@@ -239,6 +253,13 @@ export function PlayerPurchaseForm() {
             <input ref={mercosurInputRef} className="plate-number-overlay-input" aria-label="Número da placa Mercosul" value={mercosurPlate} onChange={(event) => setMercosurPlate(sanitizePlateInput(event.target.value, "MERCOSUR"))} inputMode="text" placeholder="ABC1D23" maxLength={7} autoComplete="off" />
           </div>
         </div>
+        <div className="plate-add-actions">
+          <button type="button" className="secondary-action" onClick={addCurrentPlates}>Adicionar placa</button>
+          {addedPlates.length > 0 && <div className="added-plates" aria-live="polite">
+            <strong>Placas adicionadas ({addedPlates.length})</strong>
+            {addedPlates.map((plate, index) => <div className="added-plate-row" key={plate + "-" + index}><span>{plate}</span><button type="button" className="remove-plate-button" onClick={() => removeAddedPlate(plate)} aria-label={`Remover placa ${plate}`}>Remover</button></div>)}
+          </div>}
+        </div>
         <label>Valor total por placa e rodada (R$)
           <input inputMode="decimal" value={stake} onChange={(event) => setStake(event.target.value)} placeholder="1,00" required />
         </label>
@@ -251,7 +272,7 @@ export function PlayerPurchaseForm() {
         <fieldset>
           <legend>Sequência de rodadas (até 10, sem pular sorteios)</legend>
           {loadingRounds ? <p>Carregando rodadas…</p> : rounds.length === 0 ? <p>Não há rodadas disponíveis para compra no momento.</p> : (
-            <div className="round-options">{rounds.slice(0, 10).map((round, index) => (
+            <div className="round-options round-carousel">{rounds.slice(0, 10).map((round, index) => (
               <label key={round.id} className="round-option">
                 <input type="checkbox" checked={selectedRounds.includes(round.id)} disabled={index > selectedRounds.length || (index === 0 && round.status !== "OPEN") || (index === selectedRounds.length && selectedRounds.length > 0 && new Date(round.resultAt).getTime() - new Date(rounds[index - 1]!.resultAt).getTime() !== 30 * 60_000)} onChange={() => toggleRound(round.id)} />
                 <span><strong>{round.code}</strong><br />Início: {formatDate(round.startsAt)}<br />Encerramento: {formatDate(round.cutoffAt)}</span>
@@ -260,7 +281,7 @@ export function PlayerPurchaseForm() {
           )}
           {selectedRounds.length === 10 && <small>Limite de 10 rodadas por compra atingido.</small>}
         </fieldset>
-        {stakeCents !== null && selectedRounds.length > 0 && <p>Total estimado: <strong>{formatMoney(stakeCents * selectedRounds.length * plateLines.length)}</strong> ({selectedRounds.length} rodada(s)).</p>}
+        {stakeCents !== null && selectedRounds.length > 0 && <p>Total estimado: <strong>{formatMoney(stakeCents * selectedRounds.length * plateLines.length)}</strong> ({plateLines.length} placa(s), {selectedRounds.length} rodada(s)).</p>}
         <button type="submit" disabled={submitting || loadingRounds || rounds.length === 0}>{submitting ? "Registrando…" : paymentMethod === "WALLET" ? "Pagar com saldo da conta" : "Continuar para Pix"}</button>
       </form>
       {error && <p role="alert" className="note-inline">{error}</p>}
