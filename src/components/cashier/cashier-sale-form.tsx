@@ -208,22 +208,19 @@ export function CashierSaleForm() {
             <span><strong>Dinheiro</strong><br /><small>Confirmação no ato pelo cambista</small></span>
           </label>
         </fieldset>
-        <fieldset className="plate-format-options">
-          <legend>Formato da placa</legend>
-          <label className={plateFormat === "LEGACY" ? "format-choice selected" : "format-choice"}>
-            <input type="radio" name="plateFormat" value="LEGACY" checked={plateFormat === "LEGACY"} onChange={() => { setPlateFormat("LEGACY"); setLegacyPlate(""); setMercosurPlate(""); }} />
-            <span><strong>Placa cinza (antiga)</strong><br /><small>ABC1234</small></span>
-          </label>
-          <label className={plateFormat === "MERCOSUR" ? "format-choice selected" : "format-choice"}>
-            <input type="radio" name="plateFormat" value="MERCOSUR" checked={plateFormat === "MERCOSUR"} onChange={() => { setPlateFormat("MERCOSUR"); setLegacyPlate(""); setMercosurPlate(""); }} />
-            <span><strong>Placa Mercosul (nova)</strong><br /><small>ABC1D23</small></span>
-          </label>
-        </fieldset>
-        <div className="plate-entry">
-          <label htmlFor="cashier-plate-input">Digite a placa da venda</label>
-          <PlateVisual format={plateFormat} value={platePreview} placeholder={plateFormat === "LEGACY" ? "ABC1234" : "ABC1D23"} />
-          <input id="cashier-plate-input" value={plate} onChange={(event) => setPlate(sanitizePlateInput(event.target.value, plateFormat))} inputMode={plateFormat === "LEGACY" ? "text" : "text"} placeholder={plateFormat === "LEGACY" ? "ABC-1234" : "ABC1D23"} maxLength={8} autoComplete="off" aria-describedby="plate-format-help" required />
-          <small id="plate-format-help">{plateFormat === "LEGACY" ? "Três letras de A a Z, seguidas de quatro números de 0 a 9, sem hífen." : "Três letras, um número, uma letra e dois números. A quinta posição aceita A–Z."}</small>
+        <div className="plate-pair" aria-label="Escolha uma ou as duas placas para apostar">
+          <div className="plate-entry plate-entry-card">
+            <button type="button" className="plate-tap-target" aria-label="Digitar placa cinza antiga" onClick={() => legacyInputRef.current?.focus()}>
+              <PlateVisual format="LEGACY" value={legacyPlate.toUpperCase().replace(/-/g, "")} placeholder="ABC1234" />
+            </button>
+            <input ref={legacyInputRef} className="plate-number-overlay-input" aria-label="Número da placa cinza antiga" value={legacyPlate} onChange={(event) => setLegacyPlate(sanitizePlateInput(event.target.value, "LEGACY"))} inputMode="text" placeholder="ABC1234" maxLength={7} autoComplete="off" />
+          </div>
+          <div className="plate-entry plate-entry-card">
+            <button type="button" className="plate-tap-target" aria-label="Digitar placa Mercosul" onClick={() => mercosurInputRef.current?.focus()}>
+              <PlateVisual format="MERCOSUR" value={mercosurPlate.toUpperCase().replace(/-/g, "")} placeholder="ABC1D23" />
+            </button>
+            <input ref={mercosurInputRef} className="plate-number-overlay-input" aria-label="Número da placa Mercosul" value={mercosurPlate} onChange={(event) => setMercosurPlate(sanitizePlateInput(event.target.value, "MERCOSUR"))} inputMode="text" placeholder="ABC1D23" maxLength={7} autoComplete="off" />
+          </div>
         </div>
         <label>Valor total por placa e rodada (R$)
           <input inputMode="decimal" value={stake} onChange={(event) => setStake(event.target.value)} placeholder="1,00" required />
