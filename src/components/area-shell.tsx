@@ -21,10 +21,10 @@ export function AreaShell({ children }: Props) {
           position: "relative",
           display: "grid",
           gridTemplateColumns: "minmax(0, 1fr) auto minmax(0, 1fr)",
-          gridTemplateRows: "104px",
+          gridTemplateRows: "60px",
           alignItems: "center",
           columnGap: 8,
-          paddingBottom: 8,
+          paddingBottom: 4,
         }}
       >
         <a
@@ -46,8 +46,8 @@ export function AreaShell({ children }: Props) {
             style={{
               display: "block",
               width: "auto",
-              height: "clamp(76px, 16vw, 100px)",
-              maxWidth: "60vw",
+              height: "clamp(44px, 10vw, 58px)",
+              maxWidth: "54vw",
               objectFit: "contain",
               transform: "none",
               filter: "none",
