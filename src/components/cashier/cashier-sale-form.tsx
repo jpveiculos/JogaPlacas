@@ -95,7 +95,7 @@ export function CashierSaleForm() {
     void refreshRounds(true);
     const timer = window.setInterval(() => {
       if (document.visibilityState === "visible") void refreshRounds();
-    }, 15000);
+    }, 2000);
     const refreshOnReturn = () => {
       if (document.visibilityState === "visible") void refreshRounds();
     };
