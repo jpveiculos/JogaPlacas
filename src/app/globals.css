@@ -1142,16 +1142,16 @@ p, .intro, .auth-description, .area-description, .feature-card p,
 .cashier-sale-card{padding-top:10px}
 
 
-/* Cabeçalho oficial único: em todas as páginas, somente a logomarca centralizada. */
-.site-header{box-sizing:border-box;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;width:100%;min-height:84px;margin:0 auto;padding:8px clamp(12px,3vw,24px);border-bottom:1px solid var(--border,#2b394c)}
-.site-header-brand{grid-column:2;display:flex;align-items:center;justify-content:center;width:max-content;max-width:72vw;margin:0;text-decoration:none}
-.site-header-brand img{display:block;width:auto;height:clamp(64px,13vw,80px);max-width:76vw;object-fit:contain}
-.home-page .site-header{border-bottom-color:rgba(148,163,184,.22)}
+/* Cabeçalho oficial único: mesmas dimensões e aparência em todas as páginas e áreas. */
+.site-header{box-sizing:border-box;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;width:100%;min-height:84px;margin:0 auto;padding:8px clamp(12px,3vw,24px);background:#0d111a;border-bottom:1px solid rgba(148,163,184,.22)}
+.site-header-brand{grid-column:2;display:flex;align-items:center;justify-content:center;width:max-content;max-width:80vw;margin:0;text-decoration:none}
+.site-header-brand img{display:block;width:auto;height:clamp(64px,13vw,80px);max-width:80vw;object-fit:contain}
 .auth-layout{width:min(100%,1120px);min-height:100vh;margin:0 auto;padding:0 clamp(12px,3vw,24px) 28px;box-sizing:border-box}
 .auth-layout .auth-card{margin:clamp(18px,4vh,40px) auto 0}
 .site-page-shell{padding-top:0!important}
 .site-page-shell>.site-header{margin-bottom:24px}
-@media(max-width:480px){.site-header{min-height:82px;padding:6px 10px}.site-header-brand img{height:clamp(60px,16vw,68px);max-width:80vw}.auth-layout{padding-left:10px;padding-right:10px}}
+@media(max-width:700px){.site-header{min-height:82px;padding:6px 10px}.site-header-brand img{height:clamp(60px,16vw,68px);max-width:80vw}}
+@media(max-width:480px){.auth-layout{padding-left:10px;padding-right:10px}}
 
 
 /* Página inicial: hero e imagens proporcionais em celular, sem placa cortada. */
@@ -1162,9 +1162,7 @@ p, .intro, .auth-description, .area-description, .feature-card p,
 .home-page .home-plate-mercosur{justify-self:end}
 .home-page .home-hero-stamp{width:clamp(66px,8vw,96px);height:clamp(66px,8vw,96px);font-size:clamp(.7rem,1.4vw,.9rem)}
 @media(max-width:700px){
- .home-page .site-header{min-height:82px}
- .home-page .site-header-brand img{height:clamp(60px,16vw,68px);max-width:80vw}
- .home-page .home-hero{grid-template-columns:minmax(0,1fr);gap:12px;padding:18px 14px 28px}
+  .home-page .home-hero{grid-template-columns:minmax(0,1fr);gap:12px;padding:18px 14px 28px}
  .home-page .home-hero:before{inset:0;border-radius:20px}
  .home-page .home-hero-copy{min-width:0}
  .home-page .home-hero h1{font-size:clamp(2rem,8vw,2.8rem);line-height:1.05}
