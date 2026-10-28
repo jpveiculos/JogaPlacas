@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ReceiptVerification } from "@/components/receipts/receipt-verification";
-import { BrandLogo } from "@/components/brand-logo";
+import { SiteHeader } from "@/components/site-header";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
@@ -14,10 +14,8 @@ type PageProps = { params: Promise<{ receiptCode: string }> };
 export default async function VerifyReceiptPage({ params }: PageProps) {
   const { receiptCode } = await params;
   return (
-    <main className="home-page" style={{ minHeight: "100vh", padding: "32px 16px" }}>
-      <header className="home-header">
-        <BrandLogo className="home-brand" />
-      </header>
+    <main className="home-page" style={{ minHeight: "100vh", padding: "0 16px 32px" }}>
+      <SiteHeader />
       <section className="home-ticket-section" style={{ maxWidth: 720, margin: "32px auto" }}>
         <div className="home-section-intro">
           <p className="home-eyebrow">Consulta oficial</p>
