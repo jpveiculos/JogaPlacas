@@ -17,7 +17,7 @@ export type PixPurchaseInput = {
   playerId?: string;
   cashierId?: string;
   customerId?: string;
-  paymentMethod?: "PIX" | "CASH";
+  paymentMethod?: "PIX" | "WALLET" | "CASH";
   repetitions: number;
   participations: Array<{
     roundId: string;
@@ -48,7 +48,8 @@ export class PurchaseServiceError extends Error {
       | "INVALID_IDEMPOTENCY_KEY"
       | "IDEMPOTENCY_CONFLICT"
       | "ROUND_UNAVAILABLE"
-      | "INVALID_PURCHASE",
+      | "INVALID_PURCHASE"
+      | "INSUFFICIENT_BALANCE",
   ) {
     super(message);
     this.name = "PurchaseServiceError";
@@ -81,9 +82,12 @@ export async function createPurchase(
   if (new Set(input.participations.map((item) => item.roundId)).size !== input.participations.length) {
     throw new PurchaseServiceError("Each participation must reference a distinct round", "INVALID_PURCHASE");
   }
-  const paymentMethod = input.paymentMethod === "CASH" ? PaymentMethod.CASH : PaymentMethod.PIX;
+  const paymentMethod = input.paymentMethod === "CASH" ? PaymentMethod.CASH : input.paymentMethod === "WALLET" ? PaymentMethod.WALLET : PaymentMethod.PIX;
   if (paymentMethod === PaymentMethod.CASH && (!input.cashierId || input.playerId)) {
     throw new PurchaseServiceError("Cash sales must be created by an authenticated cashier", "INVALID_ACTOR");
+  }
+  if (paymentMethod === PaymentMethod.WALLET && (!input.playerId || input.cashierId)) {
+    throw new PurchaseServiceError("Wallet purchases must belong to the authenticated player", "INVALID_ACTOR");
   }
   if (Boolean(input.playerId) === Boolean(input.cashierId)) {
     throw new PurchaseServiceError("Exactly one player or cashier must own the purchase", "INVALID_ACTOR");
@@ -293,25 +297,35 @@ export async function createPurchase(
     }
 
     const isCash = paymentMethod === PaymentMethod.CASH;
-    const receiptCode = isCash ? `JP-${randomBytes(8).toString("hex").toUpperCase()}` : (input.receiptCode ?? null);
+    const isWallet = paymentMethod === PaymentMethod.WALLET;
+    const isConfirmed = isCash || isWallet;
+    if (isWallet && input.playerId) {
+      await tx.$queryRaw`SELECT "id" FROM "User" WHERE "id" = ${input.playerId} FOR UPDATE`;
+      const ledger = await tx.ledgerEntry.aggregate({ where: { userId: input.playerId }, _sum: { amountCents: true } });
+      const availableCents = ledger._sum.amountCents ?? 0;
+      if (availableCents < totals.totalCents) {
+        throw new PurchaseServiceError(`Saldo insuficiente. Disponível: R$ ${(availableCents / 100).toFixed(2).replace(".", ",")}; total da aposta: R$ ${(totals.totalCents / 100).toFixed(2).replace(".", ",")}.`, "INSUFFICIENT_BALANCE");
+      }
+    }
+    const receiptCode = isConfirmed ? `JP-${randomBytes(8).toString("hex").toUpperCase()}` : (input.receiptCode ?? null);
     const created = await tx.purchase.create({
       data: {
         playerId: input.playerId ?? null,
         cashierId: input.cashierId ?? null,
         customerId: input.customerId ?? null,
-        status: isCash ? "CONFIRMED" : "PENDING_PAYMENT",
+        status: isConfirmed ? "CONFIRMED" : "PENDING_PAYMENT",
         paymentMethod,
         totalCents: totals.totalCents,
         currency: "BRL",
         receiptCode,
-        confirmedAt: isCash ? decisionTime : null,
+        confirmedAt: isConfirmed ? decisionTime : null,
         idempotencyKey: input.idempotencyKey,
         participations: {
           create: input.participations.map((participation) => ({
             roundId: participation.roundId,
-            status: isCash ? "CONFIRMED" : "PENDING",
+            status: isConfirmed ? "CONFIRMED" : "PENDING",
             totalCents: totalByRound.get(participation.roundId)!,
-            ...(isCash ? { confirmedAt: decisionTime } : {}),
+            ...(isConfirmed ? { confirmedAt: decisionTime } : {}),
             lines: {
               create: participation.lines.map((line) => {
                 const normalized = normalizePlate(line.plateDisplay);
@@ -328,7 +342,7 @@ export async function createPurchase(
             },
           })),
         },
-        ...(!isCash ? { payment: { create: {
+        ...(!isCash && !isWallet ? { payment: { create: {
           provider: "MERCADO_PAGO",
           status: "PENDING",
           amountCents: totals.totalCents,
@@ -337,6 +351,10 @@ export async function createPurchase(
       },
       include: { participations: { include: { lines: true } }, payment: true },
     });
+    if (isWallet && input.playerId) {
+      await tx.ledgerEntry.create({ data: { userId: input.playerId, purchaseId: created.id, type: "PURCHASE_DEBIT", amountCents: -totals.totalCents, currency: "BRL", idempotencyKey: `purchase-debit:${created.id}`, description: `Pagamento de aposta com saldo da conta ${created.id}` } });
+      await tx.auditEvent.create({ data: { actorId: input.playerId, action: "WALLET_PURCHASE_CONFIRMED", entityType: "Purchase", entityId: created.id, metadata: { receiptCode, totalCents: totals.totalCents, paymentMethod: "WALLET" } } });
+    }
     if (isCash && input.cashierId) {
       const cashier = await tx.user.findFirst({
         where: { id: input.cashierId, role: "CASHIER", status: "ACTIVE" },
