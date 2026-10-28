@@ -33,6 +33,8 @@ type VerifiedReceipt = {
 };
 
 const paymentLabels: Record<string, string> = { CASH: "Dinheiro", PIX: "Pix", WALLET: "Carteira" };
+// Public contact number, digits only with country code (Brazil: 55 + DDD + number).
+const prizeSupportWhatsapp = process.env.NEXT_PUBLIC_PRIZE_SUPPORT_WHATSAPP?.replace(/\D/g, "") ?? "";
 const roundStatusLabels: Record<VerifiedRound["status"], string> = {
   SORTEIO_AGUARDANDO: "Sorteio aguardando",
   AGUARDANDO_RESULTADO_OFICIAL: "Aguardando resultado oficial",
@@ -89,6 +91,27 @@ export function ReceiptVerification({ receiptCode }: { receiptCode: string }) {
 
   const money = (cents: number, currency = "BRL") => new Intl.NumberFormat("pt-BR", { style: "currency", currency }).format(cents / 100);
   const date = data?.confirmedAt ? formatDate(data.confirmedAt) : null;
+  const pendingPrizeLines = (data?.valid ? data.rounds ?? [] : []).flatMap((round) =>
+    round.plates
+      .filter((plate) => plate.resultStatus === "PREMIADA" && !plate.prizePaid)
+      .map((plate) => ({
+        roundCode: round.roundCode,
+        plateDisplay: plate.plateDisplay,
+        plateFormat: plate.plateFormat,
+        prizeCents: plate.prizeCents ?? 0,
+      })),
+  );
+  const prizeSupportMessage = data?.receiptCode && pendingPrizeLines.length
+    ? [
+        "Olá! Consultei meu recibo premiado no Joga Placas e preciso de orientação para resgatar/conferir meu prêmio.",
+        "Recibo: " + data.receiptCode,
+        ...pendingPrizeLines.map((prize) => "Rodada: " + prize.roundCode + " | Placa: " + prize.plateDisplay + " (" + (prize.plateFormat === "LEGACY" ? "cinza" : "Mercosul") + ") | Prêmio indicado: " + money(prize.prizeCents, data.currency ?? "BRL")),
+        "Por favor, confirmem a validação e as instruções de recebimento. Ainda não considero o prêmio pago até a confirmação oficial.",
+      ].join("\n")
+    : "";
+  const prizeSupportUrl = prizeSupportWhatsapp && prizeSupportMessage
+    ? "https://wa.me/" + prizeSupportWhatsapp + "?text=" + encodeURIComponent(prizeSupportMessage)
+    : null;
 
   if (loading) return <p role="status">Consultando o registro oficial do recibo…</p>;
   if (!data) return <p role="alert">Não foi possível consultar o recibo.</p>;
@@ -135,6 +158,19 @@ export function ReceiptVerification({ receiptCode }: { receiptCode: string }) {
               )}
             </article>
           )) : <p>Não há rodadas confirmadas vinculadas a este recibo.</p>}
+          {pendingPrizeLines.length > 0 && (
+            <aside aria-labelledby="prize-redemption-title" style={{ marginTop: 20, padding: 16, border: "1px solid #d97706", borderRadius: 10, background: "#fffbeb" }}>
+              <h3 id="prize-redemption-title" style={{ marginTop: 0 }}>Você tem um prêmio indicado para recebimento</h3>
+              <p>Guarde o recibo físico original. Entre em contato com o atendimento oficial para conferir o prêmio e receber as instruções de resgate. A consulta do QR Code não significa que o valor já foi pago.</p>
+              {prizeSupportUrl ? (
+                <a href={prizeSupportUrl} target="_blank" rel="noopener noreferrer" style={{ display: "inline-block", padding: "12px 18px", borderRadius: 8, background: "#166534", color: "#fff", fontWeight: 700, textDecoration: "none" }}>
+                  Solicitar resgate pelo WhatsApp
+                </a>
+              ) : (
+                <p role="status">O contato de atendimento ainda não está configurado. Consulte os canais oficiais da plataforma antes de enviar dados ou combinar o recebimento.</p>
+              )}
+            </aside>
+          )}
           <p><strong>Importante:</strong> os dados vêm do sistema oficial. A consulta pública não é, sozinha, autorização para pagar um prêmio.</p>
         </>
       )}
