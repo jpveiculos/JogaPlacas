@@ -676,3 +676,11 @@ Esta regra substitui qualquer instrução anterior que permita ao cambista pagar
 - **Arquivos:** `src/components/area-shell.tsx`; especificação funcional atualizada em `docs/PRODUCT_SPEC.md`.
 - **Alcance:** jogador e cambista usam o mesmo `AreaShell`; revisar ambos após deploy para evitar regressão no layout compacto.
 - **Estado:** código e documentação commitados na branch `feature/public-home-registration`. Build, deploy e inspeção visual no Railway ainda precisam ser confirmados; até lá, a correção não está validada como publicada.
+
+
+## Investigação e ajuste CSS — Nova Aposta (2026-10-28)
+
+- **Causa adicional confirmada no CSS:** após a correção anterior, a classe compacta passou a ser aplicada, mas `.area-page-compact .feature-card` ainda definia `padding:16px`. A regra que zerava a margem do título não alterava esse preenchimento, que era o espaço interno visível acima de “NOVA APOSTA”.
+- **Correção complementar feita:** em telas de até 640px, a regra específica do cartão Nova aposta agora define `padding-top:6px`. O restante do padding, as placas e os controles não são alterados por esta regra.
+- **Arquivo de código:** `src/app/globals.css`; commit `f01ab24957be232a09020fa0a1a505c06b971455`.
+- **Estado:** aguardando deploy e inspeção visual no endereço de desenvolvimento. A compilação, isoladamente, não valida o resultado visual.
