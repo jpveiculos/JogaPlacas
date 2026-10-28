@@ -3,7 +3,7 @@ Atualizado em 28/10/2026.
 
 ## Identidade oficial e aplicação global da marca
 - Nome público correto: **Joga Placa** (singular). `JogaPlacas` permanece apenas como identificador técnico do repositório GitHub.
-- Cabeçalho compartilhado em todas as áreas autenticadas: logomarca original centralizada, usuário conectado no canto esquerdo e botão Sair no canto direito.
+- Cabeçalho único em TODO o site (páginas públicas e áreas autenticadas): somente a imagem oficial da logomarca, centralizada horizontalmente. É proibido colocar usuário, botão Sair, botões de acesso, menu, ícones, títulos ou qualquer outro elemento no cabeçalho. O botão Sair fica separado, no rodapé das áreas autenticadas.
 - A logomarca deve permanecer sem itálico, inclinação, filtros ou efeitos.
 - Aplicar a marca também na página pública, nos modais de cobrança Pix (QR Code e copia e cola), na verificação pública de recibo e nos recibos impressos/digitais.
 - Toda alteração de marca deve ser acompanhada de revisão de títulos, metadados, textos acessíveis, rodapé, fluxo Pix, recibos e documentação. Não renomear o repositório técnico sem revisão separada de URLs e deploy.
@@ -137,3 +137,16 @@ Esta regra substitui qualquer instrução anterior que permita ao cambista pagar
 - A propriedade `compact` do `AreaShell` agora reduz o espaço entre o cabeçalho e o conteúdo apenas nas páginas que a solicitam.
 - O card “Nova aposta” da área do cambista recebe uma classe específica com padding superior reduzido, evitando alterar o espaçamento dos demais cards do site.
 - A alteração visual só deve ser considerada concluída após uma implantação bem-sucedida no Railway e conferência na página publicada.
+
+
+## Regra obrigatória — cabeçalho global padronizado (2026-10-28)
+
+Esta regra substitui qualquer descrição anterior que permita usuário, botão Sair ou outros controles no cabeçalho.
+
+- Todas as rotas devem usar o componente compartilhado `src/components/site-header.tsx`: página inicial, login, cadastro, troca de senha, consulta pública, termos de uso, verificação de recibo e áreas do jogador, cambista e administrador.
+- O cabeçalho contém **exclusivamente a logomarca oficial centralizada**. Nenhum botão, menu, ícone, título, nome de usuário, link de navegação ou ação pode ficar dentro do cabeçalho.
+- A logomarca deve usar a mesma imagem oficial em todas as páginas, manter sua proporção original, adaptar-se a celular e desktop e nunca ser cortada ou distorcida.
+- Os links de navegação da página pública ficam no corpo da página. O botão **Sair** permanece no rodapé das áreas autenticadas, fora do cabeçalho.
+- Não criar cabeçalhos alternativos nem duplicar CSS específico por rota. Ajustes devem ser feitos no componente compartilhado e seus estilos globais.
+- **Checklist obrigatório após mudanças de interface:** (1) listar todas as rotas em `src/app`; (2) confirmar que todas usam o mesmo componente; (3) verificar se não sobrou cabeçalho antigo ou importação/estilo conflitante; (4) executar lint, typecheck, testes e build; (5) confirmar que o deploy do commit correto terminou com sucesso no Railway; (6) conferir cada rota em celular e desktop, incluindo centralização, altura, proporção e ausência de controles no cabeçalho; (7) registrar aqui e em `docs/TECHNICAL_ROADMAP.md` o resultado e as pendências reais.
+- **Estado em 2026-10-28:** a regra foi aplicada ao código e documentada; validação automatizada, deploy e inspeção visual de todas as rotas ainda não foram confirmados. Não declarar o trabalho concluído/publicado antes dessas verificações.
