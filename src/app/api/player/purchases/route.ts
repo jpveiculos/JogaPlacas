@@ -22,8 +22,27 @@ const requestSchema = z.object({
 
 export async function POST(request: NextRequest) {
   const origin = request.headers.get("origin");
-  if (origin && origin !== request.nextUrl.origin) {
-    return NextResponse.json({ error: "Requisição inválida." }, { status: 403 });
+  if (origin) {
+    let originHost = "";
+    try {
+      originHost = new URL(origin).host.toLowerCase();
+    } catch {
+      return NextResponse.json({ error: "Requisição inválida." }, { status: 403 });
+    }
+    // Em hospedagens atrás de proxy (como Railway), nextUrl.origin pode refletir
+    // a origem interna. Compare o host do navegador com os hosts públicos encaminhados.
+    const acceptedHosts = [
+      request.headers.get("x-forwarded-host"),
+      request.headers.get("host"),
+      request.nextUrl.host,
+    ]
+      .filter((value): value is string => Boolean(value))
+      .flatMap((value) => value.split(","))
+      .map((value) => value.trim().toLowerCase())
+      .filter(Boolean);
+    if (!acceptedHosts.includes(originHost)) {
+      return NextResponse.json({ error: "Requisição inválida." }, { status: 403 });
+    }
   }
 
   const user = await getSessionUser(request.cookies.get(SESSION_COOKIE)?.value);
