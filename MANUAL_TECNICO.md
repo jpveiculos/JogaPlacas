@@ -17,6 +17,87 @@ Atualizado em 28/10/2026.
 6. Antes de declarar concluído, conferir CI do commit exato, testes pertinentes, build e deploy/logs quando aplicável. Não executar merge, alteração em produção, DNS/domínio, migração produtiva ou cobrança real sem autorização explícita.
 
 
+## Árvore do repositório e mapa de arquivos (branch de trabalho)
+
+Mapa operacional dos diretórios e arquivos principais, conferido na árvore Git desta branch. Use os caminhos exatos; não crie arquivos paralelos quando já existe um módulo responsável. [Abrir a árvore completa do repositório](https://github.com/jpveiculos/JogaPlacas/tree/feature/public-home-registration).
+
+```text
+JogaPlacas/
+├── .github/workflows/          # CI e verificações automatizadas
+├── public/images/brand/        # Arte oficial da marca
+├── public/images/plates/       # Imagens da placa cinza e Mercosul
+├── prisma/
+│   ├── schema.prisma           # Modelo do banco
+│   └── migrations/             # Migrações versionadas
+├── docs/
+│   ├── PRODUCT_SPEC.md         # Fonte de verdade das regras funcionais
+│   ├── TECHNICAL_ROADMAP.md    # Estado técnico, arquitetura e sequência
+│   ├── BRANCH-STATUS.md        # Situação das branches
+│   ├── PRIZE-SETTLEMENT.md     # Apuração e liquidação de prêmios
+│   ├── DUAL-PLATE-DRAW.md      # Sorteios dos dois formatos
+│   └── ...                     # ADRs, auditorias, planos e runbooks
+├── src/
+│   ├── app/
+│   │   ├── page.tsx            # Página pública inicial
+│   │   ├── player/page.tsx     # Área do jogador
+│   │   ├── cashier/page.tsx    # Área do cambista
+│   │   ├── admin/page.tsx      # Área administrativa
+│   │   ├── login/page.tsx      # Login
+│   │   ├── cadastro/page.tsx   # Cadastro
+│   │   ├── verificar-recibo/   # Consulta pública via QR Code
+│   │   ├── api/                # Rotas HTTP/API por domínio e perfil
+│   │   ├── globals.css         # Estilos globais
+│   │   └── layout.tsx          # Layout raiz, metadados e CSS
+│   ├── components/
+│   │   ├── admin/              # Gestão administrativa
+│   │   ├── auth/               # Autenticação
+│   │   ├── cashier/            # Venda e resumo do cambista
+│   │   ├── player/             # Apostas, histórico e carteira
+│   │   ├── plates/             # Visualização das placas
+│   │   ├── receipts/           # Recibos, QR e impressão térmica
+│   │   ├── brand-logo.tsx      # Logomarca reutilizável
+│   │   ├── site-header.tsx     # Cabeçalho compartilhado
+│   │   └── area-shell.tsx      # Estrutura das áreas autenticadas
+│   ├── domain/
+│   │   ├── prize-rule-snapshot.ts # Multiplicadores e versão vigente
+│   │   ├── allocate-plate-stake.ts # Distribuição da aposta
+│   │   ├── purchase-rules.ts   # Regras de compra
+│   │   └── cashier-commission.ts # Comissão do cambista
+│   └── modules/
+│       ├── bets/               # Valores de aposta
+│       ├── payments/           # Pagamentos e confirmação
+│       ├── plates/             # Normalização e geração de placas
+│       ├── purchases/          # Criação e validação de compras
+│       └── rounds/             # Rodadas, sorteio e apuração
+├── MANUAL-MESTRE.md            # Entrada obrigatória para tarefas
+├── MANUAL_TECNICO.md           # Manual e mapa operacional
+├── README.md
+├── package.json                # Scripts e dependências
+└── .env.example                # Exemplo de variáveis sem segredos reais
+```
+
+### Onde mexer por tipo de alteração
+
+| Alteração | Arquivo(s) principal(is) | Conferências obrigatórias |
+|---|---|---|
+| Multiplicadores e versão da regra | `src/domain/prize-rule-snapshot.ts` | `docs/PRODUCT_SPEC.md`, testes de apuração/snapshot e este manual |
+| Distribuição da aposta entre categorias | `src/domain/allocate-plate-stake.ts` | Testes de centavos e regra funcional |
+| Apuração/liquidação de prêmio | `src/modules/rounds/settle-round-prizes.ts` | Testes unitários e de integração |
+| Abrir/fechar/sortear rodadas | `src/modules/rounds/` e `src/app/api/admin/rounds/` | Horários, testes e auditoria |
+| Formatos e validação de placas | `src/modules/plates/normalize-plate.ts`, `src/components/plates/plate-visual.tsx` | Cinza e Mercosul; digitação, colagem e API |
+| Compra do jogador | `src/components/player/player-purchase-form.tsx`, `src/app/api/player/purchases/route.ts`, `src/modules/purchases/create-purchase.ts` | Pagamento, saldo, recibo, snapshots e idempotência |
+| Venda do cambista | `src/components/cashier/cashier-sale-form.tsx`, `src/app/api/cashier/purchases/` | Comissão, pagamento e recibo |
+| Recibo, QR e impressão | `src/components/receipts/`, `src/app/api/public/receipt-verification/[receiptCode]/route.ts` | Código único, consulta e impressão |
+| Pix/Mercado Pago | `src/modules/payments/`, `src/app/api/webhooks/mercado-pago/route.ts` | Callback, idempotência e reconciliação |
+| Logomarca/cabeçalho | `src/components/brand-logo.tsx`, `src/components/site-header.tsx`, `src/app/globals.css` | Todas as áreas e telas responsivas |
+| Página pública | `src/app/page.tsx` | Navegação e explicação das regras |
+| Banco de dados | `prisma/schema.prisma`, `prisma/migrations/` | Migração, testes e reversão |
+| Regras funcionais | `docs/PRODUCT_SPEC.md` | Manter somente a regra atual como normativa |
+| Estado e sequência técnica | `docs/TECHNICAL_ROADMAP.md` | Separar implementação, testes e deploy |
+
+**Regra de manutenção:** quando uma regra for substituída, atualizar as seções normativas em todos os manuais/especificações aplicáveis no mesmo trabalho. Manter versões antigas somente para interpretar registros históricos, rotuladas claramente como históricas/superadas; nunca deixá-las parecendo vigentes.
+
+
 ## Fuso horário oficial das rodadas
 - Toda entrada e exibição de horário de rodada no painel administrativo deve usar o horário de Brasília, atualmente UTC−03:00.
 - O navegador envia horários locais do campo `datetime-local` convertidos para instantes UTC; o servidor persiste os instantes como datas absolutas.
@@ -42,14 +123,19 @@ Atualizado em 28/10/2026.
 - Pagamentos reais não devem ser considerados homologados apenas por compilação: confirmar callbacks do provedor, idempotência, reconciliação e registros financeiros em ambiente de teste controlado.
 
 
-## Multiplicadores vigentes de prêmios — 28/10/2026
-- Versão da regra: `approved-v3`.
-- Tabela aplicada igualmente às placas cinza (`LEGACY`) e Mercosul (`MERCOSUR`): unidade 9x; dezena 30x; centena 300x; milhar 3.000x; três primeiras letras na ordem exata 3.000x; placa inteira 300.000x.
-- A apuração compara cada aposta exclusivamente com o resultado do mesmo formato de placa. A multiplicação é aplicada ao valor alocado à categoria vencedora, em centavos inteiros.
-- Cada compra nova grava um snapshot da versão vigente. Apostas antigas mantêm os multiplicadores registrados no snapshot original; não se reescreve o histórico ao mudar a regra.
-- Testes atualizados para confirmar que a alocação de R$ 0,20 na unidade, multiplicada por 9x, resulta em R$ 1,80 de prêmio bruto.
-- A alteração no repositório não comprova publicação no ambiente de produção. Validar CI, testes de integração e deploy antes de declarar a regra ativa no site.
+## Multiplicadores vigentes de prêmios — 28/10/2026 (regra atual)
 
+- **Versão vigente para novas apostas: `approved-v4`.**
+- Unidade (último caractere): **6x**.
+- Dezena (últimos dois caracteres): **30x**.
+- Centena (últimos três caracteres): **300x**.
+- Milhar (últimos quatro caracteres): **3.000x**.
+- Três primeiras letras, na ordem exata: **3.000x**.
+- Placa inteira: **300.000x**.
+- A tabela aplica-se às placas cinza (`LEGACY`) e Mercosul (`MERCOSUR`), sempre comparando a aposta com o resultado do mesmo formato.
+- O multiplicador é aplicado somente ao valor alocado à categoria vencedora, em centavos inteiros. Exemplo de alocação de R$ 1,00: a unidade recebe R$ 0,20; com 6x, o prêmio bruto da unidade é **R$ 1,20**.
+- Cada linha de compra guarda `ruleVersion` e `ruleSnapshot`. Novas compras devem gravar `approved-v4`; compras históricas com `approved-v3` conservam o snapshot original e não devem ser recalculadas. A versão antiga não é regra vigente e não deve ser apresentada como tal.
+- **Estado da implantação:** código/documentação atualizados na branch `feature/public-home-registration`; a regra só pode ser considerada ativa no site após confirmar testes pertinentes e o deploy do commit exato no Railway.
 
 ## Consulta de recibos e área do cambista
 - O QR Code impresso no recibo abre a página específica `/verificar-recibo/{receiptCode}`, que consulta o registro oficial, a situação do pagamento, as rodadas e os resultados vinculados àquela compra.
