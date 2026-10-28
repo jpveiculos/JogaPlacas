@@ -3,15 +3,15 @@ import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
-  title: "Joga Placas | Seu jogo e seu recibo",
-  description: "Conheça o Joga Placas. Consulte seu recibo original pelo QR Code impresso.",
+  title: "Joga Placa | Seu jogo e seu recibo",
+  description: "Conheça o Joga Placa. Consulte seu recibo original pelo QR Code impresso.",
 };
 
 export default function HomePage() {
   return (
     <div className="home-page">
       <header className="home-header">
-        <Link href="/" className="home-brand home-wordmark" aria-label="Joga Placas — página inicial"><span className="wordmark-joga">JOGA</span><span className="wordmark-placas">PLACAS</span></Link>
+        <Link href="/" className="home-brand home-wordmark" aria-label="Joga Placa — página inicial"><span className="wordmark-joga">JOGA</span><span className="wordmark-placa">PLACA</span></Link>
         <nav className="home-nav" aria-label="Navegação principal">
           <a href="#como-funciona">Como funciona</a>
           <Link className="home-login-button" href="/login">Entrar</Link>
@@ -57,7 +57,7 @@ export default function HomePage() {
       </section>
 
       <footer className="home-footer">
-        <Link href="/" className="home-brand home-wordmark" aria-label="Joga Placas — página inicial"><span className="wordmark-joga">JOGA</span><span className="wordmark-placas">PLACAS</span></Link>
+        <Link href="/" className="home-brand home-wordmark" aria-label="Joga Placa — página inicial"><span className="wordmark-joga">JOGA</span><span className="wordmark-placa">PLACA</span></Link>
         <div><Link href="/termos-de-uso">Termos de uso</Link><Link href="/login">Entrar</Link></div>
         <p>Guarde o recibo impresso. A consulta é feita pelo QR Code do próprio documento.</p>
       </footer>
