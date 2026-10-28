@@ -24,3 +24,12 @@ Atualizado em 27/10/2026.
 - Alterações relacionadas a rodadas devem incluir testes da conversão de horário, código de rodada, cutoff e evento de auditoria.
 - Após cada commit, verificar o status de CI, o deploy correspondente no Railway, logs de build e runtime, e executar testes de fumaça nas rotas afetadas antes de declarar conclusão.
 - Pagamentos reais não devem ser considerados homologados apenas por compilação: confirmar callbacks do provedor, idempotência, reconciliação e registros financeiros em ambiente de teste controlado.
+
+
+## Multiplicadores vigentes de prêmios — 28/10/2026
+- Versão da regra: `approved-v3`.
+- Tabela aplicada igualmente às placas cinza (`LEGACY`) e Mercosul (`MERCOSUR`): unidade 9x; dezena 30x; centena 300x; milhar 3.000x; três primeiras letras na ordem exata 3.000x; placa inteira 300.000x.
+- A apuração compara cada aposta exclusivamente com o resultado do mesmo formato de placa. A multiplicação é aplicada ao valor alocado à categoria vencedora, em centavos inteiros.
+- Cada compra nova grava um snapshot da versão vigente. Apostas antigas mantêm os multiplicadores registrados no snapshot original; não se reescreve o histórico ao mudar a regra.
+- Testes atualizados para confirmar que a alocação de R$ 0,20 na unidade, multiplicada por 9x, resulta em R$ 1,80 de prêmio bruto.
+- A alteração no repositório não comprova publicação no ambiente de produção. Validar CI, testes de integração e deploy antes de declarar a regra ativa no site.
