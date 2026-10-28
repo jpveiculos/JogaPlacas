@@ -306,6 +306,18 @@ export function CashierSaleForm() {
             {addedPlates.map((plate, index) => <div className="added-plate-row" key={plate + "-" + index}><span>{plate}</span><button type="button" className="remove-plate-button" onClick={() => removeAddedPlate(plate)} aria-label={`Remover placa ${plate}`}>Remover</button></div>)}
           </div>}
         </div>
+        <fieldset>
+          <legend>Rodadas</legend>
+          {loadingRounds ? <p>Carregando rodadas…</p> : visibleRounds.length === 0 ? <p>Não há rodadas disponíveis para compra no momento.</p> : (
+            <div className="round-options round-carousel">{visibleRounds.slice(0, 10).map((round, index) => (
+              <label key={round.id} className="round-option">
+                <input type="checkbox" checked={selectedRounds.includes(round.id)} disabled={index > selectedRounds.length || (index === 0 && (round.status !== "OPEN" || new Date(round.cutoffAt).getTime() <= clockNow)) || (index === selectedRounds.length && selectedRounds.length > 0 && new Date(round.resultAt).getTime() - new Date(visibleRounds[index - 1]!.resultAt).getTime() !== 30 * 60_000)} onChange={() => toggleRound(round.id)} />
+                <span><strong>{round.code}</strong><br />Início: {formatDate(round.startsAt)}<br />Encerra: {formatDate(round.cutoffAt)}</span>
+              </label>
+            ))}</div>
+          )}
+          {selectedRounds.length === 10 && <small>Limite: 10 rodadas.</small>}
+        </fieldset>
         <label>Valor total por placa e rodada (R$)
           <input inputMode="decimal" value={stake} onChange={(event) => setStake(event.target.value)} placeholder="1,00" required />
         </label>
@@ -319,18 +331,6 @@ export function CashierSaleForm() {
             <input type="radio" name="cashierPaymentMethod" value="CASH" checked={paymentMethod === "CASH"} onChange={() => setPaymentMethod("CASH")} />
             <span><strong>Dinheiro</strong></span>
           </label>
-        </fieldset>
-        <fieldset>
-          <legend>Rodadas</legend>
-          {loadingRounds ? <p>Carregando rodadas…</p> : visibleRounds.length === 0 ? <p>Não há rodadas disponíveis para compra no momento.</p> : (
-            <div className="round-options round-carousel">{visibleRounds.slice(0, 10).map((round, index) => (
-              <label key={round.id} className="round-option">
-                <input type="checkbox" checked={selectedRounds.includes(round.id)} disabled={index > selectedRounds.length || (index === 0 && (round.status !== "OPEN" || new Date(round.cutoffAt).getTime() <= clockNow)) || (index === selectedRounds.length && selectedRounds.length > 0 && new Date(round.resultAt).getTime() - new Date(visibleRounds[index - 1]!.resultAt).getTime() !== 30 * 60_000)} onChange={() => toggleRound(round.id)} />
-                <span><strong>{round.code}</strong><br />Início: {formatDate(round.startsAt)}<br />Encerra: {formatDate(round.cutoffAt)}</span>
-              </label>
-            ))}</div>
-          )}
-          {selectedRounds.length === 10 && <small>Limite: 10 rodadas.</small>}
         </fieldset>
         {stakeCents !== null && selectedRounds.length > 0 && <p>Total estimado: <strong>{formatMoney(stakeCents * selectedRounds.length * plateLines.length)}</strong> ({plateLines.length} placa(s), {selectedRounds.length} rodada(s)).</p>}
         <button type="submit" disabled={submitting || loadingRounds || visibleRounds.length === 0}>{submitting ? "Registrando…" : paymentMethod === "CASH" ? "Confirmar venda em dinheiro" : "Registrar venda e preparar Pix"}</button>
