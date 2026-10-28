@@ -4,6 +4,7 @@ import type { ThermalReceiptPlate } from "./thermal-receipt-types";
 
 const line = (roundCode: string, plateDisplay = "ABC-1234"): ThermalReceiptPlate => ({
   roundCode,
+  resultAt: "2026-10-28T04:00:00.000Z",
   plateDisplay,
   plateFormat: "LEGACY",
   stakeCents: 100,
