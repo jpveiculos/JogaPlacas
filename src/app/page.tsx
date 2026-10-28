@@ -5,8 +5,8 @@ import { BrandLogo } from "@/components/brand-logo";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
-  title: "Joga Placa | Seu jogo e seu recibo",
-  description: "Conheça o Joga Placa. Consulte seu recibo original pelo QR Code impresso.",
+  title: "Joga Placa | Seu jogo de placas",
+  description: "Conheça o Joga Placa: jogue uma placa e concorra automaticamente às seis categorias de prêmio.",
 };
 
 export default function HomePage() {
@@ -16,11 +16,11 @@ export default function HomePage() {
 
       <section className="home-hero" aria-labelledby="home-title">
         <div className="home-hero-copy">
-          <p className="home-eyebrow">Seu jogo e seu recibo</p>
-          <h1 id="home-title">Seu jogo. Seu recibo. <span>Consulte pelo QR Code.</span></h1>
-          <p className="home-hero-description">Guarde seu recibo impresso. Para conferir a aposta, abra a câmera do celular e aponte para o QR Code do próprio recibo. A consulta mostra os dados oficiais daquela compra.</p>
+          <p className="home-eyebrow">Joga Placa</p>
+          <h1 id="home-title">Seu jogo de <span>placas.</span></h1>
+          <p className="home-hero-description">Jogue uma placa e concorra automaticamente a seis prêmios. Se acertar a unidade, dezena, centena, milhar, as três letras ou a placa inteira, você ganha conforme as regras oficiais.</p>
           <div className="home-hero-actions">
-            <a className="home-primary-button" href="#como-funciona">Como consultar pelo QR Code</a>
+            <a className="home-primary-button" href="#como-funciona">Como funciona</a>
             <Link className="home-secondary-button" href="/login">Entrar na minha conta</Link>
             <Link className="home-secondary-button" href="/cadastro">Criar minha conta</Link>
           </div>
@@ -36,9 +36,18 @@ export default function HomePage() {
       <section id="como-funciona" className="home-how-section" aria-labelledby="home-how-title">
         <div className="home-section-intro">
           <p className="home-eyebrow">Simples e direto</p>
-          <h2 id="home-how-title">Como consultar seu recibo</h2>
-          <p>A câmera do celular lê o QR Code impresso e abre a página de conferência daquele recibo específico.</p>
+          <h2 id="home-how-title">Como funciona</h2>
+          <p>Uma única aposta na placa participa automaticamente das seis categorias de prêmio. Veja o exemplo abaixo para entender os formatos cinza e Mercosul.</p>
         </div>
+        <figure className="home-how-infographic">
+          <img
+            src="/images/brand/como-funciona-duas-placas.png"
+            alt="Infográfico comparando a placa cinza e a placa Mercosul e explicando as seis categorias de prêmio."
+            loading="lazy"
+            decoding="async"
+          />
+          <figcaption>Uma única placa por aposta; participação automática nas seis categorias, conforme o resultado e as regras vigentes.</figcaption>
+        </figure>
         <div className="home-steps">
           <article><span>01</span><h3>Faça sua aposta</h3><p>Participe pela sua conta, quando disponível, ou jogue presencialmente com um cambista autorizado.</p></article>
           <article><span>02</span><h3>Guarde o recibo</h3><p>Confira se o recibo foi emitido e mantenha o código iniciado por JP- para consultar sua aposta.</p></article>
