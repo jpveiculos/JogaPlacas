@@ -703,3 +703,10 @@ Esta regra substitui qualquer instrução anterior que permita ao cambista pagar
 - **Proibir baixa manual de prêmio pelo cambista em todos os caminhos:** interface, API, permissões, ações administrativas delegadas ou endpoints alternativos. Se houver endpoint antigo de baixa/pagamento de prêmio acessível ao papel CASHIER, removê-lo ou negar acesso e adicionar teste de autorização. A reconciliação administrativa de falhas de crédito online permanece exclusiva a ADMIN e não deve ser usada para pagar prêmios de clientes sem carteira.
 - Não confundir prêmio com comissão do cambista, confirmação de recebimento da venda, pagamento de saque do jogador ou reconciliação de crédito de carteira.
 - Não apagar registros financeiros históricos nem alterar dados de produção nesta mudança. Revisar código e testes antes de afirmar que a proibição técnica está completa.
+
+
+## Decisão de interface — painéis recolhíveis na área do jogador (2026-10-28)
+- Manter o formulário de compra de placas e rodadas sempre visível no início da área do jogador.
+- Recolher inicialmente todo o conteúdo abaixo do formulário em três menus expansíveis com seta e identificação clara: **Carteira digital / Saldo e saques**, **Suas apostas / Histórico dos últimos 7 dias** e **Resultados / Últimos resultados**.
+- O cabeçalho de cada painel deve explicar brevemente o que existe dentro. Tocar nele abre ou fecha o conteúdo, sem navegar para outra página.
+- A alteração organiza a interface e economiza rolagem, sem remover conteúdo ou modificar as regras funcionais dos componentes.
