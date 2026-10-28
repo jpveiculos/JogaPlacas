@@ -945,3 +945,7 @@ p, .intro, .auth-description, .area-description, .feature-card p,
 }
 
 .thermal-receipt-draw-time{font-size:9px;font-weight:800;line-height:1.3;overflow-wrap:anywhere}
+
+
+/* Marca oficial nos fluxos de pagamento Pix */
+.pix-brand-logo{display:block;width:auto;height:clamp(42px,10vw,64px);max-width:60%;object-fit:contain;margin:0 auto 12px;transform:none;filter:none}
