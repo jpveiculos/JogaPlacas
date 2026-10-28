@@ -772,7 +772,29 @@ p, .intro, .auth-description, .area-description, .feature-card p,
   height:100%;
   object-fit:fill;
 }
+/* Hide sample characters baked into the plate artwork until the user types a real plate. */
+.plate-image .plate-blank-area {
+  position:absolute;
+  z-index:1;
+  display:block;
+  background:rgba(250,251,252,.98);
+  border-radius:2px;
+  pointer-events:none;
+}
+.plate-image.plate-legacy .plate-blank-area {
+  left:8%;
+  top:40%;
+  width:84%;
+  height:48%;
+}
+.plate-image.plate-mercosur .plate-blank-area {
+  left:5%;
+  top:44%;
+  width:90%;
+  height:43%;
+}
 .plate-image .plate-characters{
+  z-index:2;
   position:absolute;
   top:52%;
   left:50%;
