@@ -3,9 +3,9 @@
  *
  * Railway cron jobs have a minimum interval of five minutes, which is too coarse
  * for minute-level opening, cutoff, and draw times. This process invokes the
- * protected scheduler endpoint every 15 seconds while explicitly enabled.
+ * protected scheduler endpoint every 5 seconds while explicitly enabled.
  */
-const SCHEDULER_INTERVAL_MS = 15_000;
+const SCHEDULER_INTERVAL_MS = 5_000;
 
 type SchedulerRuntime = typeof globalThis & {
   __jogaPlacasSchedulerStarted?: boolean;
@@ -50,7 +50,7 @@ export async function register() {
     }
   };
 
-  console.info("[round-scheduler] Automatic round scheduling enabled; checking every 15 seconds.");
+  console.info("[round-scheduler] Automatic round scheduling enabled; checking every 5 seconds.");
   const firstRun = setTimeout(() => void runScheduler(), 3_000);
   firstRun.unref?.();
   const interval = setInterval(() => void runScheduler(), SCHEDULER_INTERVAL_MS);
