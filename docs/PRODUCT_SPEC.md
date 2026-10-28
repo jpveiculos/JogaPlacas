@@ -771,3 +771,9 @@ Esta regra substitui qualquer instrução anterior que permita ao cambista pagar
 - A logomarca no cabeçalho continua centralizada, usando o componente `SiteHeader` compartilhado e sem botões ou links no cabeçalho.
 - Aceite: build sem erro; conferir no celular a página inicial, a logomarca, as duas placas ilustrativas inteiras e o início do conteúdo sem imagem gigante cortada.
 - Estado: correção de código e documentação registrada; aguarda build, deploy e verificação visual no endereço publicado.
+
+
+## Dimensões padronizadas da logomarca — 2026-10-28
+- Todas as páginas usam o cabeçalho compartilhado e a mesma imagem oficial.
+- Desktop/tablet: altura responsiva de 64–80px; celular: 60–68px (página inicial em celular: 68px); largura automática e imagem sem corte/distorção.
+- O manual técnico contém os valores CSS exatos e é a referência para futuras alterações.
