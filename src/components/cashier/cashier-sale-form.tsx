@@ -207,19 +207,17 @@ export function CashierSaleForm() {
 
   return (
     <section className="feature-card" aria-labelledby="player-purchase-heading">
-      <span className="feature-label">Nova aposta</span>
-      <h2 id="player-purchase-heading">Escolha a placa e a sequência de rodadas</h2>
-      <p>Toque em uma placa ou nas duas, digite os números e escolha as rodadas.</p>
+      <h2 id="player-purchase-heading" className="cashier-form-heading">Nova venda</h2>
       <form onSubmit={submit} className="purchase-form">
         <fieldset className="plate-format-options">
           <legend>Forma de pagamento</legend>
           <label className={paymentMethod === "PIX" ? "format-choice selected" : "format-choice"}>
             <input type="radio" name="cashierPaymentMethod" value="PIX" checked={paymentMethod === "PIX"} onChange={() => setPaymentMethod("PIX")} />
-            <span><strong>Pix</strong><br /><small>Aguardará confirmação automática</small></span>
+            <span><strong>Pix</strong></span>
           </label>
           <label className={paymentMethod === "CASH" ? "format-choice selected" : "format-choice"}>
             <input type="radio" name="cashierPaymentMethod" value="CASH" checked={paymentMethod === "CASH"} onChange={() => setPaymentMethod("CASH")} />
-            <span><strong>Dinheiro</strong><br /><small>Confirmação no ato pelo cambista</small></span>
+            <span><strong>Dinheiro</strong></span>
           </label>
         </fieldset>
         <div className="plate-pair" aria-label="Escolha uma ou as duas placas para apostar">
@@ -247,7 +245,7 @@ export function CashierSaleForm() {
           <input inputMode="decimal" value={stake} onChange={(event) => setStake(event.target.value)} placeholder="1,00" required />
         </label>
         <fieldset>
-          <legend>Sequência de rodadas (até 10, sem pular sorteios)</legend>
+          <legend>Rodadas</legend>
           {loadingRounds ? <p>Carregando rodadas…</p> : rounds.length === 0 ? <p>Não há rodadas disponíveis para compra no momento.</p> : (
             <div className="round-options round-carousel">{rounds.slice(0, 10).map((round, index) => (
               <label key={round.id} className="round-option">
@@ -256,7 +254,7 @@ export function CashierSaleForm() {
               </label>
             ))}</div>
           )}
-          {selectedRounds.length === 10 && <small>Limite de 10 rodadas por compra atingido.</small>}
+          {selectedRounds.length === 10 && <small>Limite: 10 rodadas.</small>}
         </fieldset>
         {stakeCents !== null && selectedRounds.length > 0 && <p>Total estimado: <strong>{formatMoney(stakeCents * selectedRounds.length * plateLines.length)}</strong> ({plateLines.length} placa(s), {selectedRounds.length} rodada(s)).</p>}
         <button type="submit" disabled={submitting || loadingRounds || rounds.length === 0}>{submitting ? "Registrando…" : paymentMethod === "CASH" ? "Confirmar venda em dinheiro" : "Registrar venda e preparar Pix"}</button>
