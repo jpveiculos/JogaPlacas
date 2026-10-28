@@ -789,7 +789,8 @@ p, .intro, .auth-description, .area-description, .feature-card p,
   position:absolute;
   z-index:1;
   display:block;
-  background:rgba(250,251,252,.98);
+  /* Use a transparent cutout: the plate artwork itself supplies the background color/texture. */
+  background:transparent;
   border-radius:2px;
   pointer-events:none;
 }
