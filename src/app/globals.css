@@ -864,7 +864,7 @@ p, .intro, .auth-description, .area-description, .feature-card p,
 .round-carousel>.round-option{flex:0 0 min(78vw,260px);min-width:0;scroll-snap-align:start;min-height:100px}
 .round-carousel>.round-option span{overflow-wrap:anywhere}
 .plate-add-actions{display:grid;gap:10px}
-.purchase-form button.secondary-action{justify-self:start;min-height:42px;padding:9px 16px;border:1px solid var(--border);background:var(--surface);color:var(--text)}
+.purchase-form button.secondary-action{justify-self:start;min-height:54px;padding:12px 22px;border:2px solid #34d399;border-radius:14px;background:#34d399;color:#062b22;font-size:1.05rem;font-weight:850;box-shadow:0 5px 0 #16845f,0 0 0 3px rgb(52 211 153 / 16%);transition:transform .15s ease,box-shadow .15s ease;cursor:pointer}.purchase-form button.secondary-action:hover{background:#6ee7b7;border-color:#6ee7b7;box-shadow:0 5px 0 #16845f,0 0 0 4px rgb(52 211 153 / 24%)}.purchase-form button.secondary-action:active{transform:translateY(3px);box-shadow:0 2px 0 #16845f}.purchase-form button.secondary-action:focus-visible{outline:3px solid #a7f3d0;outline-offset:4px}
 .added-plates{display:grid;gap:8px;padding:12px;border:1px solid var(--border);border-radius:12px}
 .added-plate-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--border)}
 .added-plate-row:last-child{border-bottom:0}
