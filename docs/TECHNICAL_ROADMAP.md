@@ -635,3 +635,13 @@ Esta seção prevalece sobre instruções anteriores e registros históricos des
 - Remover/manter removidas as rotas e APIs gerais de resultados públicos e a busca pública por código. Preservar a rota e API específicas de verificação por QR.
 - Não confundir remoção de UI/rotas com exclusão de dados históricos; não executar migração nem apagar dados sem plano e autorização.
 - **Validação obrigatória:** conferir o gerador do QR no recibo real, o endereço HTTPS gerado, a abertura pela câmera de um celular, o escopo de dados exibido e a ausência de funções de reemissão. Código commitado não prova teste nem deploy.
+
+
+## Fluxo de resgate de prêmio pelo QR Code — 2026-10-28
+
+- A rota de verificação específica do recibo já consulta os dados oficiais da compra, rodadas, placas, prêmios indicados e se há registro de crédito.
+- Foi adicionado à página de verificação um bloco de orientação e botão de WhatsApp quando existir prêmio indicado ainda sem crédito confirmado. A mensagem pré-preenchida leva o código do recibo, rodada, placa/formato e valor indicado, sem dados de autenticação ou pagamento sensíveis.
+- O botão depende de `NEXT_PUBLIC_PRIZE_SUPPORT_WHATSAPP`, configurado com dígitos apenas, incluindo país e DDD. O número oficial ainda precisa ser fornecido/configurado no ambiente Railway; não inferir nem inventar o número.
+- Validar após configuração: botão abre o contato oficial correto; mensagem está codificada corretamente; inclui todos os prêmios pendentes do recibo; não aparece para recibos inválidos ou sem prêmio pendente; não afirma pagamento confirmado sem registro de crédito.
+- A conversa WhatsApp é solicitação de orientação e conferência, não pagamento automático. Validar separadamente o processo operacional e a autorização para pagar prêmios de vendas de cambista, incluindo idempotência/auditoria quando aplicável.
+- Estado atual: código do botão adicionado na branch de desenvolvimento; número de atendimento não configurado por falta do número oficial confirmado; testes, build, validação ponta a ponta e deploy ainda não confirmados.
