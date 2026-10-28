@@ -752,3 +752,14 @@ Esta regra substitui qualquer instrução anterior que permita ao cambista pagar
 - A API de resultados permite acesso autenticado aos papéis PLAYER e CASHIER; continua negando usuários não autenticados, outros papéis e contas obrigadas a trocar a senha. A resposta não deve ser armazenada em cache.
 - Esta inclusão é apenas de consulta de resultados publicados: não adiciona histórico de vendas, busca de recibos, segunda via nem funções de pagamento de prêmio ao cambista.
 - **Estado:** interface e autorização do endpoint atualizadas nesta branch. Build/testes, deploy e validação visual ainda precisam ser confirmados.
+
+
+## Regra visual obrigatória — cabeçalho único em todo o site (2026-10-28)
+
+- Todas as páginas e áreas devem usar o componente compartilhado `src/components/site-header.tsx`.
+- O cabeçalho contém **somente a imagem oficial da logomarca, centralizada horizontalmente**. Não colocar menu, botão Entrar, Criar cadastro, Sair, ícone, título, usuário ou qualquer outro controle ao lado da marca.
+- A regra vale para página inicial, login, cadastro, troca de senha, consulta pública, termos de uso, verificação de recibo e áreas de jogador, cambista e administrador.
+- Links e ações necessários à navegação ficam no conteúdo da página, nunca dentro do cabeçalho. O botão Sair das áreas autenticadas permanece no rodapé, separado do cabeçalho.
+- O mesmo componente define o alinhamento e as dimensões responsivas da marca; não criar cabeçalhos paralelos nem estilos inline específicos por página. A imagem deve manter proporção, usar `object-fit: contain` e não ser cortada.
+- **Aceite:** conferir todas as rotas em celular e desktop e confirmar logomarca centralizada, sem controles no cabeçalho, mesma altura/alinhamento e sem regressão de conteúdo.
+- **Estado em 2026-10-28:** alteração aplicada ao código e documentada; build, deploy e verificação visual real ainda precisam ser confirmados.
