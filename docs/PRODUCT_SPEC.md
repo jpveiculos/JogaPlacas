@@ -744,3 +744,11 @@ Esta regra substitui qualquer instrução anterior que permita ao cambista pagar
 - Ajuste complementar: no mobile, o cartão `.feature-card[aria-label="Nova aposta"]` recebe `padding-top: 6px`, mantendo os demais lados e os tamanhos/posições dos controles inalterados.
 - Critério de aceitação: comparar a borda superior do cartão com o início do título no celular; o título deve subir visivelmente e permanecer com margem interna mínima.
 - Situação: correção CSS commitada em `src/app/globals.css`; aguardando deploy bem-sucedido e verificação visual real. Não declarar concluído antes da confirmação.
+
+## Área do cambista — menu suspenso de últimos resultados (2026-10-28)
+
+- A área do cambista deve exibir, abaixo do formulário de nova aposta e imediatamente acima do rodapé/botão **Sair**, o mesmo menu expansível **Resultados — Últimos resultados** da área do jogador.
+- O menu inicia recolhido. Ao abrir, apresenta os resultados publicados recentes com código da rodada, data/hora e as duas placas (cinza e Mercosul), reutilizando o mesmo componente visual do jogador.
+- A API de resultados permite acesso autenticado aos papéis PLAYER e CASHIER; continua negando usuários não autenticados, outros papéis e contas obrigadas a trocar a senha. A resposta não deve ser armazenada em cache.
+- Esta inclusão é apenas de consulta de resultados publicados: não adiciona histórico de vendas, busca de recibos, segunda via nem funções de pagamento de prêmio ao cambista.
+- **Estado:** interface e autorização do endpoint atualizadas nesta branch. Build/testes, deploy e validação visual ainda precisam ser confirmados.
