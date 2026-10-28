@@ -55,3 +55,10 @@ Criado em 2026-10-27 para evitar que o manual e as decisões fiquem difíceis de
 - Regra obrigatória: todas as páginas usam `src/components/site-header.tsx`; somente a logomarca oficial centralizada, sem botões, menu, ícones, usuário ou outros elementos no cabeçalho.
 - Links da página pública ficam no conteúdo; botão Sair fica no rodapé das áreas autenticadas.
 - Ver detalhes e critério de aceite em `docs/PRODUCT_SPEC.md` e `docs/TECHNICAL_ROADMAP.md`, na seção de padronização global do cabeçalho.
+
+
+## Mapa rápido do repositório
+
+Para identificar a pasta e o arquivo responsável por cada mudança, consulte a seção **“Árvore do repositório e mapa de arquivos”** em [`MANUAL_TECNICO.md`](https://github.com/jpveiculos/JogaPlacas/blob/feature/public-home-registration/MANUAL_TECNICO.md). Ela contém a árvore operacional e uma tabela de localização por funcionalidade.
+
+**Multiplicadores vigentes em 28/10/2026 (`approved-v4`):** unidade 6x, dezena 30x, centena 300x, milhar 3.000x, três letras 3.000x e placa inteira 300.000x. Não usar 9x como regra vigente; o valor histórico só é preservado nos snapshots de apostas antigas.
