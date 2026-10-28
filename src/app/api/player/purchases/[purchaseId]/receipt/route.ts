@@ -74,8 +74,9 @@ export async function GET(request: NextRequest, context: RouteContext) {
     }
 
     const isCashSale = purchase.paymentMethod === "CASH";
+    const isWalletSale = purchase.paymentMethod === "WALLET";
     if (purchase.status !== "CONFIRMED"
-      || (!isCashSale && (purchase.payment?.status !== "CONFIRMED" || !purchase.payment.confirmedAt))
+      || (!isCashSale && !isWalletSale && (purchase.payment?.status !== "CONFIRMED" || !purchase.payment.confirmedAt))
       || !purchase.receiptCode
       || !purchase.confirmedAt) {
       return NextResponse.json({ error: "O recibo oficial estará disponível após a confirmação do pagamento." }, { status: 409, headers });
