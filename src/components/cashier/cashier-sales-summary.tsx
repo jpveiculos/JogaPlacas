@@ -33,24 +33,17 @@ export function CashierSalesSummary() {
     return () => { window.clearTimeout(timer); window.clearInterval(interval); };
   }, [load]);
 
-  return <section className="feature-card" aria-labelledby="cashier-summary-heading">
-    <span className="feature-label">Meu resultado</span>
-    <h2 id="cashier-summary-heading">Vendas e comissão acumulada</h2>
+  return <section className="cashier-compact-summary" aria-label="Resumo financeiro do cambista">
     {error && <p role="alert" className="note-inline">{error}</p>}
-    {!summary ? <p>Carregando seus totais…</p> : <>
-      <div className="round-options">
-        <article className="round-option">
-          <span>Total das vendas confirmadas</span>
-          <strong>{money(summary.totalSalesCents)}</strong>
-          <p>{summary.confirmedSalesCount} venda(s) confirmada(s)</p>
-        </article>
-        <article className="round-option">
-          <span>Minha comissão acumulada</span>
-          <strong>{money(summary.commissionCents)}</strong>
-          <p>Taxa atual: {(summary.commissionRateBasisPoints / 100).toLocaleString("pt-BR", { maximumFractionDigits: 2 })}%</p>
-        </article>
-      </div>
-      <p className="note-inline">A comissão é mostrada em reais e calculada por venda confirmada, usando a taxa válida no momento da confirmação. Os totais são atualizados automaticamente.</p>
-    </>}
+    <div className="cashier-summary-grid">
+      <article className="cashier-summary-tile">
+        <span>Valor total das apostas</span>
+        <strong>{summary ? money(summary.totalSalesCents) : "—"}</strong>
+      </article>
+      <article className="cashier-summary-tile">
+        <span>Valor total da comissão</span>
+        <strong>{summary ? money(summary.commissionCents) : "—"}</strong>
+      </article>
+    </div>
   </section>;
 }
