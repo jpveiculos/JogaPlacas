@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     },
     select: { id: true, code: true, startsAt: true, cutoffAt: true, resultAt: true, status: true },
     orderBy: [{ startsAt: "asc" }, { code: "asc" }],
-    take: 100,
+    take: 10,
   });
 
   return NextResponse.json({
