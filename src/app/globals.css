@@ -784,7 +784,8 @@ p, .intro, .auth-description, .area-description, .feature-card p,
   white-space:nowrap;
   color:#111820;
   font-family:Arial,Helvetica,sans-serif;
-  font-size:clamp(1.5rem,12.45cqi,3.375rem);
+  /* One shared size for both plate formats, slightly larger than the former gray-plate lettering. */
+  font-size:clamp(1.5rem,16cqi,4.3rem);
   font-weight:900;
   letter-spacing:.025em;
   line-height:1;
@@ -792,7 +793,6 @@ p, .intro, .auth-description, .area-description, .feature-card p,
 }
 .plate-image.plate-mercosur .plate-characters{top:61%}
 .plate-image.plate-legacy .plate-characters{top:62%}
-.plate-image.plate-legacy .plate-characters{font-size:clamp(1.8rem,14.94cqi,4.05rem)}
 
 .home-brand img{display:block;width:auto;height:44px;max-width:min(230px,42vw);object-fit:contain}
 .home-footer .home-brand img{height:38px}
