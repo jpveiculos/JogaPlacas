@@ -72,7 +72,7 @@ export function PublicResultsBoard() {
   return (
     <main className="public-results-page">
       <header className="public-results-header">
-        <div className="public-results-brand">Joga<span>Placas</span></div>
+        <a href="/" className="home-brand home-wordmark" aria-label="Joga Placas — página inicial"><span className="wordmark-joga">JOGA</span><span className="wordmark-placas">PLACAS</span></a>
         <div className="public-results-title-row">
           <div><p className="public-results-eyebrow">Resultados oficiais publicados</p><h1>Resultados</h1></div>
           <div className="live-indicator"><span /> AO VIVO</div>
