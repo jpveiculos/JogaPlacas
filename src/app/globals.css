@@ -880,3 +880,42 @@ p, .intro, .auth-description, .area-description, .feature-card p,
 .cashier-summary-tile span{font-size:.78rem;line-height:1.2;color:var(--muted);font-weight:700}
 .cashier-summary-tile strong{font-size:clamp(1rem,3.5vw,1.35rem);line-height:1.15;overflow-wrap:anywhere}
 @media(max-width:360px){.cashier-summary-grid{gap:6px}.cashier-summary-tile{padding:10px}.cashier-summary-tile span{font-size:.72rem}}
+
+
+/* Compact cashier layout: brand/logout, financial tiles, then the sale form. */
+.area-page-compact .area-header{align-items:center;gap:12px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+.area-page-compact .area-header-branding{gap:0;flex:1}
+.area-page-compact .area-header-branding .home-wordmark{margin:0}
+.area-page-compact .account-controls{width:auto;justify-content:flex-end}
+.area-page-compact .area-content{padding-top:12px}
+.area-page-compact .cashier-compact-summary{margin-bottom:12px}
+.area-page-compact .cashier-summary-tile{padding:10px 12px}
+.area-page-compact .cashier-summary-tile span{font-size:.74rem}
+.area-page-compact .cashier-summary-tile strong{font-size:1.12rem}
+.area-page-compact .feature-card{max-width:none;padding:16px;border-radius:16px}
+.area-page-compact .feature-card h2{font-size:1.35rem}
+.area-page-compact .purchase-form{gap:14px;margin-top:12px}
+.area-page-compact .plate-pair{order:1}
+.area-page-compact .plate-add-actions{order:2}
+.area-page-compact .plate-add-actions>button.secondary-action{width:100%;min-height:52px;justify-self:stretch;font-size:1.02rem}
+.area-page-compact .plate-add-actions .added-plates{width:100%}
+.area-page-compact .purchase-form .plate-format-options{order:3;grid-template-columns:repeat(2,minmax(0,1fr));padding:10px;gap:8px}
+.area-page-compact .plate-format-options legend{font-size:.9rem}
+.area-page-compact .plate-format-options .format-choice{align-items:center;justify-content:center;padding:12px 8px;gap:8px}
+.area-page-compact .purchase-form>label{order:4}
+.area-page-compact .purchase-form>fieldset:not(.plate-format-options){order:5}
+.area-page-compact .purchase-form>p{order:6;margin:0}
+.area-page-compact .purchase-form>button[type=submit]{order:7;width:100%}
+.area-page-compact .purchase-form .plate-pair{display:grid;gap:12px}
+.area-page-compact .purchase-form .plate-entry{min-width:0}
+.area-page-compact .purchase-form .plate-entry .plate-visual{width:100%;max-width:none}
+@media(max-width:480px){
+ .area-page-compact .area-header{flex-direction:row}
+ .area-page-compact .area-header-branding .home-wordmark .wordmark-joga{font-size:1.55rem}
+ .area-page-compact .area-header-branding .home-wordmark .wordmark-placas{font-size:.68rem}
+ .area-page-compact .logout-button{min-height:36px;padding:6px 12px}
+ .area-page-compact .feature-card{padding:12px}
+ .area-page-compact .cashier-summary-tile{padding:9px}
+ .area-page-compact .cashier-summary-tile span{font-size:.68rem}
+ .area-page-compact .cashier-summary-tile strong{font-size:1rem}
+}
