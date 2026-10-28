@@ -1140,3 +1140,15 @@ p, .intro, .auth-description, .area-description, .feature-card p,
 /* Compacta o espaço acima do formulário do cambista em telas pequenas. */
 .area-content-compact{padding-top:8px}
 .cashier-sale-card{padding-top:10px}
+
+
+/* Cabeçalho oficial único: em todas as páginas, somente a logomarca centralizada. */
+.site-header{box-sizing:border-box;display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;width:100%;min-height:84px;margin:0 auto;padding:8px clamp(12px,3vw,24px);border-bottom:1px solid var(--border,#2b394c)}
+.site-header-brand{grid-column:2;display:flex;align-items:center;justify-content:center;width:max-content;max-width:72vw;margin:0;text-decoration:none}
+.site-header-brand img{display:block;width:auto;height:clamp(56px,12vw,72px);max-width:72vw;object-fit:contain}
+.home-page .site-header{border-bottom-color:rgba(148,163,184,.22)}
+.auth-layout{width:min(100%,1120px);min-height:100vh;margin:0 auto;padding:0 clamp(12px,3vw,24px) 28px;box-sizing:border-box}
+.auth-layout .auth-card{margin:clamp(18px,4vh,40px) auto 0}
+.site-page-shell{padding-top:0!important}
+.site-page-shell>.site-header{margin-bottom:24px}
+@media(max-width:480px){.site-header{min-height:72px;padding:6px 10px}.site-header-brand img{height:clamp(50px,14vw,62px);max-width:76vw}.auth-layout{padding-left:10px;padding-right:10px}}
