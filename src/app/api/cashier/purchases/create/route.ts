@@ -21,8 +21,11 @@ const requestSchema = z.object({
 
 export async function POST(request: NextRequest) {
   const origin = request.headers.get("origin");
-  if (origin && origin !== request.nextUrl.origin) {
-    return NextResponse.json({ error: "Requisição inválida." }, { status: 403 });
+  if (origin) {
+    let originHost = "";
+    try { originHost = new URL(origin).host.toLowerCase(); } catch { originHost = ""; }
+    const allowedHosts = [request.nextUrl.host, request.headers.get("x-forwarded-host")?.split(",")[0]?.trim(), request.headers.get("host")].filter((value): value is string => Boolean(value)).map((value) => value.toLowerCase());
+    if (!originHost || !allowedHosts.includes(originHost)) return NextResponse.json({ error: "Requisição inválida." }, { status: 403 });
   }
 
   const user = await getSessionUser(request.cookies.get(SESSION_COOKIE)?.value);
