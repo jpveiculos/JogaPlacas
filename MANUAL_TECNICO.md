@@ -35,9 +35,10 @@ Atualizado em 27/10/2026.
 - A alteração no repositório não comprova publicação no ambiente de produção. Validar CI, testes de integração e deploy antes de declarar a regra ativa no site.
 
 
-## Consulta pública por QR e recuperação de segunda via
-- O QR Code impresso no recibo abre `/verificar-recibo/{receiptCode}`, que consulta o registro oficial e mostra a situação do pagamento, as rodadas e os resultados vinculados à compra.
-- A consulta geral “Consulte sua aposta” foi removida da área do cambista para evitar duplicação: a consulta normal deve ser feita pelo QR Code do recibo.
-- A área do cambista mantém apenas a função “Perdeu o recibo? Emitir segunda via”. Permite localizar uma compra dos últimos 7 dias pelo código completo do recibo ou pela placa completa (placa cinza ou Mercosul), e então abrir/imprimir o recibo novamente.
-- A recuperação por placa é restrita às compras realizadas pelo próprio cambista autenticado; não deve ser disponibilizada como busca pública por placa. A tela mostra data, valor, placas e situação para ajudar a identificar a compra correta quando a mesma placa aparece em mais de uma venda.
-- A segunda via só pode ser emitida se o pagamento estiver confirmado e o recibo estiver dentro do prazo de validade. Não expor compra de outro cambista nem transformar uma busca por placa em acesso público aos dados da aposta.
+## Consulta de recibos e área do cambista
+- O QR Code impresso no recibo abre `/verificar-recibo/{receiptCode}`, para consultar o registro oficial, a situação do pagamento, as rodadas e os resultados vinculados à compra.
+- A consulta é somente de leitura: não permite emitir, reimprimir nem recuperar um recibo perdido.
+- Não oferecer segunda via de recibo por placa, código, pedido ao cambista ou qualquer outro fluxo. Se o recibo impresso for perdido, não há recuperação nem reemissão.
+- Na área do cambista, manter somente o formulário de registrar uma nova aposta. Remover histórico/resumo de vendas e opções de consulta de apostas, resultados e segunda via.
+- O cambista orienta o jogador a consultar o recibo original pelo QR Code impresso. A área do jogador continua separada e mantém seu próprio histórico de jogadas e consultas; essa alteração não modifica essa área.
+- A consulta pública pelo QR/código do recibo não deve oferecer botão ou endpoint de reemissão, regeneração ou impressão de uma nova via.
