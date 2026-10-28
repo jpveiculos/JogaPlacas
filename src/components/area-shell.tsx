@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { LogoutButton } from "@/components/auth/logout-button";
+import { BrandLogo } from "@/components/brand-logo";
 
 type Props = {
   title: string;
@@ -27,33 +28,14 @@ export function AreaShell({ children, compact = false }: Props) {
           paddingBottom: 2,
         }}
       >
-        <a
-          href="/"
-          aria-label="Joga Placa — página inicial"
+        <BrandLogo
           className="area-centered-logo"
-          style={{
-            gridColumn: "2",
-            gridRow: "1",
-            display: "block",
-            lineHeight: 0,
-            margin: 0,
-            zIndex: 1,
+          imageStyle={{
+            width: "auto",
+            height: "clamp(64px, 15vw, 76px)",
+            maxWidth: "72vw",
           }}
-        >
-          <img
-            src="/images/brand/joga-placa-logo.jpg"
-            alt="Joga Placa"
-            style={{
-              display: "block",
-              width: "auto",
-              height: "clamp(64px, 15vw, 76px)",
-              maxWidth: "72vw",
-              objectFit: "contain",
-              transform: "none",
-              filter: "none",
-            }}
-          />
-        </a>
+        />
       </header>
       <section className={`area-content${compact ? " area-content-compact" : ""}`}>{children}</section>
       <footer
