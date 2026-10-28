@@ -235,9 +235,6 @@ export function PlayerPurchaseForm() {
   return (
     <section className="feature-card" aria-labelledby="player-purchase-heading">
       <span className="feature-label">Nova aposta</span>
-      <h2 id="player-purchase-heading">Escolha a placa e a sequência de rodadas</h2>
-      <p>Toque em uma placa ou nas duas, digite os números e escolha as rodadas.</p>
-      <p>Saldo da conta: <strong>{walletBalanceCents === null ? "consultando…" : formatMoney(walletBalanceCents)}</strong></p>
       <form onSubmit={submit} className="purchase-form">
         <div className="plate-pair" aria-label="Escolha uma ou as duas placas para apostar">
           <div className="plate-entry plate-entry-card">
@@ -253,6 +250,7 @@ export function PlayerPurchaseForm() {
             <input ref={mercosurInputRef} className="plate-number-overlay-input" aria-label="Número da placa Mercosul" value={mercosurPlate} onChange={(event) => setMercosurPlate(sanitizePlateInput(event.target.value, "MERCOSUR"))} inputMode="text" placeholder="ABC1D23" maxLength={7} autoComplete="off" />
           </div>
         </div>
+        <p className="player-wallet-balance">Saldo da conta: <strong>{walletBalanceCents === null ? "consultando…" : formatMoney(walletBalanceCents)}</strong></p>
         <div className="plate-add-actions">
           <button type="button" className="secondary-action" onClick={addCurrentPlates}>Adicionar placa</button>
           {addedPlates.length > 0 && <div className="added-plates" aria-live="polite">
