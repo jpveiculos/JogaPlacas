@@ -33,3 +33,11 @@ Atualizado em 27/10/2026.
 - Cada compra nova grava um snapshot da versão vigente. Apostas antigas mantêm os multiplicadores registrados no snapshot original; não se reescreve o histórico ao mudar a regra.
 - Testes atualizados para confirmar que a alocação de R$ 0,20 na unidade, multiplicada por 9x, resulta em R$ 1,80 de prêmio bruto.
 - A alteração no repositório não comprova publicação no ambiente de produção. Validar CI, testes de integração e deploy antes de declarar a regra ativa no site.
+
+
+## Consulta pública por QR e recuperação de segunda via
+- O QR Code impresso no recibo abre `/verificar-recibo/{receiptCode}`, que consulta o registro oficial e mostra a situação do pagamento, as rodadas e os resultados vinculados à compra.
+- A consulta geral “Consulte sua aposta” foi removida da área do cambista para evitar duplicação: a consulta normal deve ser feita pelo QR Code do recibo.
+- A área do cambista mantém apenas a função “Perdeu o recibo? Emitir segunda via”. Permite localizar uma compra dos últimos 7 dias pelo código completo do recibo ou pela placa completa (placa cinza ou Mercosul), e então abrir/imprimir o recibo novamente.
+- A recuperação por placa é restrita às compras realizadas pelo próprio cambista autenticado; não deve ser disponibilizada como busca pública por placa. A tela mostra data, valor, placas e situação para ajudar a identificar a compra correta quando a mesma placa aparece em mais de uma venda.
+- A segunda via só pode ser emitida se o pagamento estiver confirmado e o recibo estiver dentro do prazo de validade. Não expor compra de outro cambista nem transformar uma busca por placa em acesso público aos dados da aposta.
