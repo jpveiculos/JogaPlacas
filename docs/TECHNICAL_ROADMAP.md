@@ -580,3 +580,44 @@ O componente atual src/components/receipts/thermal-receipt.tsx usa window.print(
 - A interface pública mostra separadamente: sorteio aguardando; aguardando resultado oficial; resultado publicado; rodada cancelada; placa premiada, não premiada ou ainda aguardando apuração. Só apresenta o crédito como pago quando há registro de crédito do prêmio.
 - O QR continua identificando o recibo/compra; uma compra com várias rodadas mostra cada rodada separadamente, sem misturar placas nem exigir um QR impresso por rodada.
 - **Ainda não validado:** executar typecheck, lint, testes e build; verificar o modelo de dados e os casos de borda de rodada concluída sem apuração; testar a consulta em celular e o QR impresso. Não declarar esta implementação pronta para produção até passar essas verificações.
+
+## Atualização de implementação — fluxo de placas, seletor de rodadas, carteira e ambiente de pagamentos (2026-10-28)
+
+Esta atualização registra as alterações recentes na branch `feature/public-home-registration`. O registro de código commitado não equivale a validação ponta a ponta nem a deploy publicado.
+
+### Fluxo de montagem de aposta — jogador e cambista
+- Requisito de UX: preencher a placa e clicar explicitamente em **Adicionar placa**. A placa adicionada deve aparecer numa lista separada dos campos de entrada, continuar na aposta enquanto o usuário preenche outras placas e poder ser removida antes do envio.
+- A área do jogador e a área do cambista receberam estado de placas adicionadas, botão **Adicionar placa**, lista de placas selecionadas e ação **Remover**. Ao concluir/limpar uma venda, a lista temporária também deve ser limpa.
+- O total exibido deve refletir o número de placas, o valor por placa e o número de rodadas selecionadas. O payload deve conter todas as placas adicionadas e ser validado novamente no servidor.
+- **Validação pendente:** confirmar no navegador, nas duas áreas, que uma placa adicionada não é perdida ao digitar a próxima, que placas duplicadas são tratadas conforme a regra de negócio, que remover uma placa atualiza o total e que o payload/recibo contém todas as placas e participações. A alteração de interface está commitada, mas não foi validada com testes automatizados nem manualmente no site publicado.
+
+### Rodadas — apresentação compacta
+- A interface das áreas do jogador e do cambista usa uma faixa horizontal com rolagem para reduzir a altura ocupada em telas móveis.
+- Na API e no componente do cambista, a consulta/listagem foi limitada a no máximo 10 rodadas.
+- **Validação pendente:** verificar ordenação temporal, inclusão das rodadas elegíveis, navegação por toque/teclado e se o limite não oculta uma rodada válida necessária ao fluxo. A seleção e a validação de elegibilidade continuam sendo responsabilidade do servidor.
+
+### Pagamento do jogador com saldo da conta
+- A interface passou a oferecer **Pix** ou **Saldo da conta**, mostra o saldo consultado e avisa quando ele não cobre o valor estimado.
+- A API do jogador aceita `paymentMethod: PIX | WALLET`. O serviço de compras foi alterado para tratar WALLET como confirmação interna e registrar débito no livro-razão na transação de criação da compra; o endpoint de recibo passou a aceitar uma compra WALLET confirmada sem exigir um registro de pagamento Pix.
+- **Bloqueador de validação financeira:** antes de considerar esse caminho correto, revisar a fórmula oficial de saldo disponível e os tipos/valores de lançamentos do livro-razão. O débito deve competir atomicamente com reservas de saque e outros gastos, a chave idempotente deve ter restrição única no banco, a compra deve ser revertida integralmente se o débito falhar e o saldo exibido precisa vir do mesmo cálculo usado no servidor. Não operar com dinheiro real nem declarar a carteira validada até concluir essa revisão e executar testes PostgreSQL de concorrência, saldo insuficiente, repetição, rollback e saque simultâneo.
+
+### Área do cambista — requisição inválida e recebimento
+- As rotas de criação de compra por Pix e por dinheiro foram ajustadas para validar a origem considerando o host público encaminhado pelo proxy, em vez de comparar cegamente a origem com o host interno visto pela aplicação.
+- **Atenção de segurança:** a lista de hosts confiáveis deve ser validada contra o domínio realmente configurado no ambiente. Cabeçalhos encaminhados só são confiáveis se forem controlados/normalizados pela plataforma de hospedagem; não relaxar a proteção CSRF de forma genérica.
+- A rota de dinheiro e a interface foram alteradas anteriormente para separar o fluxo CASH do Pix. Isso ainda exige teste ponta a ponta: cambista autenticado, valor recebido antes da confirmação, idempotência, comissão, recibo, venda repetida e bloqueio de origem maliciosa. Uma mensagem de sucesso não pode aparecer antes da confirmação transacional.
+
+### Mercado Pago Pix, domínio e ambiente
+- O repositório já contém código de checkout Pix/Mercado Pago, persistência do identificador da ordem, webhook autenticado por assinatura HMAC, consulta do estado canônico no provedor, comparação de referência/moeda/valor e confirmação transacional idempotente.
+- Isso comprova presença de implementação no código, **não** que o ambiente hospedado tenha credenciais válidas, domínio definitivo, webhook cadastrado ou pagamentos testados.
+- Próximas etapas obrigatórias:
+  1. Definir/confirmar o domínio que será usado e configurar a URL pública/base da aplicação no ambiente de hospedagem.
+  2. Configurar secretamente as credenciais de teste do Mercado Pago e o segredo de assinatura do webhook; nunca guardar tokens no repositório nem compartilhá-los no chat.
+  3. Cadastrar a URL pública do webhook no painel do provedor e confirmar que a assinatura recebida é validada.
+  4. Testar em homologação: criação da ordem, QR/copia-e-cola, notificação válida, duplicada, inválida, fora de ordem, pagamento recusado/expirado, valor/referência divergentes, falha temporária e confirmação/recibo únicos.
+  5. Verificar logs e reconciliação de pagamentos cujo checkout falhou após a criação no provedor.
+  6. Só depois de CI verde e aprovação explícita, planejar a configuração de produção. Não executar cobrança real nem alterar DNS/domínio/branch principal sem autorização explícita.
+- QR de cobrança Pix e QR do recibo são coisas distintas: o primeiro serve para pagar; o segundo identifica o recibo para consulta pública.
+
+### Situação da verificação
+- As alterações desta atualização foram registradas na branch `feature/public-home-registration`; não foi confirmada nesta etapa a conclusão de CI, typecheck, lint, suíte de testes, build, deploy nem teste manual no ambiente Railway.
+- O status geral é **implementação parcial em validação**, não pronto para operação financeira. Prioridades imediatas: corrigir e validar a montagem de múltiplas placas; testar a rolagem de rodadas; auditar a contabilidade do saldo e concorrência; reproduzir e verificar a correção de “Requisição inválida”; depois validar Mercado Pago em homologação.
