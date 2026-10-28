@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { BrandLogo } from "@/components/brand-logo";
+import { SiteHeader } from "@/components/site-header";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
@@ -11,14 +12,7 @@ export const metadata: Metadata = {
 export default function HomePage() {
   return (
     <div className="home-page">
-      <header className="home-header">
-        <BrandLogo className="home-brand" />
-        <nav className="home-nav" aria-label="Navegação principal">
-          <a href="#como-funciona">Como funciona</a>
-          <Link className="home-login-button" href="/login">Entrar</Link>
-          <Link className="home-login-button" href="/cadastro">Criar cadastro</Link>
-        </nav>
-      </header>
+      <SiteHeader />
 
       <section className="home-hero" aria-labelledby="home-title">
         <div className="home-hero-copy">
