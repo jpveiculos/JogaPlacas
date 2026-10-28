@@ -33,3 +33,10 @@ Repositório: [jpveiculos/JogaPlacas](https://github.com/jpveiculos/JogaPlacas)
 ## Estado conhecido deste índice
 
 Criado em 2026-10-27 para evitar que o manual e as decisões fiquem difíceis de localizar. Em 2026-10-27, a conferência das refs remotas encontrou somente `main` e `feature/public-home-registration`. O manual técnico, a especificação funcional e as decisões de produto estão disponíveis na branch oficial de desenvolvimento. `main` permanece preservada e não deve ser alterada sem autorização explícita.
+
+## Atualização automática e validade das rodadas — 2026-10-28
+- Nos formulários de compra do jogador e de venda do cambista, consultar a lista de rodadas disponíveis a cada **2 segundos**, enquanto a página estiver visível. Ao voltar à página/aba, consultar imediatamente.
+- Manter o temporizador já existente no cliente para atualizar a exibição no horário de encerramento (cutoffAt). Não adicionar um segundo mecanismo de remoção ou de limpeza da seleção que duplique a regra existente.
+- A lista retornada pelas APIs de rodadas deve conter apenas rodadas elegíveis. A filtragem visual no cliente melhora a experiência, mas não substitui a validação autoritativa no servidor.
+- **Regra obrigatória para aposta e pagamento:** antes de registrar a compra/venda e antes de iniciar ou confirmar qualquer pagamento Pix, o servidor deve revalidar, no mesmo fluxo transacional, que a primeira rodada continua aberta e que todas as rodadas selecionadas ainda aceitam apostas. Se alguma rodada tiver encerrado, recusar a operação sem registrar aposta nem gerar cobrança válida e devolver erro claro em português; o cliente deve atualizar a lista e pedir que a pessoa selecione rodadas válidas novamente. Não confiar no relógio do dispositivo nem somente no estado do carrossel.
+- A consulta a cada 2 segundos foi ajustada no código dos dois formulários. A validação ponta a ponta de concorrência entre encerramento e criação de cobrança precisa ser testada e confirmada antes de considerar o fluxo homologado.
