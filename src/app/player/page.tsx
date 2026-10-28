@@ -12,9 +12,30 @@ export default async function PlayerPage() {
   return (
     <AreaShell title="Área do jogador" username={user.username} compact logoOnlyHeader logoutAtBottom>
       <PlayerPurchaseForm />
-      <PlayerWalletWithdrawals />
-      <PlayerBetHistory />
-      <PlayerRecentResults />
+      <details className="player-collapsible-section">
+        <summary>
+          <span className="player-collapsible-label">Carteira digital</span>
+          <span className="player-collapsible-title">Saldo e saques</span>
+          <span className="player-collapsible-hint">Toque para consultar saldo, solicitar saque e ver o histórico</span>
+        </summary>
+        <PlayerWalletWithdrawals />
+      </details>
+      <details className="player-collapsible-section">
+        <summary>
+          <span className="player-collapsible-label">Suas apostas</span>
+          <span className="player-collapsible-title">Histórico dos últimos 7 dias</span>
+          <span className="player-collapsible-hint">Toque para ver suas placas, rodadas e prêmios</span>
+        </summary>
+        <PlayerBetHistory />
+      </details>
+      <details className="player-collapsible-section">
+        <summary>
+          <span className="player-collapsible-label">Resultados</span>
+          <span className="player-collapsible-title">Últimos resultados</span>
+          <span className="player-collapsible-hint">Toque para consultar os sorteios publicados</span>
+        </summary>
+        <PlayerRecentResults />
+      </details>
     </AreaShell>
   );
 }
