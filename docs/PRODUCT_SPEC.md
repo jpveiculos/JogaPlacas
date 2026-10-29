@@ -805,3 +805,11 @@ Esta regra substitui qualquer instrução anterior que permita ao cambista pagar
 - O painel administrativo oferece um menu recolhível **Últimos resultados**, fechado por padrão, que mostra até 10 sorteios publicados mais recentes, incluindo código da rodada, data/hora e as placas cinza e Mercosul.
 - Reutilizar a visualização existente de resultados e permitir somente acesso autenticado. Esta seção é adicional à gestão de rodadas e não substitui os controles operacionais do administrador.
 - Estado: código registrado na branch de desenvolvimento; build, testes e implantação não confirmados.
+
+
+## Ajuste vigente — logomarca proporcional no cabeçalho (2026-10-29)
+- Esta regra substitui os tamanhos maiores documentados anteriormente para o cabeçalho compartilhado.
+- Cabeçalho com altura mínima de 74 px em desktop/tablet e 64 px em celular (até 480 px).
+- Logomarca centralizada, sem distorção: altura responsiva de 54–66 px em desktop/tablet e 54 px em celular; largura automática, limitada a 72vw/76vw e 320 px no desktop.
+- Manter `object-fit: contain`, sem recorte nem esticamento. O ajuste vale globalmente para página pública, login, cadastro e áreas autenticadas por meio de `SiteHeader`/`BrandLogo` compartilhados.
+- Implementado no CSS global da branch `feature/public-home-registration`. Build, deploy e inspeção visual em celular/desktop ainda precisam ser confirmados.
