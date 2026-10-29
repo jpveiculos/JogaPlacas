@@ -20,7 +20,7 @@ export function AreaShell({ children, compact = false, footerContent }: Props) {
       <section className={`area-content${compact ? " area-content-compact" : ""}`}>{children}</section>
       <footer
         className="area-logout-footer"
-        style={{ display: "flex", justifyContent: "center", padding: "24px 0 32px" }}
+        style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "24px 0 32px", width: "100%" }}
       >
         {footerContent}
         <LogoutButton />
