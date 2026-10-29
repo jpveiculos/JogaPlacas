@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
-const logo = "/images/brand/joga-placa-logo.jpg";
+const logo = "/images/brand/iconi-getal.PNG";
 
 export const metadata: Metadata = {
   title: {
@@ -16,9 +16,9 @@ export const metadata: Metadata = {
     title: "Joga Placa",
   },
   icons: {
-    icon: [{ url: logo, type: "image/jpeg" }],
-    apple: [{ url: logo, type: "image/jpeg" }],
-    shortcut: [{ url: logo, type: "image/jpeg" }],
+    icon: [{ url: logo, type: "image/png" }],
+    apple: [{ url: logo, type: "image/png" }],
+    shortcut: [{ url: logo, type: "image/png" }],
   },
   openGraph: {
     type: "website",
@@ -26,7 +26,7 @@ export const metadata: Metadata = {
     siteName: "Joga Placa",
     title: "Joga Placa",
     description: "Consulte recibos e acompanhe os resultados publicados.",
-    images: [{ url: logo, alt: "Logomarca Joga Placa" }],
+    images: [{ url: logo, alt: "Ícone Joga Placa" }],
   },
   twitter: {
     card: "summary_large_image",
