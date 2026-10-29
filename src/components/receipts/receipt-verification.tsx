@@ -150,6 +150,33 @@ export function ReceiptVerification({ receiptCode }: { receiptCode: string }) {
                   ))}
                 </div>
               )}
+              {round.plates.length > 0 && (
+                <div style={{ marginTop: 12 }}>
+                  <strong style={{ display: "block", color: "#111827", marginBottom: 6 }}>Suas placas</strong>
+                  <div style={{ display: "grid", gap: 6 }}>
+                    {round.plates.map((plate, index) => {
+                      const status = plate.resultStatus === "PREMIADA"
+                        ? (plate.prizePaid ? "Prêmio pago" : "Premiada")
+                        : plate.resultStatus === "NAO_PREMIADA"
+                          ? "Não premiada"
+                          : plate.resultStatus === "AGUARDANDO_APURACAO"
+                            ? "Apuração pendente"
+                            : "Aguardando resultado";
+                      const statusColor = plate.resultStatus === "PREMIADA"
+                        ? "#166534"
+                        : plate.resultStatus === "NAO_PREMIADA"
+                          ? "#991b1b"
+                          : "#854d0e";
+                      return (
+                        <div key={`${round.roundCode}-${plate.plateDisplay}-${index}`} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8, padding: "8px 10px", borderRadius: 6, background: "#f3f4f6", border: "1px solid #d1d5db" }}>
+                          <strong style={{ color: "#111827", fontSize: 16 }}>{plate.plateDisplay}</strong>
+                          <span style={{ color: statusColor, fontWeight: 800, fontSize: 14 }}>{status}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </article>
           )) : <p style={{ color: "#374151" }}>Nenhuma rodada confirmada para este recibo.</p>}
         </>
