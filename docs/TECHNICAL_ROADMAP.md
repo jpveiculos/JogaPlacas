@@ -774,3 +774,9 @@ A limpeza final das branches deve ocorrer somente após comparar arquivos/commit
 - Requisito aprovado: menu suspenso recolhido por padrão, no rodapé acima de Sair, com dois cards: saldo total das apostas/vendas confirmadas e saldo total de comissão confirmada do cambista autenticado.
 - Implementado na branch `feature/public-home-registration`: endpoint existente `GET /api/cashier/summary`, componente `CashierSalesSummary`, integração via `footerContent` em `AreaShell` e CSS responsivo.
 - Pendente: validar typecheck/lint/testes/build, conferir atualização automática e erro de API, testar em celular/desktop e confirmar deploy no Hydro. Não declarar publicado antes da validação.
+
+
+## Painel administrativo — formulário manual de rodadas (2026-10-29)
+- O formulário de criação manual foi ocultado da interface, mantendo seu JSX e lógica no componente para uso futuro.
+- A listagem e as operações de administração de rodadas foram preservadas.
+- Pendente: validar CI/build e deploy, e confirmar no painel publicado que apenas o formulário manual deixou de aparecer.
