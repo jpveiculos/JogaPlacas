@@ -326,3 +326,10 @@ Este procedimento é obrigatório para solicitações futuras, não apenas para 
 - Clicar no cabeçalho abre/fecha o conteúdo; o controle deve funcionar por toque em celular e por teclado, com foco visível. O texto secundário explica a finalidade de cada seção.
 - A mudança é apenas de apresentação: não remover módulos, formulários, endpoints, permissões ou lógica de negócio. A criação manual de rodadas permanece preservada e oculta conforme regra anterior.
 - Implementação registrada em `src/app/admin/page.tsx` e estilos em `src/app/globals.css` na branch `feature/public-home-registration`. Validar build, deploy e comportamento responsivo antes de considerar publicado.
+
+
+## Painel administrativo — menu suspenso de últimos resultados (2026-10-29)
+- Acrescentado menu **Últimos resultados**, fechado por padrão, no painel administrativo, junto das demais seções recolhíveis.
+- Reutiliza o componente `PlayerRecentResults`, exibindo até 10 rodadas concluídas com as duas placas e data/hora.
+- A API `GET /api/player/results` passa a permitir também o papel `ADMIN`, mantendo autenticação, resultados publicados e cache privado sem armazenamento.
+- A mudança reaproveita o componente e a API existentes; não cria lógica duplicada de resultados. Validar autorização, lint/typecheck/testes/build e deploy antes de considerar publicado.
