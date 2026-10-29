@@ -18,7 +18,8 @@
     "db:studio": "prisma studio",
     "test:postgres": "vitest run src/modules/purchases/create-purchase.postgres.integration.test.ts src/lib/auth/login-rate-limit.postgres.integration.test.ts src/modules/rounds/settle-round-prizes.postgres.integration.test.ts",
     "test:migration-backfill": "node scripts/test-dual-plate-migration.mjs",
-    "admin:provision": "npx --yes tsx@4.20.6 scripts/provision-admin.mjs"
+    "admin:provision": "npx --yes tsx@4.20.6 scripts/provision-admin.mjs",
+    "admin:recover": "node scripts/recover-admin.mjs"
   },
   "dependencies": {
     "@prisma/adapter-pg": "7.10.1",
