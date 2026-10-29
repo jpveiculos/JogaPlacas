@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authPrisma } from "@/lib/auth/session";
+import { calculateLinePrizeCents } from "@/modules/rounds/settle-round-prizes";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -44,6 +45,15 @@ export async function GET(_request: NextRequest, context: RouteContext) {
               select: {
                 plateDisplay: true,
                 plateFormat: true,
+                normalizedPlate: true,
+                unitCents: true,
+                tensCents: true,
+                hundredsCents: true,
+                thousandsCents: true,
+                lettersCents: true,
+                fullPlateCents: true,
+                ruleVersion: true,
+                ruleSnapshot: true,
                 prizeCents: true,
                 prizeCreditedAt: true,
               },
@@ -95,19 +105,39 @@ export async function GET(_request: NextRequest, context: RouteContext) {
           resultAt: round.resultAt.toISOString(),
           resultLegacyPlate: completed ? round.resultLegacyPlate : null,
           resultMercosurPlate: completed ? round.resultMercosurPlate : null,
-          plates: participation.lines.map((line) => ({
-            plateDisplay: line.plateDisplay,
-            plateFormat: line.plateFormat,
-            resultStatus: !completed
-              ? "AGUARDANDO"
-              : (line.prizeCents ?? 0) > 0
-                ? "PREMIADA"
-                : line.prizeCents === 0
-                  ? "NAO_PREMIADA"
+          plates: participation.lines.map((line) => {
+            let calculatedPrizeCents: number | null = null;
+            if (completed && round.resultLegacyPlate && round.resultMercosurPlate) {
+              try {
+                calculatedPrizeCents = calculateLinePrizeCents({
+                  plateFormat: line.plateFormat,
+                  normalizedPlate: line.normalizedPlate,
+                  unitCents: line.unitCents,
+                  tensCents: line.tensCents,
+                  hundredsCents: line.hundredsCents,
+                  thousandsCents: line.thousandsCents,
+                  lettersCents: line.lettersCents,
+                  fullPlateCents: line.fullPlateCents,
+                  ruleVersion: line.ruleVersion,
+                  ruleSnapshot: line.ruleSnapshot,
+                }, round.resultLegacyPlate, round.resultMercosurPlate);
+              } catch {
+                // Never guess a result if the historical bet/rules are inconsistent.
+              }
+            }
+            const prizeCents = line.prizeCents ?? calculatedPrizeCents;
+            return {
+              plateDisplay: line.plateDisplay,
+              plateFormat: line.plateFormat,
+              resultStatus: !completed
+                ? "AGUARDANDO"
+                : prizeCents !== null
+                  ? prizeCents > 0 ? "PREMIADA" : "NAO_PREMIADA"
                   : "AGUARDANDO_APURACAO",
-            prizeCents: completed && (line.prizeCents ?? 0) > 0 ? line.prizeCents : null,
-            prizePaid: Boolean(line.prizeCreditedAt),
-          })),
+              prizeCents: completed && prizeCents !== null && prizeCents > 0 ? prizeCents : null,
+              prizePaid: Boolean(line.prizeCreditedAt),
+            };
+          }),
         };
       }),
       message: "Recibo registrado e pagamento confirmado no sistema oficial.",
