@@ -104,3 +104,12 @@ Os módulos administrativos ficam em menus suspensos com seta, fechados por padr
 - O painel administrativo também deve ter um menu recolhível **Últimos resultados**, fechado por padrão, mostrando até 10 resultados publicados com placa cinza, placa Mercosul e data/hora.
 - Reutilizar o componente existente de resultados e permitir acesso autenticado de administrador à API de resultados; não duplicar regras nem expor resultados a usuários sem sessão.
 - Estado: implementação registrada na branch `feature/public-home-registration`; build, testes e deploy ainda precisam ser confirmados.
+
+
+## Auditoria estrutural mais recente — 2026-10-29
+
+A revisão da estrutura e o registro das últimas mudanças estão em:
+- [MANUAL_TECNICO.md — auditoria estrutural e atualizações de interface](https://github.com/jpveiculos/JogaPlacas/blob/feature/public-home-registration/MANUAL_TECNICO.md)
+- [docs/TECHNICAL_ROADMAP.md — auditoria estrutural pós-ajustes visuais](https://github.com/jpveiculos/JogaPlacas/blob/feature/public-home-registration/docs/TECHNICAL_ROADMAP.md)
+
+Pontos que não devem ser tratados como concluídos sem evidência: execução recorrente do agendador no host; migrações/provisionamento no banco de desenvolvimento; homologação ponta a ponta Mercado Pago; CI, lint, typecheck, testes e build do commit atual; inspeção visual do painel administrativo no computador; e envio da nova imagem de alta resolução para `public/images/brand/como-funciona-duas-placas.PNG`. Domínio/DNS e publicação ficam para a etapa posterior autorizada pelo responsável.
