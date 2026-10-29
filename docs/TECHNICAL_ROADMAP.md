@@ -780,3 +780,9 @@ A limpeza final das branches deve ocorrer somente após comparar arquivos/commit
 - O formulário de criação manual foi ocultado da interface, mantendo seu JSX e lógica no componente para uso futuro.
 - A listagem e as operações de administração de rodadas foram preservadas.
 - Pendente: validar CI/build e deploy, e confirmar no painel publicado que apenas o formulário manual deixou de aparecer.
+
+
+## Painel administrativo recolhível — 2026-10-29
+- Implementado agrupamento visual de módulos em menus suspensos com seta, fechados por padrão, na branch `feature/public-home-registration`.
+- Módulos: rodadas/sorteios, prêmios/carteira digital, controle financeiro/saques, cadastro/gestão de cambistas.
+- Pendente: lint/typecheck/testes/build, revisão visual em celular e desktop e confirmação do deploy.
