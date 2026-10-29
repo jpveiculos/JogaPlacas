@@ -1417,3 +1417,24 @@ p, .intro, .auth-description, .area-description, .feature-card p,
   .admin-page-layout .round-actions button,
   .admin-page-layout .round-options button{flex:1 1 140px}
 }
+
+
+/* Resultados públicos expansíveis na página inicial. */
+.home-public-results{width:100%;margin-top:24px;border:1px solid #34465c;border-radius:20px;background:#0c1b2d;color:#f3f8ff;overflow:hidden}
+.home-public-results>summary{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:86px;padding:20px 24px;cursor:pointer;list-style:none;font-size:clamp(1.3rem,4.8vw,1.8rem);font-weight:800}
+.home-public-results>summary::-webkit-details-marker{display:none}
+.home-public-results>summary:focus-visible{outline:3px solid #59d5f2;outline-offset:-4px}
+.home-results-chevron{display:grid;place-items:center;width:42px;height:42px;flex:0 0 auto;border:1px solid #59d5f2;border-radius:50%;color:#59d5f2;font-size:1.8rem;line-height:1;transition:transform .2s ease}
+.home-public-results[open] .home-results-chevron{transform:rotate(180deg)}
+.home-public-results-content{padding:0 24px 24px}
+.home-public-results-description{margin:0 0 18px;color:#c6d4e5;font-size:1.05rem}
+.home-public-results-list{display:grid;gap:16px}
+.home-public-result{padding:18px;border:1px solid #334b65;border-radius:14px;background:#10243a}
+.home-public-result-heading{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px;margin-bottom:14px;font-size:1.05rem}
+.home-public-result-heading time{color:#c6d4e5;font-size:.95rem}
+.home-public-result-plates{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.home-public-result-plates>div{display:grid;align-content:start;gap:9px;min-width:0}
+.home-public-result-plates>div>span{font-size:.95rem;font-weight:800}
+.home-public-result-plates .plate-visual{width:100%;max-width:340px}
+@media(max-width:600px){.home-public-results>summary{min-height:78px;padding:17px 18px}.home-public-results-content{padding:0 16px 18px}.home-public-result{padding:13px}.home-public-result-plates{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){.home-results-chevron{transition:none}}
