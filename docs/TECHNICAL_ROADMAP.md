@@ -763,3 +763,9 @@ A limpeza final das branches deve ocorrer somente após comparar arquivos/commit
 - Critério de aceite: provocar pelo menos um erro de validação local, um erro devolvido pela API e um sucesso em cada fluxo crítico; em tela pequena, a mensagem deve aparecer logo abaixo do botão acionado sem exigir rolar até o topo. Verificar leitor de tela/atributos ARIA e estado de carregamento/desabilitação do botão.
 - Implementação registrada nesta alteração: CSS global padroniza mensagens `role="alert"` em vermelho e `role="status"` em verde; o cadastro de cambistas, criação manual de rodadas, login, cadastro público e troca de senha exibem feedback abaixo do botão/ação. Os formulários de compra/venda já exibiam seus avisos após o formulário e passam a receber o padrão global de cores.
 - Estado: alterações de código/documentação commitadas na branch `feature/public-home-registration`. A padronização completa de todos os formulários e ações administrativas restantes, bem como lint, typecheck, testes, build, deploy e validação visual em celular/desktop, ainda precisa ser auditada antes de declarar a tarefa integralmente concluída.
+
+
+### Auditoria do fuso horário das rodadas — 29/10/2026
+- Divergência confirmada entre manual e código: o manual exigia `Etc/GMT+3` (Brasília UTC−03:00), enquanto o endpoint do agendador declarava `America/Sao_Paulo`; o deploy mostrou esse identificador antigo nos logs.
+- Correção aplicada na branch `feature/public-home-registration`: agendador e teste passam a usar `Etc/GMT+3`. Ambos os identificadores tinham o mesmo offset atual UTC−03:00; portanto, a evidência aponta inconsistência de implementação/documentação, não prova de desvio de horário ou de um remendo de compensação.
+- Pendente: CI/testes, deploy do commit e confirmação nos logs do valor `Etc/GMT+3`.
