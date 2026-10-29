@@ -3,12 +3,17 @@ import { AdminRoundManager } from "@/components/admin/admin-round-manager";
 import { AdminPrizeCreditReconciliation } from "@/components/admin/admin-prize-credit-reconciliation";
 import { AdminWithdrawalManager } from "@/components/admin/admin-withdrawal-manager";
 import { AdminCashierManager } from "@/components/admin/admin-cashier-manager";
+import { PlayerRecentResults } from "@/components/player/player-recent-results";
 import { requireRole } from "@/lib/auth/require-role";
 export const dynamic = "force-dynamic";
 export default async function AdminPage() {
   const user = await requireRole("ADMIN");
   return <AreaShell title="Administração" username={user.username} description="Configuração e supervisão da plataforma.">
     <div className="admin-accordion-list">
+      <details className="admin-accordion">
+        <summary><span>Últimos resultados</span><span className="admin-accordion-description">Consultar os 10 sorteios publicados mais recentes</span></summary>
+        <div className="admin-accordion-content"><PlayerRecentResults /></div>
+      </details>
       <details className="admin-accordion">
         <summary><span>Rodadas e sorteios</span><span className="admin-accordion-description">Consultar rodadas e resultados</span></summary>
         <div className="admin-accordion-content"><AdminRoundManager /></div>
