@@ -270,3 +270,14 @@ Este procedimento é obrigatório para solicitações futuras, não apenas para 
 - Histórico consultado: as decisões anteriores registravam uma tentativa com `max-height: 100px` e, depois, proposta de cabeçalho aproximado de 76px/logo até 76px na área autenticada. O CSS compartilhado mais recente havia reduzido a imagem a 56px na página inicial móvel e 50–62px nas demais telas pequenas. Para unificar e evitar a marca pequena, o padrão atual passa a ser os valores responsivos acima.
 - Ao alterar dimensões no futuro, atualizar esta seção e o CSS compartilhado; conferir visualmente jogador, cambista, administrador e página inicial em celular e desktop.
 - Estado: padrão documentado e CSS atualizado; aguarda build/deploy e confirmação visual no site publicado.
+
+
+## Implantação no Hydro — migrações e provisionamento inicial (2026-10-29)
+
+- O erro `The table public.LoginAttemptBucket does not exist` indica que a aplicação acessou o banco antes de a migração correspondente estar aplicada. O modelo `LoginAttemptBucket` existe em `prisma/schema.prisma` e sua migração versionada é `prisma/migrations/20261024010000_login_rate_limit/migration.sql`.
+- O arquivo `railway.json` contém `preDeployCommand`, mas essa configuração é específica do Railway e não deve ser considerada um hook de pré-deploy do Hydro.
+- Para garantir a ordem no Hydro, o script `build` passa a executar, nesta ordem: validação do schema, geração do Prisma Client, `prisma migrate deploy`, provisionamento idempotente do primeiro administrador e build do Next.js.
+- O provisionamento exige `DATABASE_URL`. Se ainda não existir administrador, também exige `ADMIN_USERNAME`, `ADMIN_INITIAL_PASSWORD` com pelo menos 6 caracteres e `CONFIRM_ADMIN_PROVISIONING=CREATE_FIRST_ADMIN`. Se já existir administrador, o script não altera a conta nem a senha.
+- Não usar `prisma migrate reset`, não apagar o banco e não criar a tabela manualmente. As migrações versionadas são a fonte de verdade.
+- Configurar as variáveis no serviço de aplicação Hydro, incluindo a conexão interna correta do PostgreSQL. As variáveis precisam estar disponíveis durante o build, pois a migração e o provisionamento passam a acontecer nessa etapa.
+- **Estado da alteração:** correção registrada no repositório. Ainda é necessário confirmar o novo build/deploy no Hydro, verificar nos logs que as migrações terminaram com sucesso e testar o login. A edição do repositório, sozinha, não comprova que o banco foi atualizado.
