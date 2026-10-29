@@ -726,3 +726,27 @@ Esta regra substitui qualquer instrução anterior que permita ao cambista pagar
 - A seção logo abaixo chama-se **“Como funciona”** e esclarece que uma única aposta na placa concorre automaticamente às seis categorias: unidade, dezena, centena, milhar, três letras e placa inteira.
 - O infográfico comparando placa cinza e Mercosul deve ficar em `public/images/brand/como-funciona-duas-placas.PNG` e é referenciado no JSX por `/images/brand/como-funciona-duas-placas.PNG`. O CSS mantém a proporção, largura responsiva e sem corte.
 - **Dependência de arquivo:** a imagem ainda precisa ser adicionada ao caminho acima no repositório antes que apareça no site. Não declarar a seção visual concluída nem validar deploy até confirmar o arquivo e o build.
+
+
+## Git, deploy novo na AcquaCloud Hydro e bootstrap do administrador — 2026-10-29
+
+### Branch oficial e diretório raiz
+
+- A branch de desenvolvimento de referência continua sendo `feature/public-home-registration`. A aplicação nova do Hydro deve apontar para `jpveiculos/JogaPlacas`, branch `feature/public-home-registration`, com Pasta/Root Directory vazio. O projeto Next.js e o `package.json` estão na raiz; selecionar `apps/api` faria a plataforma procurar o projeto no local errado.
+- Não usar `main` como branch de trabalho nem a branch `fix/hydro-admin-recovery` como fonte completa do site. Evitar criar branches de correção isoladas; consolidar mudanças aprovadas na branch oficial, atualizar este manual e verificar os testes antes de declarar concluído.
+
+### Diferença entre provisionamento e recuperação
+
+- `scripts/provision-admin.mjs` na branch oficial cria o primeiro administrador somente se não houver nenhum administrador. Requer `DATABASE_URL`, `ADMIN_USERNAME`, `ADMIN_INITIAL_PASSWORD` e `CONFIRM_ADMIN_PROVISIONING=CREATE_FIRST_ADMIN`. A senha inicial aceita mínimo de 6 caracteres; o sistema gera o hash e define `mustChangePassword=true`. Se já existir administrador, não altera conta nem senha.
+- `scripts/recover-admin.mjs` na branch `fix/hydro-admin-recovery` é uma ferramenta separada de recuperação de senha de um administrador já existente. Exige `ADMIN_RECOVERY_USERNAME`, `ADMIN_RECOVERY_PASSWORD` e `CONFIRM_ADMIN_RECOVERY=RESET_EXISTING_ADMIN`; não cria o primeiro administrador. Não executar no banco vazio para tentar provisionar a conta.
+- Para o banco novo do Hydro, depois de confirmar a branch oficial e configurar as variáveis de runtime necessárias, executar as migrações e seguir o procedimento de provisionamento inicial documentado em `scripts/provision-admin.mjs`. Não copiar os exemplos genéricos de ORM/campos encontrados em pesquisas: o modelo vigente usa Prisma e o schema real do Joga Placas.
+
+### Auditoria de branches em 2026-10-29
+
+- `fix/hydro-admin-recovery`: divergiu da branch oficial por 2 commits em cada direção; diferença identificada: `scripts/recover-admin.mjs` adicionado e script `admin:recover` no `package.json`. Útil para recuperação de conta existente, mas não substitui o provisionamento inicial.
+- `fix/railway-bootstrap-and-password-minimum`: 7 commits exclusivos e 286 commits atrás da branch oficial; inclui documentos específicos do Railway e alterações de autenticação/provisionamento. Não mesclar a branch inteira automaticamente.
+- `fix/railway-bootstrap-audit`: 8 commits exclusivos e 291 commits atrás; inclui roteiro de deploy Railway e outras alterações de autenticação. Não mesclar a branch inteira automaticamente.
+- `main`: 1067 commits atrás da branch oficial na comparação consultada. Preservar sem alterações até autorização explícita de publicação.
+- `feature/public-home-registration`: branch de referência para o site completo e a documentação vigente.
+
+A limpeza final das branches deve ocorrer somente após comparar arquivos/commits, integrar apenas mudanças ainda úteis, confirmar que a branch oficial contém a versão desejada e executar validações. Não excluir branches antes dessa conferência e não relatar merge/testes/deploy como concluídos sem evidência verificável.
