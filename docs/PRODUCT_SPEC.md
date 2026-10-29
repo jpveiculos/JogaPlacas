@@ -799,3 +799,9 @@ Esta regra substitui qualquer instrução anterior que permita ao cambista pagar
 - Usar `GET /api/cashier/summary`, autenticado e restrito ao papel `CASHIER`; nenhum dado de outro cambista pode ser exposto.
 - Esta decisão substitui a instrução anterior que removia todo resumo financeiro. Continuam proibidos histórico detalhado, consulta de apostas individuais, segunda via/reimpressão e pagamento ou baixa de prêmios pelo cambista.
 - Estado: componente e integração no rodapé implementados na branch `feature/public-home-registration`; testes, build e deploy ainda precisam de confirmação.
+
+
+## Painel administrativo — últimos resultados em menu suspenso (2026-10-29)
+- O painel administrativo oferece um menu recolhível **Últimos resultados**, fechado por padrão, que mostra até 10 sorteios publicados mais recentes, incluindo código da rodada, data/hora e as placas cinza e Mercosul.
+- Reutilizar a visualização existente de resultados e permitir somente acesso autenticado. Esta seção é adicional à gestão de rodadas e não substitui os controles operacionais do administrador.
+- Estado: código registrado na branch de desenvolvimento; build, testes e implantação não confirmados.
