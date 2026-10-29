@@ -8,7 +8,10 @@ COPY package.json package-lock.json ./
 RUN npm ci
 
 COPY . .
-RUN npm run build
+
+# Prisma config requires DATABASE_URL during validation/generation.
+# This local placeholder is build-only; runtime uses the real Railway variable.
+RUN DATABASE_URL="postgresql://build:build@127.0.0.1:5432/build" npm run build
 
 ENV NODE_ENV=production
 ENV HOSTNAME=0.0.0.0
