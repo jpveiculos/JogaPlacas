@@ -1258,3 +1258,82 @@ p, .intro, .auth-description, .area-description, .feature-card p,
 .admin-accordion-content{padding:0 12px 14px;min-width:0}
 .admin-accordion-content>*{min-width:0}
 @media(max-width:480px){.admin-accordion-list{gap:9px}.admin-accordion>summary{padding:13px 42px 13px 13px}.admin-accordion-content{padding:0 8px 10px}}
+
+
+/* Página pública enxuta: infográfico e apenas as duas ações de acesso. */
+.home-entry{
+  width:min(100%,760px);
+  margin:0 auto;
+  padding:clamp(18px,4vw,32px) clamp(14px,3vw,24px) 36px;
+}
+.home-entry>.home-eyebrow{
+  margin:0 0 14px;
+  color:#55d4ef;
+  font-size:clamp(1rem,3vw,1.2rem);
+  font-weight:800;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+}
+.home-entry .home-how-infographic{
+  margin:0;
+  padding:clamp(7px,2vw,12px);
+  border:1px solid #d7e3ef;
+  border-radius:clamp(14px,3vw,22px);
+  background:#07172b;
+  box-shadow:0 16px 42px rgb(0 0 0 / 18%);
+}
+.home-entry .home-how-infographic img{
+  display:block;
+  width:100%;
+  height:auto;
+  border-radius:12px;
+  object-fit:contain;
+}
+.home-entry .home-how-infographic figcaption{
+  padding:clamp(12px,3vw,20px) 8px 8px;
+  color:#e6f2ff;
+  text-align:center;
+  font-size:clamp(.98rem,3.4vw,1.18rem);
+  line-height:1.6;
+}
+.home-entry-actions{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+  margin-top:22px;
+}
+.home-entry-actions>a{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-width:0;
+  min-height:58px;
+  padding:14px 18px;
+  border:1px solid transparent;
+  border-radius:15px;
+  text-align:center;
+  text-decoration:none;
+  font-size:1.05rem;
+  font-weight:800;
+  line-height:1.25;
+  box-shadow:0 8px 20px rgb(0 0 0 / 18%);
+  transition:transform .16s ease,filter .16s ease,box-shadow .16s ease;
+}
+.home-entry-actions>a:hover{transform:translateY(-2px);filter:brightness(1.06);box-shadow:0 12px 24px rgb(0 0 0 / 24%)}
+.home-entry-actions>a:focus-visible{outline:3px solid #fff;outline-offset:3px}
+.home-entry-login{
+  background:linear-gradient(135deg,#65e0f4,#39bedb);
+  color:#07172b;
+}
+.home-entry-register{
+  background:linear-gradient(135deg,#16834b,#0d6939);
+  color:#fff;
+  border-color:rgba(134,239,172,.35)!important;
+}
+@media(max-width:420px){
+  .home-entry-actions{grid-template-columns:1fr;gap:10px;margin-top:16px}
+  .home-entry-actions>a{min-height:54px}
+}
+@media(prefers-reduced-motion:reduce){
+  .home-entry-actions>a{transition:none}
+}
