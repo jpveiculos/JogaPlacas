@@ -46,7 +46,7 @@ export function PublicRecentResults() {
         <span className="home-results-chevron" aria-hidden="true">⌄</span>
       </summary>
       <div className="home-public-results-content">
-        <p className="home-public-results-description">Confira os sorteios concluídos nas últimas 24 horas.</p>
+        <p className="home-public-results-description">Sorteios concluídos nas últimas 24 horas.</p>
         {loading ? <p>Carregando resultados…</p>
           : error ? <p role="alert">{error}</p>
           : results.length === 0 ? <p>Ainda não há resultados publicados nas últimas 24 horas.</p>
