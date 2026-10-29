@@ -333,3 +333,11 @@ Este procedimento é obrigatório para solicitações futuras, não apenas para 
 - Reutiliza o componente `PlayerRecentResults`, exibindo até 10 rodadas concluídas com as duas placas e data/hora.
 - A API `GET /api/player/results` passa a permitir também o papel `ADMIN`, mantendo autenticação, resultados publicados e cache privado sem armazenamento.
 - A mudança reaproveita o componente e a API existentes; não cria lógica duplicada de resultados. Validar autorização, lint/typecheck/testes/build e deploy antes de considerar publicado.
+
+
+## Ajuste vigente — logomarca proporcional no cabeçalho (2026-10-29)
+- Esta regra substitui os tamanhos maiores documentados anteriormente para o cabeçalho compartilhado.
+- Cabeçalho com altura mínima de 74 px em desktop/tablet e 64 px em celular (até 480 px).
+- Logomarca centralizada, sem distorção: altura responsiva de 54–66 px em desktop/tablet e 54 px em celular; largura automática, limitada a 72vw/76vw e 320 px no desktop.
+- Manter `object-fit: contain`, sem recorte nem esticamento. O ajuste vale globalmente para página pública, login, cadastro e áreas autenticadas por meio de `SiteHeader`/`BrandLogo` compartilhados.
+- Implementado no CSS global da branch `feature/public-home-registration`. Build, deploy e inspeção visual em celular/desktop ainda precisam ser confirmados.
