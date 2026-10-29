@@ -143,7 +143,7 @@ JogaPlacas/
 - Remover a página geral de resultados públicos, a busca pública por código digitado e a API geral de resultados públicos. A conferência do recibo deve começar pelo QR Code impresso.
 - A consulta do recibo é somente de leitura: não permite emitir, reimprimir nem recuperar um recibo perdido.
 - Não oferecer segunda via de recibo por placa, código, pedido ao cambista ou qualquer outro fluxo. Se o recibo impresso for perdido, não há recuperação nem reemissão.
-- Na área do cambista, manter somente o formulário de registrar uma nova aposta. Remover histórico/resumo de vendas e opções de consulta de apostas, resultados e segunda via.
+- Na área do cambista, manter o formulário de registrar uma nova aposta e o menu suspenso financeiro definido na decisão vigente abaixo. Remover histórico detalhado de vendas e opções de consulta de apostas individuais, segunda via ou reimpressão. A antiga instrução de remover todo resumo financeiro foi substituída pela decisão mais recente.
 - O cambista orienta o jogador a consultar o recibo original pelo QR Code impresso. A área do jogador continua separada e mantém seu próprio histórico de jogadas e consultas; essa alteração não modifica essa área.
 - A página pública específica do QR e a API de verificação devem continuar disponíveis para validar o código do recibo, sem incluir reemissão, regeneração ou impressão de uma nova via.
 
@@ -301,3 +301,13 @@ Este procedimento é obrigatório para solicitações futuras, não apenas para 
 - Não foi encontrada evidência de um “remendo” que mudasse o horário do servidor; o problema confirmado era uma divergência entre a regra documentada e o identificador IANA usado pelo agendador. Atualmente ambos representam UTC−03:00, mas a implementação deve seguir a regra explícita do manual para evitar ambiguidade e manter a árvore consistente.
 - Correção registrada na branch de desenvolvimento: o agendador agora usa `Etc/GMT+3` e os nomes auxiliares referem-se a Brasília; o teste de unidade foi alinhado com essa regra.
 - Esta alteração ainda precisa passar por testes/CI e novo deploy para que os logs de produção confirmem `timeZone: 'Etc/GMT+3'`. Não considerar a correção implantada apenas porque foi commitada.
+
+
+## Área do cambista — resumo financeiro em menu suspenso (decisão vigente, 2026-10-29)
+- Exibir na área do cambista um menu recolhível chamado **Resumo do cambista**, no rodapé, imediatamente acima do botão **Sair**. Deve iniciar fechado para não ocupar espaço no formulário de venda.
+- Ao abrir, mostrar duas janelas/cards lado a lado: **Saldo total das apostas** e **Saldo total da comissão**. Em telas estreitas, permitir que os cards empilhem sem cortar valores.
+- O total de apostas soma somente vendas confirmadas do cambista autenticado. A comissão soma os registros oficiais de comissão das vendas confirmadas do mesmo cambista. Não calcular com dados fornecidos pelo navegador nem expor dados de outros cambistas.
+- Valores em reais (BRL), atualização automática a cada 30 segundos e consulta ao carregar. Enquanto carrega, mostrar estado de carregamento; em falha, exibir erro visível no próprio menu.
+- Reutilizar `GET /api/cashier/summary`, autenticado e restrito ao papel `CASHIER`, com `Cache-Control: no-store, private`.
+- Esta decisão substitui a instrução anterior de remover todo resumo financeiro. Não reintroduzir histórico de vendas, busca de recibos, segunda via, reimpressão ou pagamento/baixa de prêmios pelo cambista.
+- Implementação registrada na branch `feature/public-home-registration`: componente `CashierSalesSummary` no rodapé de `AreaShell`, acima de Sair; estilos responsivos adicionados ao CSS global. Validar build/testes e deploy antes de considerar publicado.
