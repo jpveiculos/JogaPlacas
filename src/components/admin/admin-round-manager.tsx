@@ -100,7 +100,16 @@ export function AdminRoundManager() {
     <span className="feature-label">Operação</span>
     <h2 id="admin-rounds-heading">Rodadas e resultados</h2>
     <p>As ações são verificadas novamente no servidor. O sorteio só fica disponível após o fechamento e no horário programado; a apuração exige os dois resultados publicados.</p>
-    {/* Formulário de criação manual preservado no código, mas oculto no painel administrativo. */}
+    {false && (
+      <form className="admin-round-create" onSubmit={createRound}>
+        <h3>Criar uma rodada</h3>
+        <p>Informe os horários no horário de Brasília <strong>(UTC−03:00)</strong>. O início deve ser 29 minutos antes do resultado, que acontece nos minutos :00 ou :30. O sistema fecha as apostas um minuto antes do sorteio.</p>
+        <label>Início da rodada <input type="datetime-local" value={startsAtInput} onChange={(event) => setStartsAtInput(event.target.value)} required /></label>
+        <label>Horário do resultado <input type="datetime-local" value={resultAtInput} onChange={(event) => setResultAtInput(event.target.value)} required /></label>
+        <button type="submit" disabled={busy !== null}>{busy === "create" ? "Criando…" : "Criar rodada"}</button>
+      </form>
+    )}
+
 
     <div className="form-feedback-slot" aria-live="polite">
       {error && <p role="alert" className="note-inline form-feedback-error" aria-live="assertive">{error}</p>}
