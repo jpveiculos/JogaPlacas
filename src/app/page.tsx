@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { SiteHeader } from "@/components/site-header";
+import { PublicRecentResults } from "@/components/public-recent-results";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
@@ -28,6 +29,7 @@ export default function HomePage() {
           <Link className="home-entry-login" href="/login">Entrar</Link>
           <Link className="home-entry-register" href="/cadastro">Criar conta</Link>
         </nav>
+        <PublicRecentResults />
       </main>
     </div>
   );
