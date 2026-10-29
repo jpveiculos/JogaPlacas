@@ -72,3 +72,9 @@ Para identificar a pasta e o arquivo responsável por cada mudança, consulte a 
 - Comparação de refs em 2026-10-29: `fix/hydro-admin-recovery` divergiu da branch oficial por 2 commits em cada direção e acrescenta `scripts/recover-admin.mjs` e a entrada `admin:recover` em `package.json`. As branches `fix/railway-bootstrap-and-password-minimum` e `fix/railway-bootstrap-audit` estão muito defasadas/divergentes (286 e 291 commits atrás, respectivamente) e contêm documentação/alterações específicas do Railway; não as mesclar integralmente. `main` está 1067 commits atrás da branch oficial na comparação consultada; preservá-la até uma decisão explícita de publicação.
 - Política de limpeza: comparar commits e arquivos antes de excluir qualquer branch; preservar as mudanças úteis na branch oficial, atualizar este manual, executar testes e só então remover branches redundantes. Não criar branches adicionais para correções pequenas; consolidar na branch oficial autorizada. Não apagar branches automaticamente antes de verificar o resultado da consolidação.
 - Estado operacional: o script de recuperação da branch Hydro foi inspecionado, mas sua integração e testes devem ser confirmados no GitHub antes de declarar concluídos. Não confundir criação inicial de administrador com redefinição de senha de um administrador já existente.
+
+
+## Implantação no Hydro — 2026-10-29
+- O build da aplicação aplica as migrações Prisma antes de iniciar o site e executa o provisionamento idempotente do primeiro administrador. Ver procedimento e requisitos em `MANUAL_TECNICO.md`.
+- A configuração `preDeployCommand` de `railway.json` é específica do Railway; não presumir que o Hydro a execute.
+- Não resetar nem apagar o banco para corrigir tabelas ausentes. Confirmar logs de migração e login após o deploy.
