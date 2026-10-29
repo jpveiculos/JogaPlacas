@@ -90,3 +90,7 @@ Para identificar a pasta e o arquivo responsável por cada mudança, consulte a 
 - Acima do botão **Sair**, exibir o menu suspenso **Resumo do cambista**, inicialmente fechado.
 - Ao abrir, mostrar dois cards: **Saldo total das apostas** e **Saldo total da comissão**, calculados somente com vendas/comissões confirmadas do cambista autenticado.
 - A regra vigente e os critérios técnicos estão em `MANUAL_TECNICO.md` e `docs/PRODUCT_SPEC.md`. Essa decisão substitui a instrução antiga de remover todo resumo financeiro, mas não permite histórico detalhado, segunda via nem pagamento de prêmios pelo cambista.
+
+
+## Administração — criação manual de rodadas
+O formulário de criação manual de rodadas fica oculto da interface administrativa, porque o agendador cria as rodadas automaticamente. O formulário e sua lógica devem permanecer no código para possível reativação futura; não apagar o componente nem a lógica. A listagem e as demais operações de rodadas permanecem disponíveis.
