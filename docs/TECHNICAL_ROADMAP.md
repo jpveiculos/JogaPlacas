@@ -800,3 +800,34 @@ A limpeza final das branches deve ocorrer somente após comparar arquivos/commit
 - Logomarca centralizada, sem distorção: altura responsiva de 54–66 px em desktop/tablet e 54 px em celular; largura automática, limitada a 72vw/76vw e 320 px no desktop.
 - Manter `object-fit: contain`, sem recorte nem esticamento. O ajuste vale globalmente para página pública, login, cadastro e áreas autenticadas por meio de `SiteHeader`/`BrandLogo` compartilhados.
 - Implementado no CSS global da branch `feature/public-home-registration`. Build, deploy e inspeção visual em celular/desktop ainda precisam ser confirmados.
+
+
+## Auditoria estrutural pós-ajustes visuais — 2026-10-29
+
+### Mudanças recentes registradas
+- Homepage em `src/app/page.tsx`: título visível “Como funciona o jogo das placas”; texto explicando as seis categorias; apenas os botões Entrar e Criar conta abaixo do infográfico; estilos responsivos em `src/app/globals.css`.
+- Imagem explicativa servida de `public/images/brand/como-funciona-duas-placas.PNG`. A nova arte com QR Code da placa Mercosul ainda precisa ser adicionada/versionada no repositório; a geração no chat não altera os arquivos da aplicação.
+- Painel administrativo: regras CSS de alinhamento responsivo adicionadas para os acordeões, cartões, formulários, campos e botões. O ajuste deve preservar a funcionalidade e ser validado principalmente em desktop, que foi o ambiente em que o desalinhamento foi relatado.
+- Verificação do recibo: foi corrigida a divergência entre decisão e código em `src/components/receipts/receipt-verification.tsx`; o resultado geral usa **APOSTA PREMIADA** / **APOSTA NÃO PREMIADA**, mantendo o resultado individual de cada placa.
+
+### Estado estrutural encontrado
+- As rotas e componentes das áreas pública, jogador, cambista e administrador existem na branch.
+- O modelo Prisma inclui compras, participações, pagamentos, eventos de webhook, lançamentos financeiros, comissões e saques; existem módulos de regras de placas/prêmios, compras, rodadas e pagamentos.
+- Existe endpoint protegido de agendamento `POST /api/internal/round-scheduler`, que cria rodadas futuras e processa abertura, fechamento e sorteio. **A existência do endpoint não comprova que o cron do provedor esteja configurado e executando.**
+- O código contém integração Mercado Pago/Pix em etapas, incluindo criação de cobrança e webhook; a integração só pode ser considerada homologada após testes ponta a ponta com credenciais de teste e conferência de eventos, idempotência, cutoff e reconciliação. Não ativar cobrança real com base apenas na existência de variáveis ou código.
+
+### Pendências que ainda precisam de evidência
+1. CI, lint, typecheck, testes unitários/integrados, testes PostgreSQL e build do commit mais recente.
+2. Migrações e provisionamento/login do administrador confirmados no banco de desenvolvimento.
+3. Execução recorrente do agendador confirmada por configuração e logs do serviço de hospedagem.
+4. Homologação Mercado Pago em sandbox, incluindo assinatura inválida, eventos repetidos/fora de ordem, valor divergente, pagamento tardio, estados negativos e falhas transacionais.
+5. Teste completo compra → confirmação de pagamento → participação elegível → recibo/QR → resultado por formato → apuração → crédito sem duplicidade; testar também compra presencial do cambista sem pagamento de prêmio pelo cambista.
+6. Revisão de autorização por papel e segurança operacional.
+7. Inspeção visual em desktop e celular, especialmente painel administrativo no desktop.
+8. Substituição/versionamento da imagem explicativa de alta resolução com QR Code correto da placa Mercosul.
+
+### Fora do escopo desta etapa
+- Alteração de domínio/DNS e publicação em produção ficam para uma etapa posterior, conforme solicitado.
+- Não executar migrações destrutivas, reset de banco, cobranças reais ou mudanças de produção nesta auditoria.
+
+**Status desta auditoria:** leitura comparativa da branch e da documentação concluída; documentação atualizada. Não significa que todos os testes, a homologação do provedor ou o deploy foram executados.
