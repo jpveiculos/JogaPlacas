@@ -777,3 +777,16 @@ Esta regra substitui qualquer instrução anterior que permita ao cambista pagar
 - Todas as páginas usam o cabeçalho compartilhado e a mesma imagem oficial.
 - Desktop/tablet: altura responsiva de 64–80px; celular: 60–68px (página inicial em celular: 68px); largura automática e imagem sem corte/distorção.
 - O manual técnico contém os valores CSS exatos e é a referência para futuras alterações.
+
+
+## Padrão obrigatório de mensagens em formulários — 2026-10-29
+
+- Toda mensagem de validação, erro de API ou falha de operação deve ficar visível **imediatamente abaixo do botão/ação que a pessoa acabou de acionar**, dentro do mesmo formulário ou bloco de ação. Nunca deixar o único aviso no topo de um cartão/formulário longo, onde pode ficar fora da tela em celulares.
+- Erros usam vermelho com contraste alto, fundo/borda de erro e semântica acessível `role="alert"` (com anúncio assertivo quando apropriado). Sucessos usam verde com contraste alto, fundo/borda de sucesso e `role="status"`/anúncio educado. Não diferenciar estado apenas pela cor: o texto precisa explicar o que ocorreu.
+- Mensagens devem usar o mesmo espaço visual e alinhamento abaixo do botão, ocupar a largura disponível, quebrar linhas longas e funcionar em celular e desktop. Não usar alertas do navegador como substituto do feedback dentro da página.
+- Após sucesso, atualizar a lista/estado exibido quando aplicável e mostrar confirmação explícita. Após falha, preservar os dados digitados para permitir correção; não indicar sucesso antes da confirmação do servidor.
+- A regra vale para todos os formulários e ações mutáveis do site: login, cadastro, troca de senha, criação/edição de cambistas, gestão de rodadas, saques, formulários de compra/venda, Pix/carteira e qualquer formulário futuro.
+- Componentes reutilizáveis devem manter as mesmas cores, espaçamento, semântica e localização. Evitar mensagens duplicadas no topo e no rodapé do formulário.
+- Critério de aceite: provocar pelo menos um erro de validação local, um erro devolvido pela API e um sucesso em cada fluxo crítico; em tela pequena, a mensagem deve aparecer logo abaixo do botão acionado sem exigir rolar até o topo. Verificar leitor de tela/atributos ARIA e estado de carregamento/desabilitação do botão.
+- Implementação registrada nesta alteração: CSS global padroniza mensagens `role="alert"` em vermelho e `role="status"` em verde; o cadastro de cambistas, criação manual de rodadas, login, cadastro público e troca de senha exibem feedback abaixo do botão/ação. Os formulários de compra/venda já exibiam seus avisos após o formulário e passam a receber o padrão global de cores.
+- Estado: alterações de código/documentação commitadas na branch `feature/public-home-registration`. A padronização completa de todos os formulários e ações administrativas restantes, bem como lint, typecheck, testes, build, deploy e validação visual em celular/desktop, ainda precisa ser auditada antes de declarar a tarefa integralmente concluída.
