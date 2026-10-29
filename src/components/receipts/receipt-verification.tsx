@@ -32,7 +32,7 @@ type VerifiedReceipt = {
 };
 
 const roundStatusLabels: Record<VerifiedRound["status"], string> = {
-  SORTEIO_AGUARDANDO: "Em andamento",
+  SORTEIO_AGUARDANDO: "Aguardando sorteio",
   AGUARDANDO_RESULTADO_OFICIAL: "Aguardando resultado",
   RESULTADO_PUBLICADO: "Publicado",
   RODADA_CANCELADA: "Cancelada",
@@ -109,7 +109,7 @@ export function ReceiptVerification({ receiptCode }: { receiptCode: string }) {
       ? "BILHETE PREMIADO"
       : noPrize
         ? "BILHETE NÃO PREMIADO"
-        : "RESULTADO PENDENTE";
+        : "RESULTADO";
   const overallColor = !data.valid || noPrize ? "#b91c1c" : hasPrize ? "#15803d" : "#92400e";
 
   return (
@@ -161,12 +161,14 @@ export function ReceiptVerification({ receiptCode }: { receiptCode: string }) {
                           ? "Não premiada"
                           : plate.resultStatus === "AGUARDANDO_APURACAO"
                             ? "Apuração pendente"
-                            : "Aguardando resultado";
+                            : round.status === "SORTEIO_AGUARDANDO"
+                              ? "Aguardando sorteio"
+                              : "Aguardando resultado";
                       const statusColor = plate.resultStatus === "PREMIADA"
                         ? "#166534"
                         : plate.resultStatus === "NAO_PREMIADA"
                           ? "#991b1b"
-                          : "#854d0e";
+                          : "#1d4ed8";
                       return (
                         <div key={`${round.roundCode}-${plate.plateDisplay}-${index}`} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8, padding: "8px 10px", borderRadius: 6, background: "#f3f4f6", border: "1px solid #d1d5db" }}>
                           <strong style={{ color: "#111827", fontSize: 16 }}>{plate.plateDisplay}</strong>
