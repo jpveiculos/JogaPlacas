@@ -790,3 +790,12 @@ Esta regra substitui qualquer instrução anterior que permita ao cambista pagar
 - Critério de aceite: provocar pelo menos um erro de validação local, um erro devolvido pela API e um sucesso em cada fluxo crítico; em tela pequena, a mensagem deve aparecer logo abaixo do botão acionado sem exigir rolar até o topo. Verificar leitor de tela/atributos ARIA e estado de carregamento/desabilitação do botão.
 - Implementação registrada nesta alteração: CSS global padroniza mensagens `role="alert"` em vermelho e `role="status"` em verde; o cadastro de cambistas, criação manual de rodadas, login, cadastro público e troca de senha exibem feedback abaixo do botão/ação. Os formulários de compra/venda já exibiam seus avisos após o formulário e passam a receber o padrão global de cores.
 - Estado: alterações de código/documentação commitadas na branch `feature/public-home-registration`. A padronização completa de todos os formulários e ações administrativas restantes, bem como lint, typecheck, testes, build, deploy e validação visual em celular/desktop, ainda precisa ser auditada antes de declarar a tarefa integralmente concluída.
+
+
+## Decisão vigente — resumo financeiro do cambista em menu suspenso (2026-10-29)
+- A área do cambista deve conter um menu recolhível **Resumo do cambista**, no rodapé, imediatamente acima do botão **Sair**; começa fechado para manter o formulário de venda compacto.
+- Ao abrir, mostrar duas janelas: **Saldo total das apostas** e **Saldo total da comissão**, lado a lado quando houver espaço e empilhadas em telas muito estreitas.
+- O saldo das apostas soma vendas confirmadas do cambista autenticado. A comissão vem dos registros oficiais associados às vendas confirmadas desse mesmo cambista. Valores em BRL; atualizar a cada 30 segundos e ao carregar. Mostrar carregamento e erro visível no próprio menu.
+- Usar `GET /api/cashier/summary`, autenticado e restrito ao papel `CASHIER`; nenhum dado de outro cambista pode ser exposto.
+- Esta decisão substitui a instrução anterior que removia todo resumo financeiro. Continuam proibidos histórico detalhado, consulta de apostas individuais, segunda via/reimpressão e pagamento ou baixa de prêmios pelo cambista.
+- Estado: componente e integração no rodapé implementados na branch `feature/public-home-registration`; testes, build e deploy ainda precisam de confirmação.
