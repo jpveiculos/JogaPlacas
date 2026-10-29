@@ -786,3 +786,9 @@ A limpeza final das branches deve ocorrer somente após comparar arquivos/commit
 - Implementado agrupamento visual de módulos em menus suspensos com seta, fechados por padrão, na branch `feature/public-home-registration`.
 - Módulos: rodadas/sorteios, prêmios/carteira digital, controle financeiro/saques, cadastro/gestão de cambistas.
 - Pendente: lint/typecheck/testes/build, revisão visual em celular e desktop e confirmação do deploy.
+
+
+## Painel administrativo — últimos resultados (2026-10-29)
+- Implementado na branch `feature/public-home-registration`: novo acordeão **Últimos resultados** no painel administrativo, fechado por padrão, usando o componente existente `PlayerRecentResults`.
+- A API de resultados foi ajustada para aceitar sessão autenticada de administrador, além de jogador e cambista. Resultados limitam-se a rodadas concluídas com ambas as placas publicadas; a interface exibe até 10.
+- Pendente: verificar CI, testes de autorização (ADMIN/PLAYER/CASHIER e não autenticado), typecheck, lint, build, responsividade e deploy no Hydro.
