@@ -769,3 +769,8 @@ A limpeza final das branches deve ocorrer somente após comparar arquivos/commit
 - Divergência confirmada entre manual e código: o manual exigia `Etc/GMT+3` (Brasília UTC−03:00), enquanto o endpoint do agendador declarava `America/Sao_Paulo`; o deploy mostrou esse identificador antigo nos logs.
 - Correção aplicada na branch `feature/public-home-registration`: agendador e teste passam a usar `Etc/GMT+3`. Ambos os identificadores tinham o mesmo offset atual UTC−03:00; portanto, a evidência aponta inconsistência de implementação/documentação, não prova de desvio de horário ou de um remendo de compensação.
 - Pendente: CI/testes, deploy do commit e confirmação nos logs do valor `Etc/GMT+3`.
+
+## Resumo financeiro do cambista — 2026-10-29
+- Requisito aprovado: menu suspenso recolhido por padrão, no rodapé acima de Sair, com dois cards: saldo total das apostas/vendas confirmadas e saldo total de comissão confirmada do cambista autenticado.
+- Implementado na branch `feature/public-home-registration`: endpoint existente `GET /api/cashier/summary`, componente `CashierSalesSummary`, integração via `footerContent` em `AreaShell` e CSS responsivo.
+- Pendente: validar typecheck/lint/testes/build, conferir atualização automática e erro de API, testar em celular/desktop e confirmar deploy no Hydro. Não declarar publicado antes da validação.
