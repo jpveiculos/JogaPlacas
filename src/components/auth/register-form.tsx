@@ -47,8 +47,8 @@ export function RegisterForm() {
       <p id="password-help" className="password-requirement">A senha deve ter pelo menos 6 caracteres.</p>
       <label htmlFor="confirm-password">Confirme sua senha</label>
       <input id="confirm-password" name="confirm-password" type="password" autoComplete="new-password" minLength={6} maxLength={1024} value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} required />
-      {error ? <p className="form-error" role="alert">{error}</p> : null}
       <button className="primary-button" type="submit" disabled={isSubmitting}>{isSubmitting ? "Criando conta..." : "Criar minha conta"}</button>
+      {error ? <p className="form-error form-feedback-error" role="alert" aria-live="assertive">{error}</p> : null}
     </form>
   );
 }
