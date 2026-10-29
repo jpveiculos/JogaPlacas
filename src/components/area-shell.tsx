@@ -10,9 +10,10 @@ type Props = {
   logoOnlyHeader?: boolean;
   logoutAtBottom?: boolean;
   children: ReactNode;
+  footerContent?: ReactNode;
 };
 
-export function AreaShell({ children, compact = false }: Props) {
+export function AreaShell({ children, compact = false, footerContent }: Props) {
   return (
     <main className={`area-page${compact ? " area-page-compact" : ""}`}>
       <SiteHeader />
@@ -21,6 +22,7 @@ export function AreaShell({ children, compact = false }: Props) {
         className="area-logout-footer"
         style={{ display: "flex", justifyContent: "center", padding: "24px 0 32px" }}
       >
+        {footerContent}
         <LogoutButton />
       </footer>
     </main>
