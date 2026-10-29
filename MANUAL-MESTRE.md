@@ -84,3 +84,9 @@ Para identificar a pasta e o arquivo responsável por cada mudança, consulte a 
 - Regra obrigatória: mensagens de erro em vermelho e sucesso em verde, com texto claro e atributos acessíveis; sempre imediatamente abaixo do botão/ação acionado, nunca somente no topo de formulários longos.
 - Aplicar a todos os formulários e ações mutáveis do site, inclusive login/cadastro, cambistas, rodadas, saques, compras/vendas e pagamentos. Preservar dados preenchidos após falha e só confirmar sucesso após resposta positiva do servidor.
 - Detalhes, critério de aceite e estado de implementação: consultar a seção “Padrão obrigatório de mensagens em formulários — 2026-10-29” em `MANUAL_TECNICO.md`, `docs/PRODUCT_SPEC.md` e `docs/TECHNICAL_ROADMAP.md`.
+
+
+## Área do cambista — resumo financeiro (2026-10-29)
+- Acima do botão **Sair**, exibir o menu suspenso **Resumo do cambista**, inicialmente fechado.
+- Ao abrir, mostrar dois cards: **Saldo total das apostas** e **Saldo total da comissão**, calculados somente com vendas/comissões confirmadas do cambista autenticado.
+- A regra vigente e os critérios técnicos estão em `MANUAL_TECNICO.md` e `docs/PRODUCT_SPEC.md`. Essa decisão substitui a instrução antiga de remover todo resumo financeiro, mas não permite histórico detalhado, segunda via nem pagamento de prêmios pelo cambista.
