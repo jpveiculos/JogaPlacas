@@ -31,12 +31,11 @@ type VerifiedReceipt = {
   message: string;
 };
 
-const paymentLabels: Record<string, string> = { CASH: "Dinheiro", PIX: "Pix", WALLET: "Carteira" };
 const roundStatusLabels: Record<VerifiedRound["status"], string> = {
   SORTEIO_AGUARDANDO: "Em andamento",
-  AGUARDANDO_RESULTADO_OFICIAL: "Aguardando resultado oficial",
+  AGUARDANDO_RESULTADO_OFICIAL: "Aguardando resultado",
   RESULTADO_PUBLICADO: "Publicado",
-  RODADA_CANCELADA: "Rodada cancelada",
+  RODADA_CANCELADA: "Cancelada",
 };
 
 function formatDate(value: string) {
@@ -67,7 +66,7 @@ export function ReceiptVerification({ receiptCode }: { receiptCode: string }) {
         if (active) setData(body);
       } catch {
         if (active && !requestController.signal.aborted) {
-          setData({ valid: false, message: "Não foi possível verificar agora. Confira sua conexão e tente novamente." });
+          setData({ valid: false, message: "Não foi possível consultar. Tente novamente." });
         }
       } finally {
         if (active) setLoading(false);
@@ -93,11 +92,8 @@ export function ReceiptVerification({ receiptCode }: { receiptCode: string }) {
     };
   }, [receiptCode]);
 
-  const money = (cents: number, currency = "BRL") =>
-    new Intl.NumberFormat("pt-BR", { style: "currency", currency }).format(cents / 100);
-
-  if (loading) return <p role="status">Consultando o registro oficial do recibo…</p>;
-  if (!data) return <p role="alert">Não foi possível consultar o recibo.</p>;
+  if (loading) return <p role="status" style={{ color: "#111827", fontWeight: 700 }}>Consultando recibo…</p>;
+  if (!data) return <p role="alert" style={{ color: "#b91c1c", fontWeight: 700 }}>Não foi possível consultar o recibo.</p>;
 
   const rounds = data.valid ? data.rounds ?? [] : [];
   const hasPrize = rounds.some((round) => round.plates.some((plate) => plate.resultStatus === "PREMIADA"));
@@ -117,42 +113,45 @@ export function ReceiptVerification({ receiptCode }: { receiptCode: string }) {
   const overallColor = !data.valid || noPrize ? "#b91c1c" : hasPrize ? "#15803d" : "#92400e";
 
   return (
-    <section aria-live="polite" style={{ border: "1px solid #d1d5db", borderRadius: 12, padding: 20, background: "#fff", color: "#111827" }}>
-      <div style={{ padding: "14px 12px", borderRadius: 8, background: overallColor, color: "#fff", textAlign: "center", marginBottom: 20 }}>
-        <h2 style={{ margin: 0, fontSize: 20 }}>{overallLabel}</h2>
+    <section aria-live="polite" style={{ border: "2px solid #9ca3af", borderRadius: 10, padding: 16, background: "#ffffff", color: "#111827", fontSize: 16, lineHeight: 1.5 }}>
+      <div style={{ padding: "13px 10px", borderRadius: 7, background: overallColor, color: "#ffffff", textAlign: "center", marginBottom: 16 }}>
+        <h2 style={{ margin: 0, fontSize: 21, fontWeight: 800, letterSpacing: "0.02em" }}>{overallLabel}</h2>
       </div>
-      {!data.valid && <p role="alert">{data.message}</p>}
-      <p><strong>Código do recibo:</strong> {data.receiptCode ?? receiptCode.toUpperCase()}</p>
+      {!data.valid && <p role="alert" style={{ color: "#991b1b", fontWeight: 700 }}>{data.message}</p>}
+      <p style={{ margin: "0 0 16px", fontSize: 16, color: "#111827" }}><strong>Recibo:</strong> {data.receiptCode ?? receiptCode.toUpperCase()}</p>
+
       {data.valid && (
         <>
-          <p><strong>Valor registrado:</strong> {money(data.totalCents ?? 0, data.currency ?? "BRL")}</p>
-          <p><strong>Pagamento:</strong> {paymentLabels[data.paymentMethod ?? ""] ?? "Confirmado"}</p>
-          {data.confirmedAt && <p><strong>Pagamento confirmado em:</strong> {formatDate(data.confirmedAt)}</p>}
-
-          <h3>Resultados das rodadas</h3>
+          <h3 style={{ margin: "0 0 10px", fontSize: 19, color: "#111827", fontWeight: 800 }}>Resultados</h3>
           {rounds.length ? rounds.map((round) => (
-            <article key={round.roundCode} style={{ border: "1px solid #d1d5db", borderRadius: 8, padding: 14, marginTop: 12 }}>
-              <p><strong>Código da rodada:</strong> {round.roundCode}</p>
-              <p><strong>Situação:</strong> {roundStatusLabels[round.status]}</p>
-              <p><strong>Horário:</strong> {formatDate(round.resultAt)}</p>
+            <article key={round.roundCode} style={{ border: "1px solid #9ca3af", borderRadius: 8, padding: 13, marginTop: 10, background: "#ffffff", color: "#111827" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8, marginBottom: 8 }}>
+                <strong style={{ fontSize: 17, color: "#111827" }}>{round.roundCode}</strong>
+                <span style={{
+                  display: "inline-block",
+                  borderRadius: 5,
+                  padding: "3px 8px",
+                  fontSize: 14,
+                  fontWeight: 800,
+                  color: round.status === "RESULTADO_PUBLICADO" ? "#166534" : round.status === "RODADA_CANCELADA" ? "#991b1b" : "#854d0e",
+                  background: round.status === "RESULTADO_PUBLICADO" ? "#dcfce7" : round.status === "RODADA_CANCELADA" ? "#fee2e2" : "#fef3c7",
+                }}>{roundStatusLabels[round.status]}</span>
+              </div>
+              <p style={{ margin: "0 0 10px", color: "#374151", fontSize: 14 }}><strong>Horário:</strong> {formatDate(round.resultAt)}</p>
               {round.status === "RESULTADO_PUBLICADO" && (
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-                  <div>
-                    <strong>Placa sorteada</strong>
-                    <div style={{ marginTop: 6, padding: "10px 6px", border: "1px solid #9ca3af", borderRadius: 6, textAlign: "center", fontSize: 18, fontWeight: 700 }}>
-                      {round.resultLegacyPlate ?? "—"}
+                  {[round.resultLegacyPlate, round.resultMercosurPlate].map((plate, index) => (
+                    <div key={index}>
+                      <strong style={{ display: "block", fontSize: 13, color: "#374151", marginBottom: 4 }}>Placa sorteada</strong>
+                      <div style={{ padding: "11px 5px", border: "2px solid #6b7280", borderRadius: 6, textAlign: "center", fontSize: 19, color: "#111827", fontWeight: 800, background: "#f9fafb", overflowWrap: "anywhere" }}>
+                        {plate ?? "—"}
+                      </div>
                     </div>
-                  </div>
-                  <div>
-                    <strong>Placa sorteada</strong>
-                    <div style={{ marginTop: 6, padding: "10px 6px", border: "1px solid #9ca3af", borderRadius: 6, textAlign: "center", fontSize: 18, fontWeight: 700 }}>
-                      {round.resultMercosurPlate ?? "—"}
-                    </div>
-                  </div>
+                  ))}
                 </div>
               )}
             </article>
-          )) : <p>Não há rodadas confirmadas vinculadas a este recibo.</p>}
+          )) : <p style={{ color: "#374151" }}>Nenhuma rodada confirmada para este recibo.</p>}
         </>
       )}
     </section>
