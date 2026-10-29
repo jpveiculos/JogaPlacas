@@ -1441,8 +1441,8 @@ p, .intro, .auth-description, .area-description, .feature-card p,
 
 
 /* Padrão único para telas de computador: conteúdo amplo e tipografia consistente.
-   As regras mobile existentes continuam valendo abaixo deste breakpoint. */
-@media (min-width: 900px) {
+   As regras mobile e impressão existentes continuam valendo fora deste breakpoint. */
+@media screen and (min-width: 900px) {
   .area-page,
   .auth-layout,
   .site-page-shell,
