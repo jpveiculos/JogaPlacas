@@ -1,5 +1,4 @@
 import { AreaShell } from "@/components/area-shell";
-import { AdminRoundManager } from "@/components/admin/admin-round-manager";
 import { AdminPrizeCreditReconciliation } from "@/components/admin/admin-prize-credit-reconciliation";
 import { AdminWithdrawalManager } from "@/components/admin/admin-withdrawal-manager";
 import { AdminCashierManager } from "@/components/admin/admin-cashier-manager";
@@ -14,10 +13,6 @@ export default async function AdminPage() {
       <details className="admin-accordion">
         <summary><span>Últimos resultados</span><span className="admin-accordion-description">Consultar os 10 sorteios publicados mais recentes</span></summary>
         <div className="admin-accordion-content"><PlayerRecentResults /></div>
-      </details>
-      <details className="admin-accordion">
-        <summary><span>Rodadas e sorteios</span><span className="admin-accordion-description">Consultar rodadas e resultados</span></summary>
-        <div className="admin-accordion-content"><AdminRoundManager /></div>
       </details>
       <details className="admin-accordion">
         <summary><span>Prêmios e carteira digital</span><span className="admin-accordion-description">Conferência e reconciliação de créditos</span></summary>
