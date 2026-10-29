@@ -311,3 +311,10 @@ Este procedimento é obrigatório para solicitações futuras, não apenas para 
 - Reutilizar `GET /api/cashier/summary`, autenticado e restrito ao papel `CASHIER`, com `Cache-Control: no-store, private`.
 - Esta decisão substitui a instrução anterior de remover todo resumo financeiro. Não reintroduzir histórico de vendas, busca de recibos, segunda via, reimpressão ou pagamento/baixa de prêmios pelo cambista.
 - Implementação registrada na branch `feature/public-home-registration`: componente `CashierSalesSummary` no rodapé de `AreaShell`, acima de Sair; estilos responsivos adicionados ao CSS global. Validar build/testes e deploy antes de considerar publicado.
+
+
+## Painel administrativo — formulário de criação manual de rodadas oculto (2026-10-29)
+- O formulário **Criar uma rodada** não deve aparecer na área administrativa em uso normal, pois as rodadas são criadas pelo agendador automático.
+- Não excluir o formulário nem sua lógica do repositório: mantê-los no componente `src/components/admin/admin-round-manager.tsx`, ocultos/desabilitados na interface por padrão, para possível reativação futura mediante alteração explícita de código.
+- Manter visíveis a consulta das rodadas existentes e as operações administrativas já disponíveis (quando aplicáveis). Esta mudança afeta somente a exibição do formulário de criação manual.
+- Alteração registrada na branch `feature/public-home-registration`; confirmar build, deploy e visualmente que o formulário não aparece, mas a listagem e as operações de rodadas continuam funcionando.
