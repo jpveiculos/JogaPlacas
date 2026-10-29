@@ -33,17 +33,23 @@ export function CashierSalesSummary() {
     return () => { window.clearTimeout(timer); window.clearInterval(interval); };
   }, [load]);
 
-  return <section className="cashier-compact-summary" aria-label="Resumo financeiro do cambista">
-    {error && <p role="alert" className="note-inline">{error}</p>}
-    <div className="cashier-summary-grid">
-      <article className="cashier-summary-tile">
-        <span>Valor total das apostas</span>
-        <strong>{summary ? money(summary.totalSalesCents) : "—"}</strong>
-      </article>
-      <article className="cashier-summary-tile">
-        <span>Valor total da comissão</span>
-        <strong>{summary ? money(summary.commissionCents) : "—"}</strong>
-      </article>
-    </div>
-  </section>;
+  return <details className="cashier-summary-menu">
+    <summary>
+      <span className="cashier-summary-menu-title">Resumo do cambista</span>
+      <span className="cashier-summary-menu-hint">Total das apostas e comissão acumulada</span>
+    </summary>
+    <section className="cashier-compact-summary" aria-label="Resumo financeiro do cambista">
+      {error && <p role="alert" className="note-inline">{error}</p>}
+      <div className="cashier-summary-grid">
+        <article className="cashier-summary-tile">
+          <span>Saldo total das apostas</span>
+          <strong>{summary ? money(summary.totalSalesCents) : "Carregando…"}</strong>
+        </article>
+        <article className="cashier-summary-tile">
+          <span>Saldo total da comissão</span>
+          <strong>{summary ? money(summary.commissionCents) : "Carregando…"}</strong>
+        </article>
+      </div>
+    </section>
+  </details>;
 }
