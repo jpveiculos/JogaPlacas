@@ -41,8 +41,8 @@ export function LoginForm() {
       <input id="username" name="username" autoComplete="username" autoCapitalize="none" spellCheck={false} maxLength={100} value={username} onChange={(event) => setUsername(event.target.value)} required />
       <label htmlFor="password">Senha</label>
       <input id="password" name="password" type="password" autoComplete="current-password" maxLength={1024} value={password} onChange={(event) => setPassword(event.target.value)} required />
-      {error ? <p className="form-error" role="alert">{error}</p> : null}
       <button className="primary-button" type="submit" disabled={isSubmitting}>{isSubmitting ? "Verificando..." : "Entrar"}</button>
+      {error ? <p className="form-error form-feedback-error" role="alert" aria-live="assertive">{error}</p> : null}
     </form>
   );
 }
