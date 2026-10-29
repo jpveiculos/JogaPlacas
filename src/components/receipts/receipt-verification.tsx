@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 
 type VerifiedPlate = {
   plateDisplay: string;
-  plateFormat: string;
   resultStatus: "AGUARDANDO" | "PREMIADA" | "NAO_PREMIADA" | "AGUARDANDO_APURACAO";
   prizeCents: number | null;
   prizePaid: boolean;
@@ -32,14 +31,11 @@ type VerifiedReceipt = {
   message: string;
 };
 
-const paymentLabels: Record<string, string> = { CASH: "Dinheiro", PIX: "Pix", WALLET: "Carteira" };
-// Public contact number, digits only with country code (Brazil: 55 + DDD + number).
-const prizeSupportWhatsapp = process.env.NEXT_PUBLIC_PRIZE_SUPPORT_WHATSAPP?.replace(/\D/g, "") ?? "";
 const roundStatusLabels: Record<VerifiedRound["status"], string> = {
-  SORTEIO_AGUARDANDO: "Sorteio aguardando",
-  AGUARDANDO_RESULTADO_OFICIAL: "Aguardando resultado oficial",
-  RESULTADO_PUBLICADO: "Resultado oficial publicado",
-  RODADA_CANCELADA: "Rodada cancelada",
+  SORTEIO_AGUARDANDO: "Em andamento",
+  AGUARDANDO_RESULTADO_OFICIAL: "Aguardando resultado",
+  RESULTADO_PUBLICADO: "Publicado",
+  RODADA_CANCELADA: "Cancelada",
 };
 
 function formatDate(value: string) {
@@ -55,25 +51,30 @@ export function ReceiptVerification({ receiptCode }: { receiptCode: string }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const controller = new AbortController();
+    let active = true;
+    let requestController: AbortController | null = null;
+
     async function verify() {
+      requestController?.abort();
+      requestController = new AbortController();
       try {
-        const response = await fetch(`/api/public/receipt-verification/${encodeURIComponent(receiptCode)}`, {
-          cache: "no-store",
-          signal: controller.signal,
-        });
+        const response = await fetch(
+          `/api/public/receipt-verification/${encodeURIComponent(receiptCode)}`,
+          { cache: "no-store", signal: requestController.signal },
+        );
         const body = await response.json() as VerifiedReceipt;
-        setData(body);
+        if (active) setData(body);
       } catch {
-        if (!controller.signal.aborted) setData({ valid: false, message: "Não foi possível verificar agora. Confira sua conexão e tente novamente." });
+        if (active && !requestController.signal.aborted) {
+          setData({ valid: false, message: "Não foi possível consultar. Tente novamente." });
+        }
       } finally {
-        if (!controller.signal.aborted) setLoading(false);
+        if (active) setLoading(false);
       }
     }
+
     void verify();
-    // Refresh official status while this public receipt page remains open.
-    // The QR identifies the purchase; the database remains the source of truth.
-    const refreshTimer = window.setInterval(() => {
+    const timer = window.setInterval(() => {
       if (document.visibilityState === "visible") void verify();
     }, 30_000);
     const refreshOnFocus = () => {
@@ -81,97 +82,103 @@ export function ReceiptVerification({ receiptCode }: { receiptCode: string }) {
     };
     document.addEventListener("visibilitychange", refreshOnFocus);
     window.addEventListener("focus", refreshOnFocus);
+
     return () => {
-      controller.abort();
-      window.clearInterval(refreshTimer);
+      active = false;
+      requestController?.abort();
+      window.clearInterval(timer);
       document.removeEventListener("visibilitychange", refreshOnFocus);
       window.removeEventListener("focus", refreshOnFocus);
     };
   }, [receiptCode]);
 
-  const money = (cents: number, currency = "BRL") => new Intl.NumberFormat("pt-BR", { style: "currency", currency }).format(cents / 100);
-  const date = data?.confirmedAt ? formatDate(data.confirmedAt) : null;
-  const pendingPrizeLines = (data?.valid ? data.rounds ?? [] : []).flatMap((round) =>
-    round.plates
-      .filter((plate) => plate.resultStatus === "PREMIADA" && !plate.prizePaid)
-      .map((plate) => ({
-        roundCode: round.roundCode,
-        plateDisplay: plate.plateDisplay,
-        plateFormat: plate.plateFormat,
-        prizeCents: plate.prizeCents ?? 0,
-      })),
-  );
-  const prizeSupportMessage = data?.receiptCode && pendingPrizeLines.length
-    ? [
-        "Olá! Consultei meu recibo premiado no Joga Placas e preciso de orientação para resgatar/conferir meu prêmio.",
-        "Recibo: " + data.receiptCode,
-        ...pendingPrizeLines.map((prize) => "Rodada: " + prize.roundCode + " | Placa: " + prize.plateDisplay + " (" + (prize.plateFormat === "LEGACY" ? "cinza" : "Mercosul") + ") | Prêmio indicado: " + money(prize.prizeCents, data.currency ?? "BRL")),
-        "Por favor, confirmem a validação e as instruções de recebimento. Ainda não considero o prêmio pago até a confirmação oficial.",
-      ].join("\n")
-    : "";
-  const prizeSupportUrl = prizeSupportWhatsapp && prizeSupportMessage
-    ? "https://wa.me/" + prizeSupportWhatsapp + "?text=" + encodeURIComponent(prizeSupportMessage)
-    : null;
+  if (loading) return <p role="status" style={{ color: "#111827", fontWeight: 700 }}>Consultando recibo…</p>;
+  if (!data) return <p role="alert" style={{ color: "#b91c1c", fontWeight: 700 }}>Não foi possível consultar o recibo.</p>;
 
-  if (loading) return <p role="status">Consultando o registro oficial do recibo…</p>;
-  if (!data) return <p role="alert">Não foi possível consultar o recibo.</p>;
+  const rounds = data.valid ? data.rounds ?? [] : [];
+  const hasPrize = rounds.some((round) => round.plates.some((plate) => plate.resultStatus === "PREMIADA"));
+  const allRoundsResolved = rounds.length > 0 && rounds.every((round) =>
+    round.status === "RESULTADO_PUBLICADO" || round.status === "RODADA_CANCELADA",
+  );
+  const noPrize = allRoundsResolved && rounds.every((round) =>
+    round.plates.length > 0 && round.plates.every((plate) => plate.resultStatus === "NAO_PREMIADA"),
+  );
+  const overallLabel = !data.valid
+    ? "RECIBO NÃO VALIDADO"
+    : hasPrize
+      ? "BILHETE PREMIADO"
+      : noPrize
+        ? "BILHETE NÃO PREMIADO"
+        : "RESULTADO PENDENTE";
+  const overallColor = !data.valid || noPrize ? "#b91c1c" : hasPrize ? "#15803d" : "#92400e";
 
   return (
-    <section aria-live="polite" style={{ border: "1px solid #d1d5db", borderRadius: 12, padding: 20, background: "#fff", color: "#111827" }}>
-      <h2 style={{ marginTop: 0, color: data.valid ? "#166534" : "#991b1b" }}>
-        {data.valid ? "✓ RECIBO VÁLIDO — PAGAMENTO CONFIRMADO" : "⚠ RECIBO NÃO VALIDADO"}
-      </h2>
-      <p>{data.message}</p>
-      <p><strong>Código:</strong> {data.receiptCode ?? receiptCode.toUpperCase()}</p>
+    <section aria-live="polite" style={{ border: "2px solid #9ca3af", borderRadius: 10, padding: 16, background: "#ffffff", color: "#111827", fontSize: 16, lineHeight: 1.5 }}>
+      <div style={{ padding: "13px 10px", borderRadius: 7, background: overallColor, color: "#ffffff", textAlign: "center", marginBottom: 16 }}>
+        <h2 style={{ margin: 0, fontSize: 21, fontWeight: 800, letterSpacing: "0.02em" }}>{overallLabel}</h2>
+      </div>
+      {!data.valid && <p role="alert" style={{ color: "#991b1b", fontWeight: 700 }}>{data.message}</p>}
+      <p style={{ margin: "0 0 16px", fontSize: 16, color: "#111827" }}><strong>Recibo:</strong> {data.receiptCode ?? receiptCode.toUpperCase()}</p>
+
       {data.valid && (
         <>
-          <p><strong>Valor registrado:</strong> {money(data.totalCents ?? 0, data.currency ?? "BRL")}</p>
-          <p><strong>Pagamento:</strong> {paymentLabels[data.paymentMethod ?? ""] ?? "Confirmado"}</p>
-          {date && <p><strong>Data de confirmação:</strong> {date}</p>}
-          <h3>Rodadas e placas deste recibo</h3>
-          {data.rounds?.length ? data.rounds.map((round) => (
-            <article key={round.roundCode} style={{ border: "1px solid #d1d5db", borderRadius: 8, padding: 14, marginTop: 12 }}>
-              <h4 style={{ marginTop: 0 }}>Rodada {round.roundCode}</h4>
-              <p><strong>Situação:</strong> {roundStatusLabels[round.status]}</p>
-              <p><strong>Horário programado:</strong> {formatDate(round.resultAt)}</p>
+          <h3 style={{ margin: "0 0 10px", fontSize: 19, color: "#111827", fontWeight: 800 }}>Resultados</h3>
+          {rounds.length ? rounds.map((round) => (
+            <article key={round.roundCode} style={{ border: "1px solid #9ca3af", borderRadius: 8, padding: 13, marginTop: 10, background: "#ffffff", color: "#111827" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8, marginBottom: 8 }}>
+                <strong style={{ fontSize: 17, color: "#111827" }}>{round.roundCode}</strong>
+                <span style={{
+                  display: "inline-block",
+                  borderRadius: 5,
+                  padding: "3px 8px",
+                  fontSize: 14,
+                  fontWeight: 800,
+                  color: round.status === "RESULTADO_PUBLICADO" ? "#166534" : round.status === "RODADA_CANCELADA" ? "#991b1b" : "#854d0e",
+                  background: round.status === "RESULTADO_PUBLICADO" ? "#dcfce7" : round.status === "RODADA_CANCELADA" ? "#fee2e2" : "#fef3c7",
+                }}>{roundStatusLabels[round.status]}</span>
+              </div>
+              <p style={{ margin: "0 0 10px", color: "#374151", fontSize: 14 }}><strong>Horário:</strong> {formatDate(round.resultAt)}</p>
               {round.status === "RESULTADO_PUBLICADO" && (
-                <div>
-                  <p><strong>Resultado placa cinza:</strong> {round.resultLegacyPlate ?? "Não informado"}</p>
-                  <p><strong>Resultado placa Mercosul:</strong> {round.resultMercosurPlate ?? "Não informado"}</p>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+                  {[round.resultLegacyPlate, round.resultMercosurPlate].map((plate, index) => (
+                    <div key={index}>
+                      <strong style={{ display: "block", fontSize: 13, color: "#374151", marginBottom: 4 }}>Placa sorteada</strong>
+                      <div style={{ padding: "11px 5px", border: "2px solid #6b7280", borderRadius: 6, textAlign: "center", fontSize: 19, color: "#111827", fontWeight: 800, background: "#f9fafb", overflowWrap: "anywhere" }}>
+                        {plate ?? "—"}
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
-              <ul>
-                {round.plates.map((plate, index) => (
-                  <li key={`${round.roundCode}-${plate.plateDisplay}-${index}`}>
-                    <strong>{plate.plateDisplay}</strong> — {plate.plateFormat === "LEGACY" ? "Placa cinza" : "Placa Mercosul"}.
-                    {" "}{plate.resultStatus === "AGUARDANDO" && "Resultado ainda não disponível."}
-                    {plate.resultStatus === "AGUARDANDO_APURACAO" && "Resultado publicado; apuração do prêmio pendente."}
-                    {plate.resultStatus === "NAO_PREMIADA" && "Não premiada nesta rodada."}
-                    {plate.resultStatus === "PREMIADA" && (
-                      <>Premiada: {money(plate.prizeCents ?? 0, data.currency ?? "BRL")}. {plate.prizePaid ? "Crédito do prêmio confirmado." : "Prêmio ainda não consta como creditado."}</>
-                    )}
-                  </li>
-                ))}
-              </ul>
-              {round.status === "RESULTADO_PUBLICADO" && round.plates.length > 0 && round.plates.every((plate) => plate.resultStatus === "NAO_PREMIADA") && (
-                <p><strong>Resultado publicado — este jogo não foi premiado nesta rodada.</strong></p>
+              {round.plates.length > 0 && (
+                <div style={{ marginTop: 12 }}>
+                  <strong style={{ display: "block", color: "#111827", marginBottom: 6 }}>Suas placas</strong>
+                  <div style={{ display: "grid", gap: 6 }}>
+                    {round.plates.map((plate, index) => {
+                      const status = plate.resultStatus === "PREMIADA"
+                        ? (plate.prizePaid ? "Prêmio pago" : "Premiada")
+                        : plate.resultStatus === "NAO_PREMIADA"
+                          ? "Não premiada"
+                          : plate.resultStatus === "AGUARDANDO_APURACAO"
+                            ? "Apuração pendente"
+                            : "Aguardando resultado";
+                      const statusColor = plate.resultStatus === "PREMIADA"
+                        ? "#166534"
+                        : plate.resultStatus === "NAO_PREMIADA"
+                          ? "#991b1b"
+                          : "#854d0e";
+                      return (
+                        <div key={`${round.roundCode}-${plate.plateDisplay}-${index}`} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8, padding: "8px 10px", borderRadius: 6, background: "#f3f4f6", border: "1px solid #d1d5db" }}>
+                          <strong style={{ color: "#111827", fontSize: 16 }}>{plate.plateDisplay}</strong>
+                          <span style={{ color: statusColor, fontWeight: 800, fontSize: 14 }}>{status}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               )}
             </article>
-          )) : <p>Não há rodadas confirmadas vinculadas a este recibo.</p>}
-          {pendingPrizeLines.length > 0 && (
-            <aside aria-labelledby="prize-redemption-title" style={{ marginTop: 20, padding: 16, border: "1px solid #d97706", borderRadius: 10, background: "#fffbeb" }}>
-              <h3 id="prize-redemption-title" style={{ marginTop: 0 }}>Você tem um prêmio indicado para recebimento</h3>
-              <p>Guarde o recibo físico original. Entre em contato com o atendimento oficial para conferir o prêmio e receber as instruções de resgate. A consulta do QR Code não significa que o valor já foi pago.</p>
-              {prizeSupportUrl ? (
-                <a href={prizeSupportUrl} target="_blank" rel="noopener noreferrer" style={{ display: "inline-block", padding: "12px 18px", borderRadius: 8, background: "#166534", color: "#fff", fontWeight: 700, textDecoration: "none" }}>
-                  Solicitar resgate pelo WhatsApp
-                </a>
-              ) : (
-                <p role="status">O contato de atendimento ainda não está configurado. Consulte os canais oficiais da plataforma antes de enviar dados ou combinar o recebimento.</p>
-              )}
-            </aside>
-          )}
-          <p><strong>Importante:</strong> os dados vêm do sistema oficial. A consulta pública não é, sozinha, autorização para pagar um prêmio.</p>
+          )) : <p style={{ color: "#374151" }}>Nenhuma rodada confirmada para este recibo.</p>}
         </>
       )}
     </section>
