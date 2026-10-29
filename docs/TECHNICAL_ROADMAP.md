@@ -1,0 +1,833 @@
+# Joga Placas — Manual técnico de implementação
+
+Status: manual operacional vigente na branch oficial de desenvolvimento `feature/public-home-registration`, revisado em 2026-10-27. A especificação funcional em `docs/PRODUCT_SPEC.md` é a fonte de verdade para comportamento; decisões arquiteturais em `docs/ADR-001-FOUNDATION.md` e `docs/TARGET_DOMAIN_MODEL.md` complementam o manual. Este documento contém registros cronológicos de inspeções: quando um registro antigo divergir da seção “Estado consolidado da implementação”, prevalece a seção consolidada, sem apagar o histórico. Entradas datadas descrevem o estado observado na data indicada; antes de agir, conferir o código atual desta branch. Não usar branches históricas nem `main` como fonte de implementação.
+
+## Identidade visual — padronização da logomarca (2026-10-28)
+
+**Regra técnica vigente:** a arte oficial única é `/images/brand/joga-placa-logo.jpg`, a mesma imagem usada no cabeçalho das áreas autenticadas. A homepage, login, cadastro, cabeçalhos/rodapés que exibam a marca, verificação de recibo e demais áreas do site devem usar essa imagem; não reconstruir o logotipo com texto estilizado nem manter variantes visuais por página.
+
+- Componente reutilizável: `src/components/brand-logo.tsx`. Usar este componente em vez de copiar o caminho do arquivo ou duplicar o HTML da marca.
+- Variações permitidas: somente tamanho, alinhamento e espaço ao redor. Preservar a proporção com `object-fit: contain`, comportamento responsivo e sem recorte/deformação. Manter `alt="Joga Placa"` e link para `/` quando o logo for clicável.
+- **Padrão único de cabeçalho (ajuste 2026-10-28):** todas as páginas públicas e áreas autenticadas usam o mesmo `.site-header` e `BrandLogo`. A geometria é única em todas as larguras: `min-height: 92px`, padding vertical de `2px`, padding horizontal `clamp(10px, 3vw, 24px)`, logomarca com `height: 88px`, `width: auto`, `max-width: 80vw` e `max-height: 88px`. A logomarca ocupa aproximadamente 96% da altura mínima do cabeçalho, mantendo margem proporcional e sem ficar pequena. A largura pode diminuir apenas quando o limite de 80vw exigir; não existe uma regra alternativa de tamanho para celular. Fundo `#0d111a`, linha inferior `rgba(148,163,184,.22)`, imagem centralizada e `object-fit: contain`, sem recorte ou deformação. Não criar regras de cabeçalho específicas por página. A auditoria encontrou regras antigas de marca `.home-brand img` usadas por outras superfícies, mas elas não selecionam `.site-header-brand`; não devem ser confundidas com o cabeçalho compartilhado nem removidas sem conferir os respectivos usos.
+- Metadados, favicon, ícone Apple e imagem Open Graph/Twitter já referenciam o mesmo arquivo no `src/app/layout.tsx`; conservar essa consistência.
+- **Aplicado no código desta branch:** homepage (cabeçalho e rodapé), login, cadastro, cabeçalho compartilhado das áreas autenticadas e verificação pública de recibo usam `BrandLogo`. Isso elimina as antigas versões montadas com texto nas superfícies alteradas.
+- **Ainda não declarado como concluído:** typecheck/testes/build, deploy Railway e conferência visual real em telas pequenas e grandes. Após o deploy, validar homepage, login, cadastro, jogador, cambista, administrador, rodapé e consulta de recibo; corrigir qualquer tamanho inadequado sem substituir a imagem oficial.
+
+## Atualização de regra de prêmio — 2026-10-28
+
+- Multiplicador de unidade atualizado de 9x para 6x na versão vigente `approved-v4`; os outros cinco multiplicadores permanecem inalterados.
+- O código gera snapshots das regras por linha de compra. Compras antigas com `approved-v3` preservam unidade 9x; novas compras devem registrar `approved-v4` e unidade 6x.
+- A alteração do código e da especificação foi registrada na branch `feature/public-home-registration`. Antes de considerar implantada, verificar testes de cálculo/snapshot, CI e deploy do commit exato; não alterar dados históricos nem reprocessar compras antigas.
+
+## Produto e navegação obrigatórios — decisão vigente em 2026-10-26
+
+A plataforma tem **quatro áreas de produto**, não apenas três. A decisão inicial de não criar uma página principal pública foi substituída pela nova direção de produto registrada na especificação funcional. Não reconstruir a navegação antiga como se ainda fosse válida.
+
+1. **Página principal pública (`/`)**: apresentação do Joga Placas, explicação de como jogar e das regras, equivalências de prêmios e acesso visível a **Entrar** e **Criar conta**. Pela decisão mais recente de 2026-10-28, não exibe painel geral de resultados/ganhadores nem busca de recibo por código digitado.
+2. **Área do jogador**: apostas, pagamentos, recibos, resultados pessoais, histórico e carteira conforme a especificação. Depois de entrar ou concluir o cadastro, o jogador é encaminhado diretamente para essa área; o histórico e as consultas pessoais permanecem.
+3. **Área do cambista**: somente registro de nova aposta/venda, recebimento permitido e entrega do recibo original; sem histórico, pesquisa, consulta de resultados, contadores de venda, segunda via, carteira própria ou saques.
+4. **Área do administrador**: gestão de usuários, rodadas, regras, resultados, financeiro, comissões, saques e auditoria.
+
+A página principal é a porta de entrada para pessoas que recebem o link em grupos ou outros locais da internet; não deve apresentar uma tela de login como primeira impressão. A consulta pública de recibo só ocorre pela leitura do QR Code do recibo físico original, que abre uma página específica daquela compra. Não manter uma página geral de resultados nem um campo público para digitar código de recibo.
+
+**Redirecionamento e acesso:** visitante sem sessão acessando `/` vê a apresentação pública. Após login, o servidor identifica o papel e encaminha à área permitida; jogador autenticado que voltar a `/` deve ser encaminhado à área do jogador, sem fluxo de navegação que o leve de volta à página de apresentação. O cadastro público, quando implementado, deve terminar com a conta criada e encaminhar o novo jogador à área do jogador. A página principal não concede privilégios nem substitui autorização no servidor. Não criar cadastro público de administrador; contas administrativas são provisionadas de forma segura. Regras de cadastro, validação, prevenção de abuso e ativação de conta precisam ser implementadas e testadas antes de abrir o cadastro ao público.
+
+## Nova decisão funcional — venda rápida do cambista sem dados do cliente (2026-10-26)
+
+O modelo operacional do cambista passa a ser semelhante ao de uma venda por bilhete: não pedir nome, telefone, WhatsApp nem selecionar/cadastrar um cliente. O cambista informa a placa e os dados estritamente necessários da aposta, registra a venda e entrega um recibo identificável por código único e QR Code. O QR Code do recibo é para localizar/consultar o bilhete; não é automaticamente o QR Code de cobrança Pix.
+
+A busca de compras por nome, telefone ou placa deve sair da interface do cambista e ser removida como fluxo de produto. Pela decisão posterior de 2026-10-28, não existe segunda via nem recuperação por código: o QR Code serve apenas para consultar o recibo original. O backend de compras deve aceitar venda com `cashierId` e sem `customerId`; não criar clientes artificiais. A compra, o pagamento/recebimento, a rodada, as linhas, a emissão original do recibo, o código único e a auditoria continuam sujeitos às validações existentes.
+
+**Registro histórico da inspeção (2026-10-26; não representa a decisão atual):** naquela data, a página do cambista mostrava consulta rápida e histórico de compras. A decisão de 2026-10-28 remove esses recursos: a área deve conter somente o registro de nova aposta/venda. A existência do fluxo de venda rápida, da emissão original e do QR deve ser validada por testes; não reintroduzir consulta ou segunda via para compensar lacunas.
+
+Não apagar registros históricos de `Customer` nem modificar a base de dados de produção como parte desta limpeza sem plano de migração, avaliação de retenção e autorização explícita.
+
+## Decisões técnicas aprovadas
+
+- Aplicação modular única com Next.js App Router, React e TypeScript estrito.
+- PostgreSQL e Prisma ORM com migrações versionadas.
+- Zod para validar entradas e configuração nos limites da aplicação.
+- Vitest para testes unitários e de integração; Playwright para fluxos críticos de interface.
+- ESLint, typecheck, testes, validação/geração Prisma, build e teste de migrações na CI.
+- Valores monetários em centavos inteiros; nunca usar ponto flutuante para dinheiro.
+- Instantes persistidos em UTC e regras/agenda apresentadas no fuso `America/Sao_Paulo`.
+- Regras financeiras centralizadas no domínio; pagamentos por adaptadores para manter o domínio independente do provedor.
+- Webhooks autenticados, persistidos e idempotentes; segredo apenas em variáveis de ambiente/gerenciador de segredos.
+- Um checkout/compra pode conter de 1 a 10 participações de rodadas, com pagamento único antecipado; cada participação é registrada separadamente.
+- Cliente atendido pelo cambista é distinto de conta de jogador, salvo criação explícita de conta.
+- Livro-razão append-only, auditoria e snapshots históricos; não alterar saldos por atalhos nem reescrever condições antigas.
+
+## Estrutura modular de destino
+
+`src/app` contém rotas e layouts das três áreas e páginas públicas auxiliares. `src/modules` concentra casos de uso por domínio: auth, plates, rounds, bets, purchases, payments, wallet, cashiers e admin. `src/domain` contém regras puras; `src/lib` contém infraestrutura compartilhada sem regras de negócio; `prisma` contém schema e migrações. Não criar módulos vazios ou abstrações antecipadas sem necessidade demonstrada.
+
+## Política de limpeza e substituição
+
+- Antes de substituir ferramenta, serviço, modelo ou fluxo, localizar todas as referências e consumidores no repositório e comparar com o manual.
+- Ao concluir a substituição, remover código antigo, dependências, scripts, configurações, rotas e documentação obsoletos somente depois de provar que não têm consumidores ativos.
+- Não manter duas implementações concorrentes da mesma responsabilidade nem adicionar correções improvisadas sobre arquitetura incompatível.
+- Não apagar histórico/auditoria financeira nem migrações já aplicadas. Migrações versionadas são histórico operacional, não lixo.
+- Atualizar documentação no mesmo conjunto de mudanças; documentos de inspeções antigas devem ser corrigidos ou explicitamente identificados como registros históricos.
+- Remover dependências somente após busca de uso e validação de build/testes. Não atualizar versões principais cegamente.
+
+## Ordem obrigatória de execução
+
+1. Auditar repositório, dependências, CI, documentação e divergências em relação ao manual.
+2. Validar modelo de domínio e schema; revisar SQL de migração e testar exclusivamente em banco descartável.
+3. Completar domínio puro e testes de placa, categorias, rateio, valores e janelas de rodada.
+4. Implementar autenticação, sessões seguras, papéis, propriedade dos registros, limites de tentativa e auditoria.
+5. Implementar compra e participações com cutoff no servidor, idempotência e concorrência real no PostgreSQL.
+6. Implementar carteira/livro-razão, prêmios, saques, vendas em espécie e comissões com invariantes transacionais.
+7. Implementar as quatro áreas de produto conforme a decisão vigente: homepage de apresentação/cadastro/login sem resultados gerais nem busca por código; área do jogador com histórico próprio; área do cambista somente para registrar nova aposta/venda; área administrativa conforme permissões. A consulta pública de recibo é exclusivamente pela página específica aberta via QR.
+8. Implementar e validar a integração Pix/Mercado Pago em ambiente de desenvolvimento/homologação; **a habilitação operacional, credenciais de produção e qualquer cobrança real ficam bloqueadas até a fase final e autorização explícita**. Código de integração já existe nesta branch, mas isso não equivale a validação ponta a ponta nem autorização de produção.
+9. Testar ponta a ponta, segurança, concorrência, reconciliação, backup/restauração e recuperação.
+10. Revisar configuração do novo servidor e variáveis de ambiente; preparar implantação e rollback sem tocar no site atual.
+11. Exigir CI verde, revisão final e autorização explícita antes de qualquer mudança de produção.
+
+## Atualização — página pública e cadastro (2026-10-26)
+
+- Registro histórico de 2026-10-26, superado em 2026-10-28: a página inicial era descrita com consulta de recibos e resultados públicos. A decisão atual remove essas funções gerais; verificar o código atual antes de usar esse registro.
+- A branch `feature/public-home-registration` adiciona os botões de cadastro, a página `/cadastro` e a API `POST /api/auth/register`, criando somente usuários PLAYER e iniciando sessão após cadastro.
+- Próximas validações obrigatórias: `npm run typecheck`, `npm run lint`, `npm test`, `npm run db:validate` e `npm run build`; revisar proteção antiabuso/limitação de cadastro; validar visualmente e funcionalmente no Railway; confirmar que o serviço e o domínio usam a branch correta. Não publicar em produção antes disso.
+
+## Estado consolidado da implementação — 2026-10-26
+
+Este quadro substitui as descrições de estado anteriores que diziam que a interface era apenas um placeholder ou que APIs/pagamentos ainda não existiam. Esses textos antigos são registros históricos da etapa em que foram escritos, não retrato do HEAD atual.
+
+### Implementado no código desta branch
+- Aplicação Next.js com páginas de login, troca de senha, jogador, cambista, administrador, resultados, termos e consulta pública; atualmente `/` redireciona para `/login`. A página principal pública de apresentação/cadastro/login/resultados combinados é uma nova funcionalidade aprovada e ainda precisa ser implementada. APIs de autenticação, compras, histórico/recibo, resultados, rodadas e saques já existem em diferentes graus de conclusão.
+- Autenticação por sessão, verificação de papel no servidor e fluxos de troca obrigatória de senha, com testes de rotas de autenticação.
+- Modelo `Purchase` → `PurchaseParticipation` → `ParticipationLine`, rateio de valores inteiros em centavos, snapshots de regra, criação transacional/idempotente de compra pendente e validações de sequência contínua de rodadas.
+- Dois resultados independentes por rodada (`resultLegacyPlate` e `resultMercosurPlate`), preservação do resultado histórico como Mercosul, gerador independente, migração de classificação histórica e serviços/rotas de fechar, sortear e apurar.
+- Scheduler interno protegido por segredo para abrir/fechar/sortear rodadas; sua execução automática depende de agendamento externo e configuração de ambiente, não apenas da existência da rota.
+- Integração de código com Mercado Pago Orders API, criação de cobrança Pix, persistência dos dados de checkout, webhook HMAC e idempotência, serviço de confirmação transacional e consulta de status. O contrato real do provedor e o fluxo ponta a ponta ainda precisam ser testados com credenciais de teste.
+- Recibo autenticado e consulta pública de recibo/resultados, crédito idempotente de prêmios de jogador e endpoint de reconciliação de crédito de prêmio.
+- Carteira derivada do livro-razão, solicitação de saque com reserva transacional e chave Pix criptografada, histórico e fila administrativa com ações **Pagar**/**Rejeitar**. O Pix do saque é feito manualmente fora da plataforma; não há transferência automática.
+
+### Parcial ou não concluído
+- Fluxo completo de venda/recebimento em espécie pelo cambista e tratamento operacional de prêmios de vendas do cambista.
+- Gestão administrativa completa de usuários, regras, comissões, relatórios e operações financeiras; as telas existentes não significam que todos os módulos administrativos estejam completos.
+- Impressão térmica validada em dispositivo real e QR Code ligado ponta a ponta ao recibo; há componentes e endpoints parciais, mas isso não comprova compatibilidade física universal.
+- Execução automática recorrente de rodadas em ambiente hospedado: exige scheduler externo, segredo e banco correto configurados e verificados.
+- Reconciliação operacional de pagamento aprovado após cutoff, eventos do provedor fora de ordem, estornos/reembolsos e alertas/observabilidade.
+- Estados legados de saque `APPROVED`/`PROCESSING`: preservar para histórico/reconciliação, sem conversão automática.
+- Validação financeira concorrente e ponta a ponta específica dos saques e do fluxo de pagamento na versão exata do HEAD.
+
+### Evidência de validação e limites
+- A branch contém workflow CI com `verify`, `migration-test` e `postgres-concurrency-test`, além de testes unitários, de rota e integração PostgreSQL.
+- No HEAD consultado nesta reconciliação (`84938086a2d50fd91de71b572372ab122416dcc9`), a API de status do commit não retornou checks/status. Portanto, **não declarar o HEAD atual aprovado por CI** só porque commits anteriores passaram.
+- Código, testes existentes ou uma migração aprovada em PostgreSQL descartável não provam operação em produção. Nenhum merge para `main`, deploy, migração produtiva ou pagamento real é autorizado por este documento.
+
+### Próximos gates
+1. Obter CI verde para o HEAD exato e revisar lint, typecheck, testes, build, migrações e concorrência PostgreSQL.
+2. Testar o contrato e as notificações reais do Mercado Pago em ambiente de teste, incluindo assinatura, duplicidade, ordem dos eventos, valores divergentes e falhas transacionais.
+3. Testar a aritmética do livro-razão de saques, idempotência e concorrência com PostgreSQL descartável; confirmar que pagamentos/rejeições não duplicam efeitos.
+4. Concluir o fluxo de cambista, a reconciliação de pagamentos tardios/estornos e os testes de impressão/QR que forem parte do escopo aprovado.
+5. Só então preparar uma proposta de implantação, sem executá-la sem autorização explícita.
+
+## Critérios de avanço e segurança
+
+Cada etapa precisa produzir código, testes e documentação coerentes. Não alterar `main`, site ativo, domínio/DNS ou banco de produção durante o trabalho de fundação. Não fazer cobranças reais. Não considerar build ou deploy isolado como prova de funcionamento ponta a ponta. Antes da operação comercial, validar os requisitos legais e regulatórios aplicáveis.
+
+
+## Atualização de verificação — 2026-10-25
+
+- CI `Verify` do commit `1d37b8fc59e0c10717272b96dec1d9bd206a6819`: sucesso.
+- A revisão estática da migração `20261024020000_dual_plate_draw` confirmou que ela interrompe a migração se qualquer `ParticipationLine.plateDisplay` não corresponder a um formato conhecido. Preservar esse fail-closed.
+- O teste de migração atual usa PostgreSQL vazio; ele não exercita a classificação de dados históricos. Antes de qualquer uso num banco com dados, criar um teste isolado de backfill LEGACY/MERCOSUR e falha segura para registro inválido/ambíguo.
+- **Nota histórica superada:** naquela revisão, `next@16.4.3` e `eslint-config-next@16.4.2` estavam desalinhados. A auditoria posterior desta mesma branch confirmou que `package.json` e `package-lock.json` já declaram `next@16.4.3` e `eslint-config-next@16.4.3`; não há ação de alinhamento pendente enquanto essas versões permanecerem iguais.
+- Nenhum teste local/instalação limpa, migração produtiva ou deploy foi executado nesta etapa.
+
+
+## Atualização de implementação — teste de migração histórica (2026-10-25)
+
+Foi adicionado um teste automatizado de backfill em PostgreSQL descartável: `scripts/test-dual-plate-migration.mjs`, comando `npm run test:migration-backfill`, integrado ao job `migration-test`. Ele testa classificação de registros LEGACY/MERCOSUR, preservação do resultado Mercosul e bloqueio para placa histórica não classificável. A implementação está commitada, mas a aprovação depende do resultado do workflow do commit atual. Executar somente em PostgreSQL descartável com permissão para criar/remover bancos. Nenhum banco real foi alterado.
+
+
+### Correção da primeira falha do teste de backfill — 2026-10-25
+A CI identificou erro na fixture de teste (`Purchase.updatedAt` inexistente na migração inicial), antes de testar o backfill em si. O campo foi removido do INSERT no commit `576ec2afb43a5a6fcb9deeb38027a0fdf53efef8`. O status continua pendente até a CI desse commit terminar.
+
+
+### CI confirmada e dependências — 2026-10-25
+O workflow completo no commit `576ec2afb43a5a6fcb9deeb38027a0fdf53efef8` concluiu com sucesso, inclusive backfill histórico e testes PostgreSQL: https://github.com/jpveiculos/JogaPlacas/actions/runs/40147585024. O pacote `eslint-config-next@16.4.3` está publicado e sua linha 16 requer ESLint >=9, compatível com a dependência atual. A diferença de patch pode ser alinhada, mas a alteração deve ser acompanhada por lockfile regenerado com npm e nova CI completa; ainda não foi feita.
+
+
+### Revisão de banco e regras de negócio — 2026-10-25
+A primeira revisão das migrações/schema encontrou ausência de `CHECK` constraints para valores/alocações não negativos, mínimo por linha e consistência de totais; também não há constraint que garanta dois resultados juntos quando a rodada é `COMPLETED`. Os serviços protegem partes dessas regras, mas escritas diretas/novos caminhos poderiam contorná-las. Avaliar constraints compatíveis com reconciliação histórica e adicionar testes de migração. O serviço atual cria compra e pagamento Pix pendentes; não há integração real com provedor/webhook nem confirmação financeira. Essas pendências devem ser resolvidas antes de ativar fluxos reais.
+
+### Verificação local via GitHub Codespaces — 2026-10-25
+
+O usuário executou manualmente no Codespaces, na branch `feature/dual-plate-draw`, os seguintes comandos e compartilhou telas do terminal:
+- `npm test`: 15 arquivos aprovados, 3 ignorados; 104 testes aprovados, 17 ignorados.
+- `npm run lint`: 0 erros e 2 avisos para uso de `window.location.assign()` em `src/components/auth/change-password-form.tsx:31` e `src/components/auth/logout-button.tsx:10`.
+- `npm run build`: a tentativa inicial falhou porque `DATABASE_URL` não estava definido. Após criar `.env` a partir de `.env.example` e configurar valores apenas de teste, uma execução posterior exibiu a tabela de rotas de build do Next.js e retornou ao prompt sem erro visível; isso é evidência visual de conclusão bem-sucedida, não validação reproduzida por automação desta auditoria.
+- Não há evidência nesta conversa de que `npm run db:validate`, `npm run db:generate` ou `npm ci` tenham sido executados no Codespaces; não afirmar que foram concluídos.
+- O `.env` é arquivo local e não deve ser commitado. Os valores configurados são exemplos de teste apontando para localhost; não criam nem iniciam PostgreSQL.
+- A verificação da execução GitHub Actions `40147783753` (commit `2bf9d5099fcba793108ef44c0290ce07aa282a8d`) confirma `success` em `verify`, `migration-test` e `postgres-concurrency-test`. A instalação reproduzível com `npm ci`, build, teste histórico de migração e testes PostgreSQL passaram no CI desse commit.
+- **Nota histórica superada:** a divergência `next@16.4.3` / `eslint-config-next@16.4.2` foi resolvida antes desta atualização; a inspeção atual desta branch encontrou ambas em `16.4.3`. Nenhum merge para `main`, migração produtiva, deploy ou pagamento real foi realizado.
+
+### Auditoria de CI e dependências — 2026-10-25 (atualização)
+
+- A execução GitHub Actions #334, no commit `ca0bd28c8e92a459379e8225956241a340fd1762`, terminou com sucesso: `verify`, `migration-test` e `postgres-concurrency-test` aprovados. No job `verify`, lint, typecheck, testes unitários e build passaram.
+- Correção do lint em `src/components/results/public-results-board.tsx`: a carga inicial foi agendada e os temporizadores são limpos no desmontar do componente.
+- Correção de resolução de imports nos testes: `vitest.config.ts` agora define o alias `@` para `src`, mantendo o alias de `server-only`. Isso resolveu a falha de testes causada pelo alias ausente.
+- Revisão das dependências na branch `feature/dual-plate-draw`: `package.json` e `package-lock.json` declaram `next@16.4.3` e `eslint-config-next@16.4.3`. A divergência de patch mencionada em notas anteriores não está presente nesta branch neste momento; não é necessário alterar versões agora. Confirmar a branch/commit antes de repetir essa verificação.
+- Este CI não executa nem autoriza deploy. Nenhuma implantação ou alteração de banco de produção foi realizada.
+- Próxima etapa: revisar regras de negócio e restrições de integridade do banco; conferir a especificação funcional antes de implementar novos fluxos. A interface principal ainda é descrita neste documento como placeholder e os fluxos de compra/pagamento continuam sem integração real com provedor Pix.
+
+### Auditoria aprofundada de integridade do banco — 2026-10-25
+
+- Confirmado no schema e na migração inicial: campos monetários em centavos são inteiros, mas ainda não têm restrições SQL explícitas para impedir valores negativos. Isso inclui totais de compras/participações, alocações das seis categorias, pagamentos, lançamentos contábeis, comissões e saques.
+- A soma das seis alocações de uma ParticipationLine deve ser exatamente o valor total daquela placa. Como o total da linha não está armazenado separadamente, essa igualdade precisa ser validada pelo domínio/serviço transacional ou por um desenho SQL adicional; um CHECK simples não pode comparar outras tabelas.
+- A especificação exige dois resultados independentes por rodada, mas a fixture do teste de backfill histórico cria uma rodada COMPLETED contendo apenas o antigo resultado Mercosul. Portanto, não é seguro adicionar imediatamente uma constraint que exija ambos os resultados em toda rodada concluída sem primeiro definir a política para rodadas históricas e ajustar o teste de migração.
+- A migração de formato de placa já falha de modo seguro quando não consegue classificar uma linha histórica; preservar esse comportamento.
+- Próxima ação técnica: adicionar constraints SQL locais e não ambíguas para valores não negativos e formato/estado de resultados, depois ampliar os testes de migração com casos válidos e inválidos. Antes de exigir dois resultados em rodadas COMPLETED, decidir e documentar como tratar rodadas históricas que só têm um resultado; não inventar nem converter um resultado para preencher o outro.
+- Nenhuma alteração de banco ou deploy de produção foi realizada. A auditoria foi somente estática, lendo schema, migrações e testes no branch de trabalho.
+
+### Restrições de integridade SQL adicionadas — 2026-10-25
+
+- Nova migração `20261025010000_integrity_checks` adiciona `CHECK` para valor mínimo de R$ 1,00 em compra e participação, alocações/prêmio não negativos, pagamento e saque estritamente positivos, taxa/comissão dentro do intervalo válido e formatos independentes dos dois resultados.
+- A migração deliberadamente não exige os dois resultados em toda rodada concluída: não há política aprovada para preencher ou classificar rodadas históricas que tenham apenas um resultado.
+- A soma entre as seis alocações de uma linha e o total da participação continua precisando de validação transacional no serviço; um `CHECK` SQL de linha não pode garantir sozinho igualdade entre tabelas. Não foi inventado um total de linha adicional nesta etapa.
+- A mudança está apenas na branch `feature/dual-plate-draw`; aguardar CI para confirmar a migração em PostgreSQL descartável. Nenhuma migração foi aplicada a produção.
+
+
+### Revisão da consistência dos totais de compra — 2026-10-25
+
+- Revisados `src/domain/allocate-plate-stake.ts`, `src/domain/purchase-rules.ts`, `src/modules/purchases/create-purchase.ts` e seus testes na branch `feature/dual-plate-draw`.
+- A alocação automática preserva exatamente o valor informado em centavos: divide por seis e destina todo o resto à Unidade. Para R$ 1,00, o resultado é Unidade R$ 0,20 e cinco categorias de R$ 0,16.
+- O serviço de compra valida o valor de cada placa antes da transação, recalcula a divisão no servidor (não confia em alocações enviadas pelo cliente), valida que cada placa totaliza pelo menos R$ 1,00 e soma os valores das linhas para obter o total da participação e da compra.
+- Os totais da participação são derivados das linhas calculadas pelo servidor; o total da compra é derivado de todas as linhas e usado também no pagamento pendente. A criação de compra, participações, linhas e pagamento ocorre na mesma transação serializável.
+- A soma das seis categorias por linha não é um total separado persistido; portanto, sua garantia vem da função central de rateio e da validação do serviço, não de uma constraint SQL entre tabelas. A auditoria não identificou necessidade imediata de duplicar o total da linha no schema.
+- Testes existentes cobrem o rateio de R$ 1,00, preservação de centavos, rejeição de valores inválidos, mínimo por placa, validação dos totais do domínio e persistência da divisão no serviço. Ainda é recomendável ampliar testes de integração com várias placas em uma participação e múltiplas participações, verificando total da compra, total por rodada e valor do pagamento em conjunto.
+- CI da migração de integridade: execução #338 concluída com sucesso; CI do commit de documentação #339 também concluída com sucesso. Nenhuma alteração foi aplicada a produção e não houve deploy.
+- Próxima etapa: ampliar os testes de compra com múltiplas linhas/rodadas e depois revisar autorização e propriedade dos registros nos endpoints antes de começar os fluxos funcionais.
+
+
+### Revisão inicial de autorização das rotas — 2026-10-25
+
+- A execução #341 do workflow `Verify` passou no commit `231003c0319f89884bdff1936381c5f50fa8060b`, incluindo o novo teste de totais financeiros para compra com múltiplas placas e rodadas.
+- Revisadas estaticamente as rotas de compra, histórico, resultados e rodadas do jogador, consulta pública de recibo e operações administrativas de fechar, sortear e apurar rodadas.
+- Rotas do jogador verificam sessão ativa, papel `PLAYER` e bloqueio por troca obrigatória de senha; histórico filtra compras por `playerId` da sessão. A criação de compra deriva o `playerId` da sessão, rejeita campos extras no schema e valida origem quando o cabeçalho `Origin` está presente.
+- Rotas administrativas revisadas verificam sessão, troca obrigatória de senha e papel `ADMIN`, validam o identificador da rodada e registram tentativas negadas por papel insuficiente. A apuração registra evento de auditoria após executar o serviço.
+- A consulta pública por recibo exige código completo com formato `JP-`, retorna somente compras confirmadas e expõe campos limitados de resultado; não retorna nome, usuário ou dados de pagamento do jogador.
+- Limite desta etapa: revisão estática não substitui testes automatizados de cada papel, tentativa de acesso cruzado entre contas, origem ausente/maliciosa, enumeração de recibos, limites de requisição e comportamento quando a escrita de auditoria falha. Não afirmar que a auditoria de segurança está concluída.
+- Próxima etapa: revisar os testes de rota existentes e acrescentar casos negativos de autorização/isolamento onde estiverem ausentes; depois examinar os fluxos de login, alteração de senha, sessão e limitação de tentativas. Nenhum deploy, cobrança ou alteração de banco de produção foi realizado.
+
+
+### Testes de autorização e revisão de autenticação — 2026-10-25 (complemento)
+
+- A execução #341 está aprovada e cobre o teste de consistência financeira com várias linhas e rodadas.
+- A leitura dos testes de rota existentes confirmou casos negativos para sessão ausente, papel incorreto, troca obrigatória de senha, requisições de outra origem, payloads inválidos e consulta pública sem recibo confirmado.
+- O histórico do jogador verifica que a consulta usa o `playerId` da sessão autenticada; a criação da compra recebe o identificador do jogador do servidor, e não do payload do cliente.
+- O login usa cookie `HttpOnly`, `SameSite=Lax`, expiração, verificação de senha e limitação de tentativas; a troca de senha exige senha atual, comprimento mínimo de 12 caracteres e revoga as sessões anteriores dentro da transação antes de emitir nova sessão.
+- Ainda falta verificar os casos em que o armazenamento de auditoria falha, os limites de tentativas e isolamento de conta com integração real PostgreSQL, além da cobertura de todas as rotas. A análise não é um pentest e não certifica a aplicação como pronta para produção.
+- A nota antiga sobre divergência Next/ESLint foi marcada como histórica para evitar instruções contraditórias; a branch atualmente auditada tem ambas as dependências na versão 16.4.3.
+
+### Revisão de sessão e limite de tentativas — 2026-10-25
+
+- As execuções #342 e #343 do workflow `Verify` foram confirmadas como concluídas com sucesso nos três jobs: verificação principal, migração e testes de concorrência PostgreSQL.
+- A revisão estática de `src/lib/auth/session.ts` confirmou token de sessão aleatório de 32 bytes, persistência somente do hash SHA-256, validade de 12 horas, revogação e rejeição de sessões expiradas, revogadas ou pertencentes a contas inativas.
+- O logout revoga a sessão apresentada e limpa o cookie; a rota de identidade retorna apenas campos de sessão necessários e desativa cache; a alteração de senha exige a senha atual e executa atualização da senha, revogação das sessões anteriores e criação da nova sessão numa transação.
+- O limitador de login tem testes de integração PostgreSQL para contagem concorrente, janela de 15 minutos e limpeza após autenticação bem-sucedida. Esses testes só são executados quando `RUN_POSTGRES_INTEGRATION=1`.
+- **Risco a tratar antes de considerar a proteção contra abuso concluída:** o limitador atual é indexado pelo nome de usuário normalizado, sem uma dimensão independente por origem/IP. Isso permite que um terceiro tente provocar bloqueio temporário de uma conta-alvo. A próxima mudança deve avaliar e testar um limite adicional por origem, sem confiar cegamente em cabeçalhos encaminhados por proxy, sem registrar IP bruto desnecessariamente e sem enfraquecer o limite por conta.
+- Esta é uma revisão estática com testes existentes, não um pentest nem uma certificação de segurança. Permanecem pendentes os testes de falha na escrita de auditoria, isolamento de sessão/conta em integração e revisão sistemática das rotas restantes.
+- Nenhum deploy, merge para `main`, cobrança real ou alteração em banco de produção foi realizado.
+
+### Revisão de auditoria administrativa — 2026-10-25 (continuação)
+
+- A inspeção das rotas administrativas confirmou que fechar e sortear registram o ator dentro dos serviços de domínio revisados, enquanto a rota de apuração grava `ROUND_PRIZES_SETTLED` depois de `settleRoundPrizes` retornar.
+- **Ponto de consistência a resolver:** se a apuração financeira concluir e a gravação posterior do evento de auditoria falhar, a rota pode responder erro 500 embora a apuração já tenha sido persistida. Antes de alterar o fluxo, revisar o serviço de apuração e sua estratégia idempotente; a solução deve garantir rastreabilidade sem repetir créditos ou criar um falso estado de falha. Não basta ocultar a exceção nem declarar a operação concluída sem auditoria.
+- A gravação de eventos de negação por papel insuficiente também é aguardada antes de responder 403; uma indisponibilidade do banco de auditoria pode alterar a resposta esperada. Criar testes específicos de falha de auditoria e decidir/documentar uma política uniforme para ações financeiras e tentativas negadas.
+- Próxima etapa: inspecionar o serviço transacional `settleRoundPrizes`, o desenho de idempotência e seus testes antes de modificar a rota. Manter as alterações em `feature/dual-plate-draw`; sem deploy ou mudanças em produção.
+
+### Apuração e auditoria na mesma transação — 2026-10-25
+
+- A apuração agora recebe o identificador do administrador e grava o evento `ROUND_PRIZES_SETTLED` dentro da mesma transação PostgreSQL que persiste os prêmios e os créditos no ledger.
+- A rota administrativa deixou de gravar o evento de sucesso depois que a transação financeira termina. Isso elimina o estado ambíguo em que a apuração poderia estar concluída no banco, mas a rota retornaria erro porque uma gravação de auditoria separada falhou.
+- Se a gravação de auditoria falhar dentro da transação, a transação inteira deve falhar e reverter junto os créditos e atualizações da apuração. A idempotência existente por `prize-credit:<lineId>` permanece como proteção adicional, não como substituto da atomicidade.
+- Os testes da rota foram ajustados para verificar que o identificador do administrador é entregue ao serviço e que a rota não tenta criar um segundo evento de sucesso fora da transação. A confirmação final depende da CI do commit atual.
+- A alteração está restrita à branch `feature/dual-plate-draw`. Nenhum deploy, merge para `main`, pagamento real ou banco de produção foi tocado.
+
+### Obrigatoriedade de auditoria na apuração — 2026-10-25
+
+- A CI da execução #349 terminou com sucesso nos três jobs: `verify`, `migration-test` e `postgres-concurrency-test`.
+- A revisão seguinte identificou que `settleRoundPrizes` aceitava o identificador do administrador como opcional. Isso permitia que uma chamada futura do serviço concluísse a apuração sem registrar o evento de auditoria, mesmo que a rota administrativa atual já passasse o ator.
+- O serviço agora exige `actorId` e grava obrigatoriamente `ROUND_PRIZES_SETTLED` na mesma transação dos créditos e da apuração. O teste de integração PostgreSQL foi atualizado para fornecer um ator e verificar os eventos de auditoria das chamadas concorrentes/repetidas, além de removê-los na limpeza da fixture.
+- A alteração está na branch `feature/dual-plate-draw`; aguardar CI antes de considerar validada. O teste de integração PostgreSQL depende de `RUN_POSTGRES_INTEGRATION=1` e de `DATABASE_URL`; a CI comum não substitui a execução explícita desse teste contra PostgreSQL.
+- Nenhum deploy, merge para `main` ou alteração de banco de produção foi realizado.
+
+### Correção de tipagem no teste de integração de apuração — 2026-10-25
+
+- As execuções #350, #351 e #352 detectaram falha de TypeScript no teste de integração PostgreSQL: duas chamadas ainda usavam a assinatura antiga de `settleRoundPrizes`, sem o ator obrigatório. Os demais jobs de migração e concorrência PostgreSQL dessas execuções passaram; o job principal falhou no typecheck.
+- Corrigi as chamadas restantes para fornecer o identificador do ator, mantendo a exigência de auditoria no serviço. Commit de correção: `0cc65cfc5d67bd6a9599dc75848740d96994884b`.
+- A execução #353 está na fila para validar a correção. Não considerar o pipeline aprovado novamente até essa execução terminar.
+- Nenhuma alteração de produção ou deploy foi feita.
+
+
+### CI restabelecida e ajuste do ator de auditoria — 2026-10-25
+
+- As execuções #353 e #354 terminaram com sucesso nos três jobs do workflow: verificação principal, teste de migração e teste de concorrência PostgreSQL. A correção das chamadas de teste para a assinatura obrigatória de `settleRoundPrizes(prisma, roundId, actorId)` está validada pela CI: https://github.com/jpveiculos/JogaPlacas/actions/runs/40233222350 e https://github.com/jpveiculos/JogaPlacas/actions/runs/40233232170.
+- Na revisão posterior do teste de integração de apuração, foi identificado que o fixture usava o ID de um jogador como ator de auditoria. O teste agora cria um usuário com papel `ADMIN` e usa esse ID nas chamadas de apuração; a limpeza remove os dois usuários de teste. Essa mudança é apenas no teste e aguarda a CI do novo commit.
+- A inspeção do checkout confirma que a criação de compra grava uma compra e pagamento Pix pendentes, com idempotência e validação transacional, mas não chama o Mercado Pago, não cria cobrança real e não confirma pagamento. A interface informa essa limitação ao jogador. A integração de pagamento continua explicitamente fora do estado funcional atual.
+- A área do cambista continua sendo um placeholder protegido por papel, sem fluxo de venda, cliente ou comissão habilitado. Não tratar os fluxos Pix/cambista como prontos.
+- A limitação de tentativas de login permanece por conta e o risco de bloqueio provocado por terceiros continua pendente. Não foi adicionada uma dimensão por IP/origem sem conhecer um sinal de cliente confiável da infraestrutura.
+- Nenhum deploy, merge para `main`, cobrança real ou alteração em banco de produção foi realizado.
+
+
+### Painel operacional inicial do administrador — 2026-10-25
+
+- Implementado endpoint protegido `GET /api/admin/rounds`, com verificação de sessão, papel `ADMIN` e troca obrigatória de senha. Retorna até 100 rodadas, seus estados/resultados e contagem de participações, além de totais agregados de compras pendentes e confirmadas; respostas sem cache.
+- A área administrativa deixou de ser apenas placeholder para o ciclo operacional de rodadas: lista rodadas, exibe os dois resultados como placas separadas e permite acionar fechamento, sorteio e apuração por meio das rotas existentes. A interface confirma ações antes de executá-las, mostra erros retornados pelo servidor e atualiza os dados após a operação.
+- As regras críticas permanecem no servidor: cutoff, estado da rodada, horário do sorteio, existência dos dois resultados e idempotência da apuração não são confiados à interface. O painel não permite editar resultados publicados.
+- Adicionado teste de rota para sessão ausente, papéis não autorizados, agregados e cabeçalho sem cache. Os commits de implementação do endpoint, componente, página, CSS e teste ainda precisam ser confirmados pela CI subsequente.
+- Limites conhecidos: ainda não existe interface de criação/recorrência de rodadas, nem painéis completos de usuários, configurações, comissões, saques e relatório financeiro. Pagamento Pix real e fluxo de cambista continuam pendentes; o painel não deve ser considerado a conclusão da plataforma.
+- Nenhum deploy, merge para `main`, cobrança real ou alteração de banco de produção foi executado.
+
+
+### Criação administrativa de rodadas — 2026-10-25
+
+- A execução #363 confirmou que o painel operacional anterior passou em lint, typecheck, testes, build, migração e concorrência PostgreSQL após a correção do efeito React.
+- Acrescentada criação manual de rodada na API administrativa: apenas ADMIN com senha inicial já alterada pode criar; requisição de outra origem é recusada quando o cabeçalho Origin está presente; os horários são validados no servidor; o início deve ser futuro e exatamente 29 minutos antes do resultado, que precisa cair nos minutos :00 ou :30 de São Paulo; o cutoff é calculado como um minuto antes do resultado.
+- O código da rodada é derivado do horário de resultado no fuso `America/Sao_Paulo`; criação e evento `ROUND_CREATED` são persistidos na mesma transação. Código duplicado retorna conflito em vez de sobrescrever a rodada.
+- A interface converte horários de parede do fuso São Paulo para ISO antes de enviar, exibe a regra de cutoff e atualiza a lista após a criação. Foram acrescentados testes de rota para origem, papel, intervalo e auditoria transacional.
+- As alterações de criação de rodada e seus testes ainda aguardam a CI dos commits mais recentes; não considerar aprovadas até a conclusão do workflow.
+- Ainda faltam recorrência automática de rodadas, administração financeira e de contas, fluxo completo de cambista, confirmação de pagamento real e revisão final de segurança. O sistema não está pronto para produção nem foi implantado.
+
+
+### Programação recorrente de rodadas — 2026-10-25
+
+- Implementado endpoint interno protegido `POST /api/internal/round-scheduler`, destinado a ser chamado pelo agendador do ambiente de hospedagem a cada minuto com `Authorization: Bearer <ROUND_SCHEDULER_SECRET>`. A ausência de segredo ou um token inválido resulta em 401.
+- O endpoint mantém uma janela móvel de 48 horas de rodadas, com horários de resultado alinhados às marcas de meia hora no fuso `America/Sao_Paulo`. Os códigos de rodada incluem data e minuto local e a restrição única no banco permite repetição segura sem duplicar rodadas.
+- A sequência recorrente abre um minuto após o sorteio anterior, fecha um minuto antes do próximo sorteio e mantém resultados em :00 e :30. A rodada com resultado às 00:30 abre às 00:01 e fecha às 00:29.
+- O agendador processa fechamentos vencidos antes dos sorteios vencidos e usa os serviços existentes que bloqueiam a linha e protegem contra sorteios duplicados. Cada rodada criada e sua auditoria são gravadas na mesma transação. Falhas individuais são reportadas no resultado para que o provedor possa repetir a chamada.
+- A criação manual segue o mesmo ciclo de 29 minutos entre início e resultado e não substitui o agendador.
+- **Não está ativado em produção:** é necessário configurar `ROUND_SCHEDULER_SECRET` no ambiente de hospedagem e criar uma tarefa externa com frequência de um minuto. O repositório não identifica ainda um provedor de hospedagem/agendador de produção confirmado, e nenhuma URL ativa, segredo ou banco produtivo foi alterado. A programação só será efetivamente automática quando essa tarefa for configurada no ambiente correto.
+- Validação de CI pendente para os commits desta implementação. Não considerar sorteios automáticos ativos nem fazer cobranças reais até validar o workflow e configurar o agendador com acesso ao banco correto.
+
+
+### Ajuste de ciclo: abertura efetiva e proteção de compras — 2026-10-25
+- O serviço `src/modules/rounds/open-round.ts` abre uma rodada SCHEDULED quando o relógio do banco alcança `startsAt`, desde que ainda esteja antes de `cutoffAt`. Usa bloqueio da linha, transação serializável e auditoria; rodadas já abertas são tratadas como no-op idempotente.
+- O endpoint interno foi alterado para POST, pois realiza mutações. A autenticação exige `ROUND_SCHEDULER_SECRET` em `Authorization: Bearer ...`, comparado em tempo constante.
+- O agendador agora processa: fechamentos vencidos, aberturas cujo início chegou e sorteios vencidos. Compras também validam `startsAt`, para impedir apostas antes da abertura mesmo que a rodada já esteja criada com status SCHEDULED.
+- Adicionados testes para abertura, rejeição antes do início/depois do fechamento, execução idempotente do scheduler e autorização; testes de compra cobrem o instante de abertura.
+- A CI destes commits está pendente. A execução automática em produção ainda exige escolher/confirmar a hospedagem correta, configurar segredo e agendar chamada a cada minuto. Nenhum deploy ou banco de produção foi alterado.
+
+
+### Correção final do alinhamento de minutos — 2026-10-25
+
+- A regra aprovada foi aplicada literalmente: resultado em :00 ou :30; abertura em :01 ou :31; fechamento em :59 ou :29 imediatamente antes do próximo resultado. Exemplo: resultado 00:00, abertura da rodada seguinte 00:01, fechamento 00:29 e resultado 00:30.
+- Para uma rodada com resultado às 00:30, o horário de início é 00:01 (29 minutos antes do resultado), o fechamento é 00:29. A rotina não usa 00:00 como início dessa rodada.
+- A criação manual foi restringida à mesma regra: resultado precisa estar nos minutos :00 ou :30 do fuso de São Paulo e o início exatamente 29 minutos antes. Os testes foram ajustados para esses instantes.
+- Se o scheduler iniciar no minuto anterior ao resultado e a rodada ainda não existir, ele ainda pode criar a rodada vencendo o cutoff e fechá-la imediatamente, para permitir o sorteio no horário programado. Se o instante do sorteio já passou, não cria retrospectivamente uma rodada nova.
+- O serviço de compra valida `startsAt` e `cutoffAt`; portanto, mesmo uma rodada previamente criada não aceita apostas antes da abertura.
+- A execução CI #405 confirmou sucesso nos três jobs (`verify`, `migration-test` e `postgres-concurrency-test`) após essas correções.
+
+
+### Auditoria das transições automáticas
+
+- Fechamentos e sorteios acionados pelo scheduler agora geram eventos de auditoria próprios (`ROUND_CLOSED_AUTOMATICALLY` e `ROUND_RESULTS_DRAWN_AUTOMATICALLY`), dentro da mesma transação que altera o estado ou persiste os resultados.
+- Operações manuais de administrador preservam os eventos de auditoria existentes com o ator associado.
+- CI #405 passou nos três jobs após as alterações mais recentes.
+
+
+### Correção de fixtures de testes após exigir abertura — 2026-10-25
+
+- A CI detectou que a fixture de integração PostgreSQL de compras tinha `startsAt` posterior ao horário de teste, algo que era tolerado antes da nova validação. A fixture foi corrigida para representar uma rodada já aberta no instante da compra.
+- A CI também detectou uma expectativa antiga no teste de criação administrativa que ainda esperava início às 12:00; a expectativa foi alinhada para 12:01, fechamento 12:29 e resultado 12:30.
+- Os jobs anteriores com falhas são anteriores a essas correções. A CI #405 do commit `c5f1119e61bb9f6f067a0b29072f5a9d35a609dd` passou em `verify`, `migration-test` e `postgres-concurrency-test`.
+
+
+### Auditoria da regra de repetição sequencial — 2026-10-25
+
+- Decisão funcional confirmada com o responsável: repetição de 1 a 10 significa rodadas consecutivas, não uma seleção de sorteios aleatórios ou espaçados. Exemplo: uma compra de 4 repetições concorre à rodada atual elegível e às três rodadas seguintes, em intervalos de 30 minutos.
+- Atualizada a fonte de verdade `docs/PRODUCT_SPEC.md`: proíbe pular sorteios, escolher rodadas alternadas ou remapear a repetição silenciosamente. Cada participação mantém seu registro próprio dentro da mesma compra antecipada.
+- A validação de domínio considera a primeira participação como a que precisa estar aberta no instante da compra; as participações seguintes podem estar agendadas, desde que estejam dentro do cutoff de cada rodada.
+- O serviço de compra valida os horários oficiais carregados do banco: cada rodada selecionada precisa ter resultado exatamente 30 minutos depois da anterior, preservando a ordem enviada e impedindo saltos. A sequência é recusada se houver lacuna.
+- Esta implementação permanece na branch `feature/dual-plate-draw`; nenhuma hospedagem, produção, cobrança real ou banco produtivo foi alterado. A conclusão depende da CI e de testes de integração adicionais.
+
+
+### Ajuste de interface e correção da CI — repetição sequencial — 2026-10-25
+
+- A primeira CI que executou a nova validação detectou uma fixture de teste financeiro antiga sem os horários `resultAt` e com a segunda rodada marcada como `OPEN`. A falha foi de fixture incompatível com o novo contrato, não do teste que rejeita sorteios pulados. A fixture foi corrigida para modelar a rodada aberta e a seguinte agendada, com resultados separados por 30 minutos.
+- A interface do jogador foi ajustada para orientar a seleção sequencial: a primeira rodada só pode ser a que está aberta; só a próxima rodada consecutiva pode ser adicionada; remover uma rodada também remove as posteriores; rodadas não consecutivas ficam desabilitadas. O servidor continua sendo a autoridade final e rejeita qualquer sequência inválida.
+- O teste automatizado de compra que tenta pular uma rodada passou na execução #412; porém a execução geral falhou por causa da fixture financeira, e não deve ser considerada aprovada. A nova execução após a correção precisa terminar com sucesso antes de validar a mudança.
+- Sem deploy, sem merge para `main`, sem banco de produção e sem cobrança real.
+
+
+### Recuperação do agendador no minuto de corte — 2026-10-25
+
+- A auditoria encontrou uma condição de borda: se o scheduler fosse iniciado durante o minuto final antes do sorteio, a geração de slots pulava o sorteio iminente porque o cutoff já havia chegado. Isso contrariava a estratégia de recuperação documentada.
+- Corrigido o cálculo para pular somente horários de resultado que já passaram. Se o scheduler iniciar às 12:29 para o resultado das 12:30, ainda cria a rodada com início às 12:01 e cutoff às 12:29; a rotina fecha a rodada e pode sortear às 12:30.
+- Adicionado teste automatizado com relógio fixo para validar o caso de inicialização às 12:29 no fuso de São Paulo e conferir os horários e o evento de auditoria.
+- A CI deve passar antes de considerar a correção validada. O endpoint permanece protegido por segredo e não foi configurado nem ativado em hospedagem de produção.
+
+
+## Padrão visual de horário — 2026-10-25
+Decisão funcional confirmada: todos os horários apresentados na interface, no recibo e em informações de rodadas devem usar o formato de 24 horas `HH:mm`, com dois pontos e sem sufixos `h` ou `hs`. Exemplos: `00:00`, `12:30`, `23:59`. Aplicar o mesmo padrão às mensagens, cartões de rodada, sequência de repetição e recibo térmico. Isso é somente formatação visual: não muda `America/Sao_Paulo`, os valores de data/hora armazenados nem a lógica do agendador. A aplicação visual em todos os componentes ainda precisa ser verificada e coberta por testes.
+
+
+## Decisão e pendências do recibo para repetição — 2026-10-25
+Registro histórico da decisão de recibo em 2026-10-27: uma compra com 1 a 10 rodadas usa um único recibo original e QR Code para consulta da compra completa. A decisão posterior de 2026-10-28 proíbe reimpressão/segunda via após o fluxo original ser encerrado; a falha física de impressão não cancela o pagamento, mas não autoriza recuperar ou reemitir o recibo.
+
+Estado atual e limites: src/components/receipts/thermal-receipt.tsx é um componente de apresentação que só renderiza com status CONFIRMED e formato válido do código. Ele recebe os dados e o QR Code da camada chamadora; o QR ainda pode ser apenas um espaço reservado. Não foi concluída a integração ponta a ponta entre confirmação real de pagamento, emissão do código, carregamento das participações, resolução do QR e impressão pelo fluxo do cambista.
+
+Testes pendentes antes de considerar o fluxo pronto:
+- recibo único para compras com 1, 5 e 10 repetições;
+- ordem contínua e índice correto da repetição, sem pular rodadas;
+- total impresso igual à soma das participações/linhas confirmadas;
+- preservação literal dos formatos de placa cinza e Mercosul;
+- recibo não renderizado para pagamento pendente/cancelado/estornado;
+- emissão original/alternativa de impressão ainda dentro do fluxo de emissão, sem efeitos financeiros adicionais; não oferecer reimpressão após encerrar o fluxo;
+- QR Code levando à consulta da compra completa e somente dados autorizados;
+- integração real com a tela do cambista e com o provedor de pagamento após confirmação assinada e idempotente.
+
+
+Implementação parcial do recibo — 2026-10-25: o componente térmico agora identifica visualmente cada linha pela repetição sequencial e mantém o código da rodada explícito. Foi adicionada cobertura unitária para várias linhas na mesma rodada e para dez rodadas em sequência. Isso cobre a apresentação do índice, não substitui a futura integração de pagamento, QR Code, consulta completa da compra ou impressão real no cambista.
+
+
+### Correção de teste do recibo — 2026-10-25
+
+- A CI #428/#429 encontrou que o arquivo de teste importava diretamente o componente TSX, mas a configuração Vitest não transformava JSX nessa importação. A regra de numeração foi extraída para `receipt-repetition.ts`, os tipos para `thermal-receipt-types.ts`, e o teste agora importa o módulo puro sem carregar JSX. O componente continua usando e exportando o mesmo helper. A correção aguarda CI; não considerar validada até todos os jobs terminarem.
+
+
+### Revisão complementar de pagamentos e recibo — 2026-10-25
+
+- A auditoria atual confirmou que `POST /api/player/purchases` cria somente compra/participações/pagamento pendentes e informa explicitamente que nenhuma cobrança Pix foi criada. O serviço não chama o Mercado Pago e não marca pagamento como confirmado.
+- A consulta pública por código de recibo já limita o resultado a compras confirmadas e expõe apenas as linhas/resultados necessários; pode servir de destino para o QR do recibo único após validação adicional e geração do QR.
+- O schema contém metadados para provedor e eventos de webhook, mas ainda não existe adaptador, criação de cobrança, verificação de autenticidade de webhook ou reconciliação ponta a ponta.
+- O plano `docs/PAYMENTS_MERCADO_PAGO_IMPLEMENTATION_PLAN.md` foi atualizado com esses achados e gates de segurança. Não usar credenciais reais nem emitir recibo até que o pagamento seja confirmado por fonte confiável no servidor.
+- As primeiras execuções da CI do recibo (#428 e #429) falharam porque Vitest tentou importar JSX do componente térmico sem transformação configurada. A regra de numeração e os tipos foram extraídos para módulos TypeScript sem JSX, e o teste passou a importar o módulo puro. A validação desta correção está pendente da CI mais recente.
+- Sem deploy, sem merge para `main`, sem alteração de banco de produção e sem cobrança real.
+
+
+### Endpoint protegido para recibo oficial — 2026-10-25
+
+- Criado `GET /api/player/purchases/[purchaseId]/receipt` para carregar os dados do recibo a partir do banco, em vez de confiar em valores enviados pelo navegador.
+- Exige sessão ativa e propriedade da compra: jogador só acessa a própria compra, cambista só acessa a compra associada a ele e administrador pode consultar para suporte/auditoria. IDs inexistentes e não autorizados retornam a mesma resposta 404 para reduzir enumeração.
+- O recibo só é retornado quando compra e pagamento estão `CONFIRMED`, ambos têm timestamp de confirmação e existe `receiptCode`. Compra pendente ou inconsistente não recebe payload de recibo.
+- Linhas e rodadas são lidas do banco, ordenadas por horário da rodada, e os valores por placa são reconstruídos a partir das seis alocações em centavos. O endpoint não cria cobranças nem altera estados financeiros.
+- Testes cobrem sessão ausente, proprietário, acesso cruzado, pagamento pendente e ordem/total de linhas. A implementação precisa passar a CI; ainda não está ligada ao componente de impressão nem à confirmação real de pagamento.
+
+
+## Recibo oficial: consulta autenticada na área do jogador (2026-10-25)
+
+- O histórico do jogador oferece a ação de consultar/imprimir recibo somente para compras cujo estado esteja `CONFIRMED`.
+- A interface consulta `GET /api/player/purchases/[purchaseId]/receipt`; o servidor repete a verificação de sessão, titularidade e confirmação de compra e pagamento. Não confiar apenas na condição visual.
+- Os dados retornados pelo servidor alimentam o componente térmico de 58 mm, com linhas agrupadas por código de rodada e um único código de recibo para a compra inteira. A emissão original não cria compra nem movimentação financeira adicional. A decisão atual não permite reimpressão/segunda via após o fluxo ser encerrado.
+- QR Code real ainda não está integrado; o componente mantém o espaço reservado. A consulta pública pelo código já existe, mas a navegação QR ponta a ponta depende de URL de destino definida e geração local confiável do QR.
+- A integração de pagamento não está ativa: sem confirmação autêntica do provedor, o recibo oficial permanece indisponível. Testes da CI devem confirmar esta alteração antes de considerar a etapa validada.
+
+
+## Consulta pública de recibo e resultados (2026-10-25)
+
+- Criada a página `/consulta`, que aceita código de recibo `JP-...` e consulta `GET /api/public/ticket-check` sem exigir sessão.
+- A página só exibe resultados retornados pelo endpoint, que limita a consulta a compras confirmadas e não retorna identificadores do jogador. Prêmio só é apresentado como creditado quando existe registro de crédito.
+- O endpoint permanece a fonte de verdade; a página não calcula premiação nem altera registros financeiros.
+- A integração com QR Code físico/digital ainda não foi ligada. O destino web pode ser `/consulta?...` numa próxima etapa, mas o fluxo precisa codificar o código do recibo com uma biblioteca local confiável e validar o link no impresso. A CI das alterações da página pública e das duas atualizações de documentação terminou com sucesso nas execuções #445, #446 e #447. Isso valida os gates automatizados desses commits, mas não substitui teste ponta a ponta nem habilita implantação.
+
+## Atualização de implementação — carteira, reconciliação de prêmios e saques (2026-10-26)
+
+- Foi adicionada à área administrativa uma ferramenta para localizar prêmios positivos de jogadores online, recalcular o valor com o snapshot histórico e reconciliar/creditar usando a chave idempotente `prize-credit:<linha>`. Falhas técnicas de crédito não expiram em sete dias; divergências no livro-razão bloqueiam a correção. O endpoint exige ADMIN, motivo da correção e grava auditoria.
+- Foi adicionada à área do jogador a seção de carteira e saques. O jogador consulta saldo derivado do livro-razão, solicita saque com valor e chave Pix, e vê o histórico de solicitações/pagamentos. O saque cria uma reserva negativa e a solicitação na mesma transação serializável; saldo reservado deixa de ficar disponível para nova utilização.
+- A chave Pix é armazenada com AES-256-GCM e chave de ambiente `WALLET_PIX_ENCRYPTION_KEY`; sem a chave, novas solicitações são bloqueadas. Formatos comuns de chave são validados antes da solicitação. Não inserir o segredo real no repositório; provisionar no ambiente de desenvolvimento/homologação antes de testar chaves reais.
+- Foi adicionada à área administrativa uma fila de saques pendentes, mostrando chave Pix apenas a ADMIN autenticado e autorizado. O administrador realiza o Pix fora do sistema, confere o comprovante e então registra a baixa com referência, observação, ator e auditoria. O clique não transfere dinheiro automaticamente; integração de payout Pix ainda não existe. Recusar o saque libera a reserva por lançamento compensatório idempotente.
+- Testes adicionados para criptografia/mascaramento, formatos de chave Pix, reserva de saldo, saldo insuficiente, origem cruzada, autenticação administrativa, baixa de pagamento e liberação após recusa. Os fluxos permanecem apenas na branch `feature/dual-plate-draw`.
+- **Validação pendente nesta atualização:** os workflows dos commits de teste de chave Pix ainda estão em execução no GitHub Actions; não declarar a pipeline mais recente verde até que os três jobs (`verify`, `migration-test`, `postgres-concurrency-test`) concluam. A CI dos commits anteriores de implementação dos painéis e dos testes iniciais de saque concluiu com sucesso.
+- **Limites importantes:** não houve deploy, migração em produção, pagamento real nem configuração de segredo real. Antes de habilitar o fluxo em ambiente utilizável, executar testes ponta a ponta com banco descartável, testar concorrência e falhas de chave, e provisionar `WALLET_PIX_ENCRYPTION_KEY` de forma segura. A plataforma ainda não está finalizada: o fluxo completo de vendas do cambista em espécie, gestão administrativa completa, configuração de comissões/financeiro e testes ponta a ponta globais continuam pendentes.
+
+
+## Regra de manutenção do estado documental — 2026-10-26
+
+Ao atualizar este manual, comparar primeiro o HEAD da branch de trabalho com cada documento e código relevante. Registrar cada item como **implementado**, **parcial**, **pendente**, **bloqueado por decisão** ou **validado por evidência**, separando claramente existência de código de validação de CI e de operação real. Quando a implementação vigente representa uma melhoria aprovada em relação à ideia inicial, atualizar a regra principal e marcar a descrição antiga como histórica/superada; não manter duas instruções conflitantes como se ambas fossem atuais. Não apagar decisões históricas que expliquem migrações ou compatibilidade, mas não as apresentar como estado atual. Atualizar `docs/PRODUCT_SPEC.md` para decisões de produto e manter os documentos técnicos alinhados no mesmo conjunto de mudanças.
+
+
+## Nova direção de produto: página principal pública — 2026-10-26
+
+Registro histórico da implementação na branch `feature/dual-plate-draw`, superado pela decisão de 2026-10-28: a home então integrava consulta pública por código e painel geral de resultados/ganhadores. Esses elementos não são requisitos atuais e não devem ser reintroduzidos. A home verifica a sessão no servidor e redireciona usuários autenticados à área correspondente por papel. Os estilos responsivos foram adicionados, mas ainda exigem validação visual e de acessibilidade. Lint, typecheck, testes e build não foram confirmados para este commit; cadastro público de jogador e apresentação dinâmica dos valores oficiais de prêmio continuam pendentes. Requisitos e critérios completos estão em `docs/PRODUCT_SPEC.md`, seção “Página principal pública e entrada no produto”.
+
+
+## Regra vigente — cadastro mínimo, recibo digital e pesquisa administrativa (2026-10-26)
+
+- Cadastro de jogador: somente nome de usuário e senha. Nome completo, CPF, telefone, WhatsApp e e-mail não são requisitos e não devem ser pedidos durante a aposta. Atualizar formulários, schemas, validações e testes para refletir essa regra sem quebrar contas históricas desnecessariamente.
+- Área do jogador: a aposta deve pedir placa e parâmetros essenciais (valor, rodada/repetição e meio de pagamento). Após confirmação autêntica, gerar recibo digital único com QR Code de consulta pública e ações de baixar/imprimir. QR do recibo não é QR de pagamento. Compra pendente não pode parecer confirmada.
+- Área do cambista: venda rápida anônima sem `customerId` e sem criação de `Customer`; placa, parâmetros essenciais, valor e fluxo de pagamento permitido. Retirar pesquisa, histórico, consulta de resultados e seleção de clientes. Não há segunda via por código ou qualquer outro meio.
+- Área administrativa: adicionar busca restrita de contas de jogadores por nome de usuário e dados mínimos de manutenção, com paginação, autorização ADMIN no servidor e auditoria. Não criar dados pessoais ausentes.
+- **Dependências técnicas:** inspecionar e adaptar schema Prisma, contratos de API, `create-purchase.ts`, rotas de compra, componentes do jogador/cambista, emissão/consulta de recibo e testes. O serviço de compra atual possui dependências do cliente e fluxo de pagamento PIX pendente; remover apenas a interface antiga antes de substituir o fluxo deixaria a venda incompleta. Não marcar a tarefa concluída até testes de autorização, venda anônima, pagamento, recibo, QR, download/impressão, ausência de PII e regressão dos registros históricos.
+- Não apagar clientes históricos em massa nem migrar banco real como parte da limpeza de interface. Planejar eventual retenção/remoção separadamente, com revisão e plano reversível. Nenhum deploy ou ativação de pagamento real autorizado por esta decisão.
+
+
+## Fluxo de recebimento do cambista — Pix e espécie (regra vigente, 2026-10-26)
+
+### Sequência obrigatória da venda
+1. Cambista informa a placa e os parâmetros indispensáveis da aposta, sem cadastro do comprador.
+2. Escolhe o método de recebimento: Pix ou dinheiro em espécie.
+3. **Pix:** criar cobrança e exibir na mesma tela QR Code Pix + código copia-e-cola. O cliente paga no app bancário. O backend aguarda confirmação autenticada do Mercado Pago, valida valor/referência/status, processa evento idempotentemente e notifica/atualiza a tela. Só então conclui a venda e apresenta automaticamente o recibo oficial com código JP-..., QR de consulta e ações de imprimir/baixar.
+4. **Espécie:** botão explícito de confirmação de recebimento, disponível ao cambista autenticado para a venda em andamento. O servidor registra ator e timestamp e, numa operação transacional/idempotente, confirma a venda e apresenta automaticamente o recibo oficial com código e QR de consulta, pronto para imprimir/baixar.
+5. O QR Pix e o QR do recibo são artefatos distintos. Não emitir recibo oficial para Pix pendente/recusado/expirado; não confiar em estado informado pelo navegador. Webhook ou clique repetido não pode duplicar compra, participações, recibo nem lançamento.
+
+### Critérios de implementação e validação
+- Criar cobrança Pix com referência interna única e validar assinatura/autenticidade do evento recebido; reconciliar status e valor com a cobrança esperada.
+- Implementar webhook idempotente, estado de pagamento persistente e atualização da interface sem exigir recarregamento manual; prever consulta de estado enquanto a confirmação chega.
+- Implementar confirmação de espécie com sessão/role de cambista, proteção contra CSRF, vínculo à venda em andamento, timestamp do servidor, trilha de auditoria e idempotência.
+- A atribuição do código de recibo e a confirmação devem ser consistentes; QR de recibo deve resolver para consulta pública autorizada apenas após confirmação. Impressão/download reutiliza o mesmo recibo e nunca cria nova venda.
+- Testar pagamento aprovado, pendente, recusado, expirado, evento duplicado, evento fora de ordem, valor divergente, webhook inválido, botão de espécie repetido, sessão sem permissão e falha de impressão durante a emissão original; verificar que não existe fluxo de reimpressão/segunda via após encerrar.
+- **Status:** regra definida; integração ponta a ponta não confirmada. Não habilitar cobrança real nem alegar que o recibo automático está pronto até a CI e testes de integração demonstrarem o comportamento. Nenhum deploy ou alteração de banco de produção é autorizado por esta decisão.
+
+
+## Requisito de UX — sair do Pix/recibo e limpar a tela após impressão/download (2026-10-26)
+
+**Critério obrigatório para o fluxo do cambista** (e padrão de comportamento para o jogador):
+
+1. Tela de cobrança Pix com botão sempre acessível para sair/fechar, inclusive quando QR/copia-e-cola não carregarem ou a cobrança ficar pendente. Fechar a tela não muda o estado financeiro, não cancela automaticamente a cobrança e não emite recibo.
+2. Tela do recibo original com ações **Imprimir** e **Sair/Fechar recibo**; opção de download/alternativa de impressão pode existir somente dentro do fluxo original. A ação de sair encerra o fluxo e não oferece recuperação posterior.
+3. Após a solicitação de impressão ser aceita e o diálogo de impressão retornar, fechar a tela do recibo e limpar o estado temporário da venda para que a interface esteja pronta para o próximo jogo. Após o navegador aceitar/iniciar o download, fazer a mesma limpeza. O clique isolado não basta: esperar a ação ter sido iniciada/aceita. Se imprimir/baixar falhar ou a impressão for cancelada, manter o recibo na tela com opção de tentar de novo ou sair.
+4. O botão Sair fecha o recibo e limpa a tela sem alterar a compra confirmada. Limpar somente os campos/estado temporários da interface; não apagar histórico nem alterar dados persistidos.
+5. Alternativas de impressão/download durante o fluxo original usam o mesmo código de recibo e não repetem a venda nem movimentações financeiras. Depois de encerrar o fluxo, não oferecer reimpressão ou segunda via. Não alegar que uma página web detecta a impressão física real: validar o retorno do diálogo do navegador.
+
+**Auditoria do estado atual:**
+- Existe botão para sair da tela Pix em `src/components/player/player-purchase-form.tsx` (“Sair e iniciar outro jogo”); ele fecha a janela e limpa campos locais, mas preserva a cobrança anterior como pendente.
+- Existe botão “Fechar recibo” em `src/components/receipts/player-purchase-receipt.tsx`.
+- `src/components/receipts/thermal-receipt.tsx` chama `window.print()`, mas não oferece fluxo dedicado de download e não executa a limpeza automática após o diálogo de impressão.
+- O fluxo completo do cambista ainda não está implementado; portanto, não considerar os requisitos atendidos ponta a ponta.
+
+**Testes de aceitação necessários:** saída Pix sem mudança indevida do estado da cobrança; botão sair do recibo após falha de impressão/download; impressão concluída limpa a interface; download iniciado limpa a interface; cancelamento/falha mantém recibo e permite sair/tentar novamente; próxima venda inicia sem dados temporários anteriores; nenhuma ação de interface duplica compra, participação, recibo ou lançamento financeiro.
+
+
+### Implementação parcial — ações de saída e download do recibo (2026-10-26)
+- O componente compartilhado `ThermalReceipt` agora oferece ações separadas de **Imprimir recibo**, **Baixar recibo** e **Sair / Fechar recibo**. Sair e baixar limpam o estado/modal do recibo por meio do callback do componente; o arquivo baixado é HTML independente com estilos e conteúdo do recibo, não um PDF.
+- As ações ficam fora da área impressa e não aparecem no papel. A área do jogador usa o botão do próprio recibo para fechar o modal, removendo a necessidade de depender de um botão externo abaixo do conteúdo.
+- A tela Pix do jogador já tinha “Sair e iniciar outro jogo”; ela continua apenas fechando a tela e limpando os campos locais, sem afirmar que isso cancela o pagamento pendente.
+- **Limite técnico:** o fluxo de impressão não fecha automaticamente o recibo porque navegadores não distinguem de forma confiável impressão física concluída de diálogo cancelado. Durante o fluxo original, permitir tentar novamente ou sair; após sair/encerrar, não disponibilizar recuperação nem segunda via.
+- O recibo ainda pode mostrar placeholder no lugar do QR real. O fluxo de cambista (venda anônima, cobrança Pix/confirmar dinheiro, emissão e limpeza de tela) continua não implementado ponta a ponta. CI dos commits recentes está em execução; não considerar validado até os jobs terminarem.
+
+
+## Reconciliação executada — branch feature/public-home-registration — 2026-10-27
+
+Esta seção reconcilia o código que foi inspecionado nesta branch com o manual. Ela prevalece sobre notas antigas que afirmem genericamente que a integração de Pix não existe; não transforma código implementado em prova de operação ponta a ponta.
+
+### Confirmado no código inspecionado
+- **Mercado Pago Pix do jogador:** `src/app/api/player/purchases/route.ts` cria uma compra pendente, reutiliza a chave de idempotência, cria/recupera uma ordem Pix e persiste o ID da ordem, QR/copia-e-cola, URL de pagamento e status do provedor.
+- **Webhook:** `src/app/api/webhooks/mercado-pago/route.ts` exige segredo e assinatura HMAC, consulta o estado canônico no provedor, compara referência, moeda e valores, registra eventos e encaminha aprovação para confirmação transacional. Estados finais negativos cancelam registros ainda pendentes.
+- **Confirmação e consulta:** `src/modules/payments/confirm-payment.ts` centraliza a confirmação; `src/app/api/player/purchases/[purchaseId]/status/route.ts` permite ao jogador consultar estado e só informa recibo pronto quando compra e pagamento estão confirmados.
+- **Interface do jogador:** `src/components/player/player-purchase-form.tsx` acompanha o estado enquanto a tela Pix está aberta.
+- **Saques:** o painel administrativo registra pagamento manual ou rejeição; não realiza transferência Pix automaticamente.
+
+### Correção documental aplicada
+O texto do painel administrativo que dizia que “não existe integração ativa com provedor” estava desatualizado e contradizia os módulos presentes. Foi substituído por uma descrição precisa: a implementação de checkout/webhook existe, mas a validação ponta a ponta e a autorização para operação real continuam pendentes.
+
+### Ainda falta — prioridade de execução
+1. Consultar os resultados atuais do GitHub Actions para o HEAD desta branch e corrigir qualquer falha; a existência de testes não prova que passaram neste commit.
+2. Completar/validar os testes de contrato da Orders API com respostas reais de homologação, incluindo ordem sem QR, erro de rede após criação e persistência segura do ID para permitir reconciliação.
+3. Testar o fluxo do jogador ponta a ponta em homologação: compra pendente → QR/copia-e-cola → notificação autenticada → confirmação única → recibo pronto; também assinatura inválida, valor/referência divergentes, evento duplicado/fora de ordem, recusa, expiração, reembolso e pagamento após cutoff. Não é necessário movimentar dinheiro real.
+4. **Correção aplicada em 2026-10-27:** o webhook deixa o evento sem `processedAt` enquanto executa a reconciliação e marca como processado só após concluir o caminho de confirmação ou registrar a necessidade de reconciliação manual. Falhas permanecem reprocessáveis. Commit `27bb05b14a1a36c2c93d9534bfe15564b6f7b95d`. Ainda requer testes de concorrência, retry e duplicidade.
+5. Verificar estados de reembolso/estorno após uma compra já confirmada. O código atual fecha somente pagamentos ainda PENDING no ramo de estado negativo; não presumir que uma notificação de reembolso reverte automaticamente uma compra já confirmada.
+6. Validar o fluxo do cambista: venda sem cadastro de cliente, escolha Pix ou espécie, confirmação de espécie auditada/idempotente e emissão original do recibo com código único e QR de consulta. Não implementar recuperação ou segunda via.
+7. Completar os módulos administrativos faltantes (gestão de contas, regras/configurações financeiras, comissões e relatórios), conforme a especificação funcional.
+8. Validar QR real do recibo, download/impressão e comportamento de saída/limpeza da tela; a cobrança Pix e o QR do recibo são artefatos diferentes.
+9. Confirmar o agendamento externo do scheduler no ambiente de desenvolvimento e a navegação da página pública/cadastro, sem tratar deploy bem-sucedido como prova de todos os fluxos.
+
+### Patamar atual
+**Fundação e fluxos do jogador: implementação substancial, com gates de teste/validação ainda abertos.** **Pix do jogador: código implementado, homologação ponta a ponta ainda não comprovada.** **Cambista: fluxo de venda rápida e recebimento ainda incompleto.** **Administração: operações básicas de rodadas, reconciliação de prêmios e fila de saques existem; gestão completa continua pendente.** Nenhuma alteração de produção ou cobrança real é autorizada por esta reconciliação.
+
+
+### Correções incrementais — 2026-10-27
+- **Webhook Pix:** o registro do evento deixou de ser marcado como processado antes da confirmação transacional. Eventos ainda não processados podem ser retomados após falha; eventos já processados são reconhecidos como duplicados. Commit: `27bb05b14a1a36c2c93d9534bfe15564b6f7b95d`.
+- **Registro histórico superado em 2026-10-28:** commits antigos adicionaram consulta de vendas por código completo para recuperar segunda via. Essa funcionalidade foi removida por decisão posterior; não restaurar a rota nem a interface de consulta.
+- **Validação:** o GitHub não retornou status checks nem execuções de Actions para o commit da correção do webhook consultado. Portanto, essas alterações estão registradas no repositório, mas não são declaradas testadas ou publicadas.
+- **Próximo gap funcional do cambista:** a tela existente ainda prepara vendas por Pix; recebimento em dinheiro com confirmação auditada/idempotente e QR Code real do recibo continuam pendentes. Não substituir o fluxo atual sem implementar uma transição de estado atômica.
+
+
+## Decisão funcional — cadastro administrativo e comissão individual de cambistas (2026-10-27)
+
+### Regra aprovada
+- A área ADMIN deve permitir criar e editar cambistas por um formulário com nome completo, nome de usuário único, senha inicial, WhatsApp e percentual individual de comissão. Senha deve ser armazenada apenas com hash; nunca registrar senha/hash em auditoria. O administrador também pode ativar ou bloquear o cambista.
+- Cada cambista tem sua própria porcentagem, editável pelo administrador, para suportar pontos fixos e vendedores itinerantes com condições diferentes. A taxa é aplicada a vendas futuras; mudanças não reescrevem o histórico.
+- A área do cambista deve exibir dois indicadores: total bruto das vendas confirmadas e comissão acumulada em dinheiro (R$). Exemplo: R$ 100,00 em vendas elegíveis com taxa individual de 20% representam R$ 20,00 de comissão, não “20%” como contador.
+- A comissão por venda deve guardar taxa e valor calculado como snapshot ligado à compra, em centavos inteiros, de modo idempotente e auditável. Vendas pendentes/fracassadas/canceladas/estornadas não devem ser contadas indevidamente; a política de estorno de uma venda já confirmada precisa de implementação e teste explícitos.
+- A alteração de taxa, criação/edição de cambista e bloqueio devem registrar ator, data e valores anterior/novo relevantes, sem expor credenciais.
+
+### Situação técnica encontrada nesta inspeção
+- A especificação já previa, de forma genérica, percentual administrado e indicadores de vendas/comissão; faltavam a exigência explícita de taxa individual por cambista, o formulário com os campos e a distinção clara entre percentual e valor monetário acumulado.
+- prisma/schema.prisma contém CashierCommission com rateBasisPoints e amountCents por compra, o que oferece estrutura para preservar a taxa e o valor históricos por venda.
+- O modelo User não continha os campos do perfil; isso foi corrigido na implementação incremental abaixo. A estrutura `CashierCommission` existente armazena a taxa em pontos-base e o valor em centavos por compra.
+- **Implementação incremental iniciada nesta branch:** adicionados campos opcionais `fullName`/`whatsapp` e `commissionRateBasisPoints` ao modelo User, com migração versionada e limite de 0–10000 pontos-base; endpoints ADMIN para listar/criar/editar cambistas, definir comissão individual, ativar/bloquear conta e redefinir senha; formulário administrativo na área ADMIN; resumo autenticado na área do cambista com total de vendas confirmadas e comissão acumulada em reais; cálculo e persistência da comissão no mesmo fluxo transacional de confirmação Pix, usando a taxa vigente no momento da confirmação e arredondamento em centavos inteiros.
+- **Ainda parcial / sem validação:** comissão só foi ligada ao caminho de confirmação Pix que foi alterado. Venda em espécie ainda não está implementada ponta a ponta e não gera comissão por esse caminho; estornos após confirmação, testes específicos do novo CRUD/cálculo e validação de migração/CI continuam pendentes. O status Railway consultado para o commit `a8cc86ae0e8a072466b26d75ffa04302a9b01220` estava `pending`; não afirmar deploy concluído nem CI verde. Não executar migração produtiva nem habilitar operação real sem os gates apropriados.
+
+
+## Decisão técnica — impressão térmica Bluetooth com máxima compatibilidade (2026-10-27)
+
+**Objetivo aprovado:** oferecer o maior alcance possível de impressoras térmicas atuais via Bluetooth, com arquitetura independente de fabricante e alternativas claras quando o acesso direto não for suportado.
+
+### Fatos de plataforma que orientam a implementação
+- Não há API única de navegador que acesse toda impressora Bluetooth. Web Bluetooth tem suporte restrito por navegador/plataforma, normalmente exige contexto seguro e não equivale a suporte geral a Bluetooth Classic/SPP.
+- A impressão padrão via navegador funciona quando o sistema operacional já consegue usar a impressora; a disponibilidade do driver/serviço de impressão é responsabilidade do dispositivo/OS.
+- Alguns modelos exigem protocolo ou comandos específicos (por exemplo, variantes de ESC/POS) ou SDK do fabricante. Não assumir que o mesmo pacote de bytes funciona em todo equipamento.
+
+### Arquitetura alvo
+1. **Default:** recibo HTML/CSS de 58 mm e impressão via diálogo nativo do sistema, sem acoplar a marca.
+2. **Capability adapter:** definir uma interface de impressão que separe UI do transporte, por exemplo printReceipt(receipt, capabilities); selecionar caminho de impressão somente após detectar suporte real.
+3. **Bluetooth Web:** avaliar como melhoria opcional para dispositivos BLE e navegadores suportados; feature-detect, tratar cancelamento/permissão/desconexão/timeouts e manter fallback.
+4. **Bridge nativa opcional:** se a cobertura de campo exigir Bluetooth Classic/SPP, implementar ou integrar um aplicativo auxiliar por plataforma com permissões do sistema e perfis/protocolos adequados. Não presumir que uma PWA ou um site Next.js possa acessar livremente Bluetooth Classic.
+5. **QR próprio:** gerar QR localmente/na aplicação para URL pública de consulta do recibo e embutir no recibo; não gerar QR de recibo por serviço externo nem confundir com o QR Pix. O QR principal identifica a compra inteira; a página consulta cada participação/rodada separadamente.
+6. **Resiliência:** falha de pareamento/impressão nunca deve criar outra venda, apagar o recibo confirmado nem impedir a saída; oferecer retry, download e diálogo de impressão padrão.
+
+### Critérios de aceitação
+- Impressão legível em 58 mm, com margens, quebras e conteúdo conferidos em impressoras reais.
+- QR do recibo escaneável após impressão e apontando para a consulta pública correta.
+- Testes registrados para Android/BLE, Android/Classic-SPP, iOS com modelos explicitamente compatíveis e desktop via sistema, sem extrapolar o resultado de um modelo para todos.
+- UI identifica o caminho utilizado e informa quando Bluetooth direto não é suportado.
+- Nenhuma mensagem de sucesso baseada apenas em abrir o diálogo; a web não pode confirmar que o papel foi fisicamente impresso.
+
+### Estado e próximo passo
+O componente atual src/components/receipts/thermal-receipt.tsx usa window.print() e HTML baixável, sem camada Bluetooth direta e com placeholder se qrCodeDataUrl não for fornecido. Próximo passo de implementação: corrigir a geração do QR e robustecer impressão HTML/CSS como caminho base; em seguida escolher o caminho Bluetooth direto/bridge com base nos dispositivos e sistemas operacionais que se pretende suportar. Não instalar SDK específico nem prometer universalidade sem teste e sem definir a plataforma auxiliar.
+
+## Implementação retomada — venda em dinheiro do cambista (2026-10-27)
+
+- Foi adicionado o endpoint de desenvolvimento `POST /api/cashier/purchases/cash`, separado do endpoint Pix e protegido por sessão de cambista, validação de origem e validação estrita do payload.
+- O serviço de compra passou a aceitar modo `CASH`: cria compra e participações confirmadas, gera código de recibo `JP-...`, grava a comissão com a taxa vigente e registra evento de auditoria dentro da mesma transação serializável. O fluxo de dinheiro não cria registro de pagamento Mercado Pago nem cobra Pix.
+- A chave de idempotência mantém o mesmo resultado em repetição da mesma solicitação e impede reutilização para conteúdo divergente.
+- **Não validado ainda:** execução local de typecheck/testes, teste integrado com PostgreSQL, revisão completa de casos de repetição e confirmação do deploy. O endpoint é código em branch, não autorização para operação em produção. A tela do cambista já oferece seleção entre Pix e dinheiro e encaminha a venda em dinheiro para o endpoint separado; após sucesso, abre o recibo pelo componente existente. Ainda precisa de typecheck, testes locais/integração e teste manual do recibo para confirmar a integração ponta a ponta. Uma revisão de integração corrigiu o endpoint de recibos oficiais para aceitar compras em dinheiro confirmadas, que não têm registro de pagamento Pix, mantendo a exigência de pagamento confirmado para compras Pix.
+
+
+
+## Atualização de implementação — consulta pública por QR e rodadas (2026-10-27)
+
+- A rota pública `/verificar-recibo/[receiptCode]` consulta a compra confirmada no banco oficial. A API agora inclui as rodadas vinculadas, horário programado, resultados oficiais publicados e estado de apuração de cada placa.
+- A interface pública mostra separadamente: sorteio aguardando; aguardando resultado oficial; resultado publicado; rodada cancelada; placa premiada, não premiada ou ainda aguardando apuração. Só apresenta o crédito como pago quando há registro de crédito do prêmio.
+- O QR continua identificando o recibo/compra; uma compra com várias rodadas mostra cada rodada separadamente, sem misturar placas nem exigir um QR impresso por rodada.
+- **Ainda não validado:** executar typecheck, lint, testes e build; verificar o modelo de dados e os casos de borda de rodada concluída sem apuração; testar a consulta em celular e o QR impresso. Não declarar esta implementação pronta para produção até passar essas verificações.
+
+## Atualização de implementação — fluxo de placas, seletor de rodadas, carteira e ambiente de pagamentos (2026-10-28)
+
+Esta atualização registra as alterações recentes na branch `feature/public-home-registration`. O registro de código commitado não equivale a validação ponta a ponta nem a deploy publicado.
+
+### Fluxo de montagem de aposta — jogador e cambista
+- Requisito de UX: preencher a placa e clicar explicitamente em **Adicionar placa**. A placa adicionada deve aparecer numa lista separada dos campos de entrada, continuar na aposta enquanto o usuário preenche outras placas e poder ser removida antes do envio.
+- A área do jogador e a área do cambista receberam estado de placas adicionadas, botão **Adicionar placa**, lista de placas selecionadas e ação **Remover**. Ao concluir/limpar uma venda, a lista temporária também deve ser limpa.
+- O total exibido deve refletir o número de placas, o valor por placa e o número de rodadas selecionadas. O payload deve conter todas as placas adicionadas e ser validado novamente no servidor.
+- **Validação pendente:** confirmar no navegador, nas duas áreas, que uma placa adicionada não é perdida ao digitar a próxima, que placas duplicadas são tratadas conforme a regra de negócio, que remover uma placa atualiza o total e que o payload/recibo contém todas as placas e participações. A alteração de interface está commitada, mas não foi validada com testes automatizados nem manualmente no site publicado.
+
+### Rodadas — apresentação compacta
+- A interface das áreas do jogador e do cambista usa uma faixa horizontal com rolagem para reduzir a altura ocupada em telas móveis.
+- Na API e no componente do cambista, a consulta/listagem foi limitada a no máximo 10 rodadas.
+- **Validação pendente:** verificar ordenação temporal, inclusão das rodadas elegíveis, navegação por toque/teclado e se o limite não oculta uma rodada válida necessária ao fluxo. A seleção e a validação de elegibilidade continuam sendo responsabilidade do servidor.
+
+### Pagamento do jogador com saldo da conta
+- A interface passou a oferecer **Pix** ou **Saldo da conta**, mostra o saldo consultado e avisa quando ele não cobre o valor estimado.
+- A API do jogador aceita `paymentMethod: PIX | WALLET`. O serviço de compras foi alterado para tratar WALLET como confirmação interna e registrar débito no livro-razão na transação de criação da compra; o endpoint de recibo passou a aceitar uma compra WALLET confirmada sem exigir um registro de pagamento Pix.
+- **Bloqueador de validação financeira:** antes de considerar esse caminho correto, revisar a fórmula oficial de saldo disponível e os tipos/valores de lançamentos do livro-razão. O débito deve competir atomicamente com reservas de saque e outros gastos, a chave idempotente deve ter restrição única no banco, a compra deve ser revertida integralmente se o débito falhar e o saldo exibido precisa vir do mesmo cálculo usado no servidor. Não operar com dinheiro real nem declarar a carteira validada até concluir essa revisão e executar testes PostgreSQL de concorrência, saldo insuficiente, repetição, rollback e saque simultâneo.
+
+### Área do cambista — requisição inválida e recebimento
+- As rotas de criação de compra por Pix e por dinheiro foram ajustadas para validar a origem considerando o host público encaminhado pelo proxy, em vez de comparar cegamente a origem com o host interno visto pela aplicação.
+- **Atenção de segurança:** a lista de hosts confiáveis deve ser validada contra o domínio realmente configurado no ambiente. Cabeçalhos encaminhados só são confiáveis se forem controlados/normalizados pela plataforma de hospedagem; não relaxar a proteção CSRF de forma genérica.
+- A rota de dinheiro e a interface foram alteradas anteriormente para separar o fluxo CASH do Pix. Isso ainda exige teste ponta a ponta: cambista autenticado, valor recebido antes da confirmação, idempotência, comissão, recibo, venda repetida e bloqueio de origem maliciosa. Uma mensagem de sucesso não pode aparecer antes da confirmação transacional.
+
+### Mercado Pago Pix, domínio e ambiente
+- O repositório já contém código de checkout Pix/Mercado Pago, persistência do identificador da ordem, webhook autenticado por assinatura HMAC, consulta do estado canônico no provedor, comparação de referência/moeda/valor e confirmação transacional idempotente.
+- Isso comprova presença de implementação no código, **não** que o ambiente hospedado tenha credenciais válidas, domínio definitivo, webhook cadastrado ou pagamentos testados.
+- Próximas etapas obrigatórias:
+  1. Definir/confirmar o domínio que será usado e configurar a URL pública/base da aplicação no ambiente de hospedagem.
+  2. Configurar secretamente as credenciais de teste do Mercado Pago e o segredo de assinatura do webhook; nunca guardar tokens no repositório nem compartilhá-los no chat.
+  3. Cadastrar a URL pública do webhook no painel do provedor e confirmar que a assinatura recebida é validada.
+  4. Testar em homologação: criação da ordem, QR/copia-e-cola, notificação válida, duplicada, inválida, fora de ordem, pagamento recusado/expirado, valor/referência divergentes, falha temporária e confirmação/recibo únicos.
+  5. Verificar logs e reconciliação de pagamentos cujo checkout falhou após a criação no provedor.
+  6. Só depois de CI verde e aprovação explícita, planejar a configuração de produção. Não executar cobrança real nem alterar DNS/domínio/branch principal sem autorização explícita.
+- QR de cobrança Pix e QR do recibo são coisas distintas: o primeiro serve para pagar; o segundo identifica o recibo para consulta pública.
+
+### Situação da verificação
+- As alterações desta atualização foram registradas na branch `feature/public-home-registration`; não foi confirmada nesta etapa a conclusão de CI, typecheck, lint, suíte de testes, build, deploy nem teste manual no ambiente Railway.
+- O status geral é **implementação parcial em validação**, não pronto para operação financeira. Prioridades imediatas: corrigir e validar a montagem de múltiplas placas; testar a rolagem de rodadas; auditar a contabilidade do saldo e concorrência; reproduzir e verificar a correção de “Requisição inválida”; depois validar Mercado Pago em homologação.
+
+
+## Decisão vigente — QR exclusivo, sem resultados gerais e sem segunda via (2026-10-28)
+
+Esta seção prevalece sobre instruções anteriores e registros históricos deste roadmap que descrevam resultados públicos gerais, busca de recibo digitando código, histórico do cambista ou reimpressão/recuperação.
+
+- A homepage apresenta o produto e os acessos de entrada/cadastro, sem painel geral de resultados/ganhadores e sem busca pública por código.
+- O QR impresso no recibo original abre `/verificar-recibo/{receiptCode}` sem login. A página mostra somente os dados oficiais da compra identificada pelo código único, incluindo participações/rodadas e estados/resultados oficiais associados.
+- Não oferecer segunda via, reimpressão, recuperação ou reemissão de recibo por QR, código, placa, consulta ao cambista ou suporte. O fluxo de impressão/entrega ocorre somente na emissão original da compra confirmada.
+- A área do cambista fica restrita ao registro de nova aposta/venda e à entrega do recibo original. Não manter histórico, contadores/resumo de vendas, pesquisa ou consulta de apostas/resultados.
+- A área do jogador permanece separada; seu histórico e consultas pessoais continuam conforme a especificação funcional.
+- Remover/manter removidas as rotas e APIs gerais de resultados públicos e a busca pública por código. Preservar a rota e API específicas de verificação por QR.
+- Não confundir remoção de UI/rotas com exclusão de dados históricos; não executar migração nem apagar dados sem plano e autorização.
+- **Validação obrigatória:** conferir o gerador do QR no recibo real, o endereço HTTPS gerado, a abertura pela câmera de um celular, o escopo de dados exibido e a ausência de funções de reemissão. Código commitado não prova teste nem deploy.
+
+
+## Fluxo de resgate de prêmio pelo QR Code — 2026-10-28
+
+- A rota de verificação específica do recibo já consulta os dados oficiais da compra, rodadas, placas, prêmios indicados e se há registro de crédito.
+- Foi adicionado à página de verificação um bloco de orientação e botão de WhatsApp quando existir prêmio indicado ainda sem crédito confirmado. A mensagem pré-preenchida leva o código do recibo, rodada, placa/formato e valor indicado, sem dados de autenticação ou pagamento sensíveis.
+- O botão depende de `NEXT_PUBLIC_PRIZE_SUPPORT_WHATSAPP`, configurado com dígitos apenas, incluindo país e DDD. O número oficial ainda precisa ser fornecido/configurado no ambiente Railway; não inferir nem inventar o número.
+- Validar após configuração: botão abre o contato oficial correto; mensagem está codificada corretamente; inclui todos os prêmios pendentes do recibo; não aparece para recibos inválidos ou sem prêmio pendente; não afirma pagamento confirmado sem registro de crédito.
+- A conversa WhatsApp é solicitação de orientação e conferência, não pagamento automático. Validar separadamente o processo operacional e a autorização para pagar prêmios de vendas de cambista, incluindo idempotência/auditoria quando aplicável.
+- Estado atual: código do botão adicionado na branch de desenvolvimento; número de atendimento não configurado por falta do número oficial confirmado; testes, build, validação ponta a ponta e deploy ainda não confirmados.
+
+
+## Decisão vigente — pagamento de prêmios exclusivamente pela plataforma (2026-10-28)
+
+Esta regra substitui qualquer instrução anterior que permita ao cambista pagar prêmio, marcar prêmio como pago/dar baixa ou entregar dinheiro de prêmio ao comprador.
+
+- **O cambista nunca paga prêmio.** Não deve existir na área do cambista botão, ação, endpoint ou permissão para pagar prêmio, dar baixa, marcar como pago, confirmar entrega de prêmio ou registrar liquidação manual de prêmio. A área do cambista fica restrita ao registro de novas apostas/vendas e à entrega do recibo original.
+- **Compra online com jogador autenticado:** após a apuração oficial, o prêmio elegível é creditado diretamente na carteira online do próprio jogador, de forma transacional e idempotente. A consulta QR pode mostrar o estado oficial, mas não substitui o registro financeiro.
+- **Compra presencial feita por cambista, sem carteira de jogador vinculada:** o cliente confere o recibo físico original pelo QR Code. Se o sistema indicar prêmio pendente, a página orienta o cliente a contatar a plataforma pelo botão oficial de WhatsApp. A equipe da plataforma valida o recibo, resultado, valor e estado financeiro e conduz o pagamento diretamente pela plataforma, nunca pelo cambista.
+- **O QR Code é a porta de entrada do pedido de resgate, não um pagamento automático.** O WhatsApp inicia o atendimento com os dados mínimos do recibo/rodada/placa/valor indicado; o prêmio só pode ser declarado pago após registro financeiro oficial.
+- **Proibir baixa manual de prêmio pelo cambista em todos os caminhos:** interface, API, permissões, ações administrativas delegadas ou endpoints alternativos. Se houver endpoint antigo de baixa/pagamento de prêmio acessível ao papel CASHIER, removê-lo ou negar acesso e adicionar teste de autorização. A reconciliação administrativa de falhas de crédito online permanece exclusiva a ADMIN e não deve ser usada para pagar prêmios de clientes sem carteira.
+- Não confundir prêmio com comissão do cambista, confirmação de recebimento da venda, pagamento de saque do jogador ou reconciliação de crédito de carteira.
+- Não apagar registros financeiros históricos nem alterar dados de produção nesta mudança. Revisar código e testes antes de afirmar que a proibição técnica está completa.
+
+
+## Execução da regra de prêmio exclusivamente pela plataforma — 2026-10-28
+
+- **Implementado no código:** apuração não credita carteira automaticamente para compras originadas por cambista (`cashierId` preenchido); endpoint ADMIN de reconciliação de crédito de carteira lista e corrige apenas compras online sem cambista.
+- **Conferido no código:** área do cambista apresenta apenas o formulário de venda; não foi encontrado fluxo dedicado de pagamento/baixa de prêmio no papel CASHIER nos endpoints inspecionados.
+- **Implementado anteriormente:** página pública de recibo oferece orientação e botão de WhatsApp para prêmios pendentes, condicionado ao número oficial configurado.
+- **Pendente antes de encerrar a tarefa:** implementar fluxo ADMIN para registrar/auditar pagamento de prêmio presencial realizado pela plataforma e fazer a página QR refletir esse pagamento sem confundi-lo com crédito de carteira. Isso exige modelagem financeira e migração versionada, rota ADMIN, testes de autorização/idempotência e apresentação no QR.
+- **Não validado:** testes, typecheck, build, integração PostgreSQL, CI e deploy. Nenhuma alteração de produção foi feita.
+
+
+## Correção executada — espaçamento de Nova Aposta (2026-10-28)
+
+- **Problema reproduzido por inspeção do código:** as regras CSS de layout compacto para `.area-page-compact` já existiam, mas `src/components/area-shell.tsx` não aplicava essa classe ao elemento `main`, embora recebesse `compact=true`. As regras de compactação do cartão não eram ativadas, mantendo espaço superior maior do que o solicitado.
+- **Alteração implementada:** o elemento principal agora recebe `area-page-compact` quando a propriedade `compact` está ativa. Isso permite que as regras responsivas existentes reduzam o padding do cartão e o espaço antes do título, sem alterar os dados ou as regras da aposta.
+- **Arquivos:** `src/components/area-shell.tsx`; especificação funcional atualizada em `docs/PRODUCT_SPEC.md`.
+- **Alcance:** jogador e cambista usam o mesmo `AreaShell`; revisar ambos após deploy para evitar regressão no layout compacto.
+- **Estado:** código e documentação commitados na branch `feature/public-home-registration`. Build, deploy e inspeção visual no Railway ainda precisam ser confirmados; até lá, a correção não está validada como publicada.
+
+
+## Investigação e ajuste CSS — Nova Aposta (2026-10-28)
+
+- **Causa adicional confirmada no CSS:** após a correção anterior, a classe compacta passou a ser aplicada, mas `.area-page-compact .feature-card` ainda definia `padding:16px`. A regra que zerava a margem do título não alterava esse preenchimento, que era o espaço interno visível acima de “NOVA APOSTA”.
+- **Correção complementar feita:** em telas de até 640px, a regra específica do cartão Nova aposta agora define `padding-top:6px`. O restante do padding, as placas e os controles não são alterados por esta regra.
+- **Arquivo de código:** `src/app/globals.css`; commit `f01ab24957be232a09020fa0a1a505c06b971455`.
+- **Estado:** aguardando deploy e inspeção visual no endereço de desenvolvimento. A compilação, isoladamente, não valida o resultado visual.
+
+## Área do cambista — menu expansível “Últimos resultados” (2026-10-28)
+
+- O componente `PlayerRecentResults` é reutilizado dentro de um elemento `details.player-collapsible-section` na página do cambista, depois do formulário de venda. Por estar antes do rodapé do `AreaShell`, fica acima do botão **Sair**, na parte inferior da página.
+- O menu usa o mesmo visual e conteúdo da área do jogador e começa recolhido. Exibe até 10 resultados publicados, com horário/código da rodada e placas cinza e Mercosul.
+- A rota autenticada `GET /api/player/results` foi ajustada para aceitar `PLAYER` e `CASHIER`, mantendo bloqueio de não autenticados, outros papéis e contas com troca de senha obrigatória. Respostas continuam privadas e sem cache.
+- Não foi criada funcionalidade de histórico de vendas, reimpressão/segunda via, consulta de recibos ou pagamento de prêmios pelo cambista.
+- **Implementado no código desta branch; não considerar validado/publicado até** confirmar testes/build, deploy Railway e funcionamento visual em celular e desktop.
+
+
+## Padronização global do cabeçalho — 2026-10-28
+
+- Criado o componente compartilhado `src/components/site-header.tsx`, com a imagem oficial centralizada em uma única grade de três colunas para manter o centro exato da tela.
+- Substituídos os cabeçalhos específicos da homepage, áreas autenticadas e verificação de recibo. Login, cadastro, troca de senha, consulta pública e termos de uso passam a renderizar o mesmo componente no topo.
+- A navegação da homepage foi removida do cabeçalho; os acessos continuam no conteúdo da página. O cabeçalho não contém botões, menus, usuário, ícones ou texto auxiliar. O botão Sair das áreas autenticadas continua no rodapé.
+- CSS compartilhado adicionado ao final de `src/app/globals.css` para unificar dimensões e comportamento responsivo, preservando a proporção da imagem.
+- **Validação pendente:** executar lint/typecheck/testes/build, confirmar o deploy do commit no Railway e inspecionar visualmente todas as rotas em celular e desktop. Não considerar concluído/publicado até essas verificações.
+
+
+## Homepage pública — título e infográfico de funcionamento (2026-10-28)
+
+- A mensagem principal da página pública em `src/app/page.tsx` é **“Seu jogo de placas.”**
+- A seção logo abaixo chama-se **“Como funciona”** e esclarece que uma única aposta na placa concorre automaticamente às seis categorias: unidade, dezena, centena, milhar, três letras e placa inteira.
+- O infográfico comparando placa cinza e Mercosul deve ficar em `public/images/brand/como-funciona-duas-placas.PNG` e é referenciado no JSX por `/images/brand/como-funciona-duas-placas.PNG`. O CSS mantém a proporção, largura responsiva e sem corte.
+- **Dependência de arquivo:** a imagem ainda precisa ser adicionada ao caminho acima no repositório antes que apareça no site. Não declarar a seção visual concluída nem validar deploy até confirmar o arquivo e o build.
+
+
+## Git, deploy novo na AcquaCloud Hydro e bootstrap do administrador — 2026-10-29
+
+### Branch oficial e diretório raiz
+
+- A branch de desenvolvimento de referência continua sendo `feature/public-home-registration`. A aplicação nova do Hydro deve apontar para `jpveiculos/JogaPlacas`, branch `feature/public-home-registration`, com Pasta/Root Directory vazio. O projeto Next.js e o `package.json` estão na raiz; selecionar `apps/api` faria a plataforma procurar o projeto no local errado.
+- Não usar `main` como branch de trabalho nem a branch `fix/hydro-admin-recovery` como fonte completa do site. Evitar criar branches de correção isoladas; consolidar mudanças aprovadas na branch oficial, atualizar este manual e verificar os testes antes de declarar concluído.
+
+### Diferença entre provisionamento e recuperação
+
+- `scripts/provision-admin.mjs` na branch oficial cria o primeiro administrador somente se não houver nenhum administrador. Requer `DATABASE_URL`, `ADMIN_USERNAME`, `ADMIN_INITIAL_PASSWORD` e `CONFIRM_ADMIN_PROVISIONING=CREATE_FIRST_ADMIN`. A senha inicial aceita mínimo de 6 caracteres; o sistema gera o hash e define `mustChangePassword=true`. Se já existir administrador, não altera conta nem senha.
+- `scripts/recover-admin.mjs` na branch `fix/hydro-admin-recovery` é uma ferramenta separada de recuperação de senha de um administrador já existente. Exige `ADMIN_RECOVERY_USERNAME`, `ADMIN_RECOVERY_PASSWORD` e `CONFIRM_ADMIN_RECOVERY=RESET_EXISTING_ADMIN`; não cria o primeiro administrador. Não executar no banco vazio para tentar provisionar a conta.
+- Para o banco novo do Hydro, depois de confirmar a branch oficial e configurar as variáveis de runtime necessárias, executar as migrações e seguir o procedimento de provisionamento inicial documentado em `scripts/provision-admin.mjs`. Não copiar os exemplos genéricos de ORM/campos encontrados em pesquisas: o modelo vigente usa Prisma e o schema real do Joga Placas.
+
+### Auditoria de branches em 2026-10-29
+
+- `fix/hydro-admin-recovery`: divergiu da branch oficial por 2 commits em cada direção; diferença identificada: `scripts/recover-admin.mjs` adicionado e script `admin:recover` no `package.json`. Útil para recuperação de conta existente, mas não substitui o provisionamento inicial.
+- `fix/railway-bootstrap-and-password-minimum`: 7 commits exclusivos e 286 commits atrás da branch oficial; inclui documentos específicos do Railway e alterações de autenticação/provisionamento. Não mesclar a branch inteira automaticamente.
+- `fix/railway-bootstrap-audit`: 8 commits exclusivos e 291 commits atrás; inclui roteiro de deploy Railway e outras alterações de autenticação. Não mesclar a branch inteira automaticamente.
+- `main`: 1067 commits atrás da branch oficial na comparação consultada. Preservar sem alterações até autorização explícita de publicação.
+- `feature/public-home-registration`: branch de referência para o site completo e a documentação vigente.
+
+A limpeza final das branches deve ocorrer somente após comparar arquivos/commits, integrar apenas mudanças ainda úteis, confirmar que a branch oficial contém a versão desejada e executar validações. Não excluir branches antes dessa conferência e não relatar merge/testes/deploy como concluídos sem evidência verificável.
+
+
+## Padrão obrigatório de mensagens em formulários — 2026-10-29
+
+- Toda mensagem de validação, erro de API ou falha de operação deve ficar visível **imediatamente abaixo do botão/ação que a pessoa acabou de acionar**, dentro do mesmo formulário ou bloco de ação. Nunca deixar o único aviso no topo de um cartão/formulário longo, onde pode ficar fora da tela em celulares.
+- Erros usam vermelho com contraste alto, fundo/borda de erro e semântica acessível `role="alert"` (com anúncio assertivo quando apropriado). Sucessos usam verde com contraste alto, fundo/borda de sucesso e `role="status"`/anúncio educado. Não diferenciar estado apenas pela cor: o texto precisa explicar o que ocorreu.
+- Mensagens devem usar o mesmo espaço visual e alinhamento abaixo do botão, ocupar a largura disponível, quebrar linhas longas e funcionar em celular e desktop. Não usar alertas do navegador como substituto do feedback dentro da página.
+- Após sucesso, atualizar a lista/estado exibido quando aplicável e mostrar confirmação explícita. Após falha, preservar os dados digitados para permitir correção; não indicar sucesso antes da confirmação do servidor.
+- A regra vale para todos os formulários e ações mutáveis do site: login, cadastro, troca de senha, criação/edição de cambistas, gestão de rodadas, saques, formulários de compra/venda, Pix/carteira e qualquer formulário futuro.
+- Componentes reutilizáveis devem manter as mesmas cores, espaçamento, semântica e localização. Evitar mensagens duplicadas no topo e no rodapé do formulário.
+- Critério de aceite: provocar pelo menos um erro de validação local, um erro devolvido pela API e um sucesso em cada fluxo crítico; em tela pequena, a mensagem deve aparecer logo abaixo do botão acionado sem exigir rolar até o topo. Verificar leitor de tela/atributos ARIA e estado de carregamento/desabilitação do botão.
+- Implementação registrada nesta alteração: CSS global padroniza mensagens `role="alert"` em vermelho e `role="status"` em verde; o cadastro de cambistas, criação manual de rodadas, login, cadastro público e troca de senha exibem feedback abaixo do botão/ação. Os formulários de compra/venda já exibiam seus avisos após o formulário e passam a receber o padrão global de cores.
+- Estado: alterações de código/documentação commitadas na branch `feature/public-home-registration`. A padronização completa de todos os formulários e ações administrativas restantes, bem como lint, typecheck, testes, build, deploy e validação visual em celular/desktop, ainda precisa ser auditada antes de declarar a tarefa integralmente concluída.
+
+
+### Auditoria do fuso horário das rodadas — 29/10/2026
+- Divergência confirmada entre manual e código: o manual exigia `Etc/GMT+3` (Brasília UTC−03:00), enquanto o endpoint do agendador declarava `America/Sao_Paulo`; o deploy mostrou esse identificador antigo nos logs.
+- Correção aplicada na branch `feature/public-home-registration`: agendador e teste passam a usar `Etc/GMT+3`. Ambos os identificadores tinham o mesmo offset atual UTC−03:00; portanto, a evidência aponta inconsistência de implementação/documentação, não prova de desvio de horário ou de um remendo de compensação.
+- Pendente: CI/testes, deploy do commit e confirmação nos logs do valor `Etc/GMT+3`.
+
+## Resumo financeiro do cambista — 2026-10-29
+- Requisito aprovado: menu suspenso recolhido por padrão, no rodapé acima de Sair, com dois cards: saldo total das apostas/vendas confirmadas e saldo total de comissão confirmada do cambista autenticado.
+- Implementado na branch `feature/public-home-registration`: endpoint existente `GET /api/cashier/summary`, componente `CashierSalesSummary`, integração via `footerContent` em `AreaShell` e CSS responsivo.
+- Pendente: validar typecheck/lint/testes/build, conferir atualização automática e erro de API, testar em celular/desktop e confirmar deploy no Hydro. Não declarar publicado antes da validação.
+
+
+## Painel administrativo — formulário manual de rodadas (2026-10-29)
+- O formulário de criação manual foi ocultado da interface, mantendo seu JSX e lógica no componente para uso futuro.
+- A listagem e as operações de administração de rodadas foram preservadas.
+- Pendente: validar CI/build e deploy, e confirmar no painel publicado que apenas o formulário manual deixou de aparecer.
+
+
+## Painel administrativo recolhível — 2026-10-29
+- Implementado agrupamento visual de módulos em menus suspensos com seta, fechados por padrão, na branch `feature/public-home-registration`.
+- Módulos: rodadas/sorteios, prêmios/carteira digital, controle financeiro/saques, cadastro/gestão de cambistas.
+- Pendente: lint/typecheck/testes/build, revisão visual em celular e desktop e confirmação do deploy.
+
+
+## Painel administrativo — últimos resultados (2026-10-29)
+- Implementado na branch `feature/public-home-registration`: novo acordeão **Últimos resultados** no painel administrativo, fechado por padrão, usando o componente existente `PlayerRecentResults`.
+- A API de resultados foi ajustada para aceitar sessão autenticada de administrador, além de jogador e cambista. Resultados limitam-se a rodadas concluídas com ambas as placas publicadas; a interface exibe até 10.
+- Pendente: verificar CI, testes de autorização (ADMIN/PLAYER/CASHIER e não autenticado), typecheck, lint, build, responsividade e deploy no Hydro.
+
+
+## Ajuste vigente — logomarca proporcional no cabeçalho (2026-10-29)
+- Esta regra substitui os tamanhos maiores documentados anteriormente para o cabeçalho compartilhado.
+- Cabeçalho com altura mínima de 74 px em desktop/tablet e 64 px em celular (até 480 px).
+- Logomarca centralizada, sem distorção: altura responsiva de 54–66 px em desktop/tablet e 54 px em celular; largura automática, limitada a 72vw/76vw e 320 px no desktop.
+- Manter `object-fit: contain`, sem recorte nem esticamento. O ajuste vale globalmente para página pública, login, cadastro e áreas autenticadas por meio de `SiteHeader`/`BrandLogo` compartilhados.
+- Implementado no CSS global da branch `feature/public-home-registration`. Build, deploy e inspeção visual em celular/desktop ainda precisam ser confirmados.
+
+
+## Auditoria estrutural pós-ajustes visuais — 2026-10-29
+
+### Mudanças recentes registradas
+- Homepage em `src/app/page.tsx`: título visível “Como funciona o jogo das placas”; texto explicando as seis categorias; apenas os botões Entrar e Criar conta abaixo do infográfico; estilos responsivos em `src/app/globals.css`.
+- Imagem explicativa servida de `public/images/brand/como-funciona-duas-placas.PNG`. A nova arte com QR Code da placa Mercosul ainda precisa ser adicionada/versionada no repositório; a geração no chat não altera os arquivos da aplicação.
+- Painel administrativo: regras CSS de alinhamento responsivo adicionadas para os acordeões, cartões, formulários, campos e botões. O ajuste deve preservar a funcionalidade e ser validado principalmente em desktop, que foi o ambiente em que o desalinhamento foi relatado.
+- Verificação do recibo: foi corrigida a divergência entre decisão e código em `src/components/receipts/receipt-verification.tsx`; o resultado geral usa **APOSTA PREMIADA** / **APOSTA NÃO PREMIADA**, mantendo o resultado individual de cada placa.
+
+### Estado estrutural encontrado
+- As rotas e componentes das áreas pública, jogador, cambista e administrador existem na branch.
+- O modelo Prisma inclui compras, participações, pagamentos, eventos de webhook, lançamentos financeiros, comissões e saques; existem módulos de regras de placas/prêmios, compras, rodadas e pagamentos.
+- Existe endpoint protegido de agendamento `POST /api/internal/round-scheduler`, que cria rodadas futuras e processa abertura, fechamento e sorteio. **A existência do endpoint não comprova que o cron do provedor esteja configurado e executando.**
+- O código contém integração Mercado Pago/Pix em etapas, incluindo criação de cobrança e webhook; a integração só pode ser considerada homologada após testes ponta a ponta com credenciais de teste e conferência de eventos, idempotência, cutoff e reconciliação. Não ativar cobrança real com base apenas na existência de variáveis ou código.
+
+### Pendências que ainda precisam de evidência
+1. CI, lint, typecheck, testes unitários/integrados, testes PostgreSQL e build do commit mais recente.
+2. Migrações e provisionamento/login do administrador confirmados no banco de desenvolvimento.
+3. Execução recorrente do agendador confirmada por configuração e logs do serviço de hospedagem.
+4. Homologação Mercado Pago em sandbox, incluindo assinatura inválida, eventos repetidos/fora de ordem, valor divergente, pagamento tardio, estados negativos e falhas transacionais.
+5. Teste completo compra → confirmação de pagamento → participação elegível → recibo/QR → resultado por formato → apuração → crédito sem duplicidade; testar também compra presencial do cambista sem pagamento de prêmio pelo cambista.
+6. Revisão de autorização por papel e segurança operacional.
+7. Inspeção visual em desktop e celular, especialmente painel administrativo no desktop.
+8. Substituição/versionamento da imagem explicativa de alta resolução com QR Code correto da placa Mercosul.
+
+### Fora do escopo desta etapa
+- Alteração de domínio/DNS e publicação em produção ficam para uma etapa posterior, conforme solicitado.
+- Não executar migrações destrutivas, reset de banco, cobranças reais ou mudanças de produção nesta auditoria.
+
+**Status desta auditoria:** leitura comparativa da branch e da documentação concluída; documentação atualizada. Não significa que todos os testes, a homologação do provedor ou o deploy foram executados.

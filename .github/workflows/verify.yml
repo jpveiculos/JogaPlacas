@@ -1,0 +1,120 @@
+name: Verify
+
+on:
+  pull_request:
+    branches: [main, planning/foundation]
+  push:
+    branches: [main, planning/foundation, feature/dual-plate-draw, feature/public-home-registration]
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies reproducibly
+        run: npm ci
+      - name: Validate Prisma schema
+        run: npx prisma validate
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/testdb?schema=public
+      - name: Generate Prisma client
+        run: npx prisma generate
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/testdb?schema=public
+      - name: Check administrator provisioning command
+        run: npm run admin:provision -- --help
+      - name: Lint
+        run: npm run lint
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Unit tests
+        run: npm test
+      - name: Build
+        run: npm run build
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/testdb?schema=public
+          AUTH_SECRET: test-only-secret-that-is-not-used-in-production
+          APP_BASE_URL: http://localhost:3000
+
+  migration-test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: testdb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U test -d testdb"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies reproducibly
+        run: npm ci
+      - name: Apply migrations to a fresh PostgreSQL database
+        run: npx prisma migrate deploy
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/testdb?schema=public
+      - name: Verify migration status
+        run: npx prisma migrate status
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/testdb?schema=public
+      - name: Test dual-plate migration against historical data
+        run: npm run test:migration-backfill
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/testdb?schema=public
+
+  postgres-concurrency-test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: testdb
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U test -d testdb"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies reproducibly
+        run: npm ci
+      - name: Generate Prisma client
+        run: npx prisma generate
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/testdb?schema=public
+      - name: Apply migrations to isolated PostgreSQL database
+        run: npx prisma migrate deploy
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/testdb?schema=public
+      - name: Run real PostgreSQL concurrency tests
+        run: npm run test:postgres
+        env:
+          DATABASE_URL: postgresql://test:test@localhost:5432/testdb?schema=public
+          RUN_POSTGRES_INTEGRATION: "1"

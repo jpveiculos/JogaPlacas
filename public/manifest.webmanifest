@@ -1,0 +1,17 @@
+{
+  "name": "Joga Placa",
+  "short_name": "Joga Placa",
+  "description": "Plataforma Joga Placa",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#10141d",
+  "theme_color": "#10141d",
+  "icons": [
+    {
+      "src": "/images/brand/iconi-geral.PNG",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
