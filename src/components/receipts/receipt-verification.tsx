@@ -106,9 +106,9 @@ export function ReceiptVerification({ receiptCode }: { receiptCode: string }) {
   const overallLabel = !data.valid
     ? "RECIBO NÃO VALIDADO"
     : hasPrize
-      ? "BILHETE PREMIADO"
+      ? "APOSTA PREMIADA"
       : noPrize
-        ? "BILHETE NÃO PREMIADO"
+        ? "APOSTA NÃO PREMIADA"
         : "RESULTADO";
   const overallColor = !data.valid || noPrize ? "#b91c1c" : hasPrize ? "#15803d" : "#92400e";
 
