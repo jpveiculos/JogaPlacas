@@ -792,3 +792,11 @@ A limpeza final das branches deve ocorrer somente após comparar arquivos/commit
 - Implementado na branch `feature/public-home-registration`: novo acordeão **Últimos resultados** no painel administrativo, fechado por padrão, usando o componente existente `PlayerRecentResults`.
 - A API de resultados foi ajustada para aceitar sessão autenticada de administrador, além de jogador e cambista. Resultados limitam-se a rodadas concluídas com ambas as placas publicadas; a interface exibe até 10.
 - Pendente: verificar CI, testes de autorização (ADMIN/PLAYER/CASHIER e não autenticado), typecheck, lint, build, responsividade e deploy no Hydro.
+
+
+## Ajuste vigente — logomarca proporcional no cabeçalho (2026-10-29)
+- Esta regra substitui os tamanhos maiores documentados anteriormente para o cabeçalho compartilhado.
+- Cabeçalho com altura mínima de 74 px em desktop/tablet e 64 px em celular (até 480 px).
+- Logomarca centralizada, sem distorção: altura responsiva de 54–66 px em desktop/tablet e 54 px em celular; largura automática, limitada a 72vw/76vw e 320 px no desktop.
+- Manter `object-fit: contain`, sem recorte nem esticamento. O ajuste vale globalmente para página pública, login, cadastro e áreas autenticadas por meio de `SiteHeader`/`BrandLogo` compartilhados.
+- Implementado no CSS global da branch `feature/public-home-registration`. Build, deploy e inspeção visual em celular/desktop ainda precisam ser confirmados.
