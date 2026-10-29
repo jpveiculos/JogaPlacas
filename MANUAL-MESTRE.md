@@ -78,3 +78,9 @@ Para identificar a pasta e o arquivo responsável por cada mudança, consulte a 
 - O Hydro usa o `Dockerfile` do repositório. O build valida/genera o Prisma Client e compila o Next.js; na inicialização, `start` aplica migrações pendentes, executa o provisionamento idempotente do primeiro administrador e inicia o site. Ver procedimento e requisitos em `MANUAL_TECNICO.md`.
 - A configuração `preDeployCommand` de `railway.json` é específica do Railway; não presumir que o Hydro a execute.
 - Não resetar nem apagar o banco para corrigir tabelas ausentes. Confirmar logs de migração e login após o deploy.
+
+
+## Mensagens visíveis em todos os formulários — 2026-10-29
+- Regra obrigatória: mensagens de erro em vermelho e sucesso em verde, com texto claro e atributos acessíveis; sempre imediatamente abaixo do botão/ação acionado, nunca somente no topo de formulários longos.
+- Aplicar a todos os formulários e ações mutáveis do site, inclusive login/cadastro, cambistas, rodadas, saques, compras/vendas e pagamentos. Preservar dados preenchidos após falha e só confirmar sucesso após resposta positiva do servidor.
+- Detalhes, critério de aceite e estado de implementação: consultar a seção “Padrão obrigatório de mensagens em formulários — 2026-10-29” em `MANUAL_TECNICO.md`, `docs/PRODUCT_SPEC.md` e `docs/TECHNICAL_ROADMAP.md`.
