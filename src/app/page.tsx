@@ -13,7 +13,7 @@ export default function HomePage() {
     <div className="home-page home-page-compact">
       <SiteHeader />
       <main className="home-entry">
-        <p className="home-eyebrow">Joga Placa</p>
+        <p className="home-eyebrow">Como funciona o jogo das placas</p>
         <figure className="home-how-infographic">
           <img
             src="/images/brand/como-funciona-duas-placas.PNG"
