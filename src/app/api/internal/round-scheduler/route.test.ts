@@ -52,7 +52,7 @@ describe("POST /api/internal/round-scheduler", () => {
 
   it("creates the imminent round when the scheduler starts during its cutoff minute", async () => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date("2026-10-25T15:29:00.000Z")); // 12:29 in São Paulo
+    vi.setSystemTime(new Date("2026-10-25T15:29:00.000Z")); // 12:29 in Brasília (UTC-03:00)
     mocks.findUnique.mockImplementation(({ where }: { where: { code: string } }) =>
       where.code === "JP-20261025-1230" ? null : { id: "already-scheduled" },
     );
@@ -77,7 +77,7 @@ describe("POST /api/internal/round-scheduler", () => {
     const response = await POST(request("Bearer test-secret-long-enough"));
     expect(response.status).toBe(200);
     expect(await response.json()).toMatchObject({
-      ok: true, created: 0, closed: 0, drawn: 0, failures: 0, timeZone: "America/Sao_Paulo",
+      ok: true, created: 0, closed: 0, drawn: 0, failures: 0, timeZone: "Etc/GMT+3",
     });
     expect(mocks.findUnique).toHaveBeenCalled();
     expect(mocks.findMany).toHaveBeenCalledTimes(3);
