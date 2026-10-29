@@ -10,7 +10,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
-const TIME_ZONE = "America/Sao_Paulo";
+const TIME_ZONE = "Etc/GMT+3"; // Fixed UTC-03:00, as specified by MANUAL_TECNICO.md
 const HALF_HOUR_MS = 30 * 60_000;
 const MINUTE_MS = 60_000;
 
@@ -21,7 +21,7 @@ function safeSecretMatch(actual: string | null, expected: string): boolean {
   return left.length === right.length && timingSafeEqual(left, right);
 }
 
-function saoPauloParts(date: Date) {
+function brasiliaParts(date: Date) {
   const parts = new Intl.DateTimeFormat("en-CA", {
     timeZone: TIME_ZONE, year: "numeric", month: "2-digit", day: "2-digit",
     hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23",
@@ -33,7 +33,7 @@ function wallTimeToUtc(year: number, month: number, day: number, hour: number, m
   const target = Date.UTC(year, month - 1, day, hour, minute);
   let candidate = target + 3 * 60 * MINUTE_MS;
   for (let attempt = 0; attempt < 3; attempt += 1) {
-    const parts = saoPauloParts(new Date(candidate));
+    const parts = brasiliaParts(new Date(candidate));
     const represented = Date.UTC(Number(parts.year), Number(parts.month) - 1, Number(parts.day),
       Number(parts.hour), Number(parts.minute), Number(parts.second));
     candidate += target - represented;
@@ -43,7 +43,7 @@ function wallTimeToUtc(year: number, month: number, day: number, hour: number, m
 
 function resultSlots(from: Date, through: Date): Date[] {
   const slots: Date[] = [];
-  const local = saoPauloParts(from);
+  const local = brasiliaParts(from);
   const localMinute = Number(local.minute);
   const firstMinute = localMinute < 30 ? 0 : 30;
   let cursor = wallTimeToUtc(Number(local.year), Number(local.month), Number(local.day), Number(local.hour), firstMinute);
@@ -67,7 +67,7 @@ function resultSlots(from: Date, through: Date): Date[] {
   return slots;
 }
 function roundCode(date: Date): string {
-  const parts = saoPauloParts(date);
+  const parts = brasiliaParts(date);
   return `JP-${parts.year}${parts.month}${parts.day}-${parts.hour}${parts.minute}`;
 }
 
