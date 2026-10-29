@@ -121,7 +121,7 @@ export function ReceiptVerification({ receiptCode }: { receiptCode: string }) {
       <div style={{ padding: "14px 12px", borderRadius: 8, background: overallColor, color: "#fff", textAlign: "center", marginBottom: 20 }}>
         <h2 style={{ margin: 0, fontSize: 20 }}>{overallLabel}</h2>
       </div>
-      <p>{data.message}</p>
+      {!data.valid && <p role="alert">{data.message}</p>}
       <p><strong>Código do recibo:</strong> {data.receiptCode ?? receiptCode.toUpperCase()}</p>
       {data.valid && (
         <>
@@ -153,14 +153,6 @@ export function ReceiptVerification({ receiptCode }: { receiptCode: string }) {
               )}
             </article>
           )) : <p>Não há rodadas confirmadas vinculadas a este recibo.</p>}
-          {hasPrize && (
-            <p style={{ marginTop: 16, color: "#166534", fontWeight: 700 }}>
-              O sistema identificou uma aposta premiada. Confira os detalhes com o atendimento oficial; esta consulta não confirma pagamento do prêmio.
-            </p>
-          )}
-          <p style={{ marginTop: 20, fontSize: 13, color: "#4b5563" }}>
-            As informações são consultadas no sistema oficial e atualizadas automaticamente enquanto esta página estiver aberta.
-          </p>
         </>
       )}
     </section>
