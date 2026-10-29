@@ -107,12 +107,14 @@ export function AdminRoundManager() {
       <label>Horário do resultado <input type="datetime-local" value={resultAtInput} onChange={(event) => setResultAtInput(event.target.value)} required /></label>
       <button type="submit" disabled={busy !== null}>{busy === "create" ? "Criando…" : "Criar rodada"}</button>
     </form>
+    <div className="form-feedback-slot" aria-live="polite">
+      {error && <p role="alert" className="note-inline form-feedback-error" aria-live="assertive">{error}</p>}
+      {notice && <p role="status" className="note-inline form-feedback-success" aria-live="polite">{notice}</p>}
+    </div>
     {data && <div className="round-options">
       <article className="round-option"><strong>{data.summary.pendingPayments}</strong><br />Compras aguardando pagamento</article>
       <article className="round-option"><strong>{data.summary.confirmedPurchases}</strong><br />Compras confirmadas</article>
     </div>}
-    {error && <p role="alert" className="note-inline">{error}</p>}
-    {notice && <p role="status" className="note-inline">{notice}</p>}
     {loading ? <p>Carregando rodadas…</p> : !data || data.rounds.length === 0 ? <p>Não há rodadas cadastradas.</p> : <div className="admin-round-list">
       {data.rounds.map((round) => <article className="round-option" key={round.id}>
         <div><strong>{round.code}</strong> · {statusLabels[round.status]}</div>
