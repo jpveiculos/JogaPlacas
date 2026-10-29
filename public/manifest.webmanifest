@@ -9,8 +9,8 @@
   "theme_color": "#10141d",
   "icons": [
     {
-      "src": "/images/brand/joga-placa-logo.jpg",
-      "type": "image/jpeg",
+      "src": "/images/brand/iconi-getal.PNG",
+      "type": "image/png",
       "purpose": "any"
     }
   ]
