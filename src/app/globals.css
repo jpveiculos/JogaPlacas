@@ -1243,3 +1243,18 @@ p, .intro, .auth-description, .area-description, .feature-card p,
 .cashier-summary-menu .cashier-summary-tile span{font-size:.8rem;line-height:1.35;color:var(--muted,#a5b1c2);overflow-wrap:anywhere}
 .cashier-summary-menu .cashier-summary-tile strong{font-size:clamp(1rem,3.5vw,1.3rem);line-height:1.2;overflow-wrap:anywhere}
 @media(max-width:360px){.cashier-summary-menu .cashier-summary-grid{grid-template-columns:minmax(0,1fr)}}
+
+
+/* Painel administrativo organizado em seções recolhíveis para economizar espaço. */
+.admin-accordion-list{display:grid;gap:12px;width:100%;min-width:0}
+.admin-accordion{width:100%;min-width:0;border:1px solid var(--border,#2b394c);border-radius:14px;background:var(--card,#141c28);color:var(--text,#f3f6fb);overflow:hidden}
+.admin-accordion>summary{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:4px;padding:15px 48px 15px 16px;cursor:pointer;list-style:none;touch-action:manipulation}
+.admin-accordion>summary::-webkit-details-marker{display:none}
+.admin-accordion>summary:after{content:"";position:absolute;right:20px;top:50%;width:9px;height:9px;border-right:2px solid var(--accent,#55d4ef);border-bottom:2px solid var(--accent,#55d4ef);transform:translateY(-70%) rotate(45deg);transition:transform .16s ease}
+.admin-accordion[open]>summary:after{transform:translateY(-25%) rotate(225deg)}
+.admin-accordion>summary:focus-visible{outline:3px solid var(--accent,#55d4ef);outline-offset:-3px}
+.admin-accordion>summary>span:first-child{font-weight:800;font-size:1rem;line-height:1.35}
+.admin-accordion-description{font-size:.84rem;line-height:1.4;color:var(--muted,#a5b1c2)}
+.admin-accordion-content{padding:0 12px 14px;min-width:0}
+.admin-accordion-content>*{min-width:0}
+@media(max-width:480px){.admin-accordion-list{gap:9px}.admin-accordion>summary{padding:13px 42px 13px 13px}.admin-accordion-content{padding:0 8px 10px}}
