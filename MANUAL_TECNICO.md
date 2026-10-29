@@ -318,3 +318,11 @@ Este procedimento é obrigatório para solicitações futuras, não apenas para 
 - Não excluir o formulário nem sua lógica do repositório: mantê-los no componente `src/components/admin/admin-round-manager.tsx`, ocultos/desabilitados na interface por padrão, para possível reativação futura mediante alteração explícita de código.
 - Manter visíveis a consulta das rodadas existentes e as operações administrativas já disponíveis (quando aplicáveis). Esta mudança afeta somente a exibição do formulário de criação manual.
 - Alteração registrada na branch `feature/public-home-registration`; confirmar build, deploy e visualmente que o formulário não aparece, mas a listagem e as operações de rodadas continuam funcionando.
+
+
+## Painel do administrador — seções em menus suspensos (2026-10-29)
+- Para preservar espaço, os módulos principais do painel administrativo devem ficar em seções recolhíveis com seta indicadora, fechadas por padrão.
+- Seções atuais: **Rodadas e sorteios**; **Prêmios e carteira digital**; **Controle financeiro e saques**; **Cadastro e gestão de cambistas**.
+- Clicar no cabeçalho abre/fecha o conteúdo; o controle deve funcionar por toque em celular e por teclado, com foco visível. O texto secundário explica a finalidade de cada seção.
+- A mudança é apenas de apresentação: não remover módulos, formulários, endpoints, permissões ou lógica de negócio. A criação manual de rodadas permanece preservada e oculta conforme regra anterior.
+- Implementação registrada em `src/app/admin/page.tsx` e estilos em `src/app/globals.css` na branch `feature/public-home-registration`. Validar build, deploy e comportamento responsivo antes de considerar publicado.
