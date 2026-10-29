@@ -1438,3 +1438,120 @@ p, .intro, .auth-description, .area-description, .feature-card p,
 .home-public-result-plates .plate-visual{width:100%;max-width:340px}
 @media(max-width:600px){.home-public-results>summary{min-height:78px;padding:17px 18px}.home-public-results-content{padding:0 16px 18px}.home-public-result{padding:13px}.home-public-result-plates{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){.home-results-chevron{transition:none}}
+
+
+/* Padrão único para telas de computador: conteúdo amplo e tipografia consistente.
+   As regras mobile existentes continuam valendo abaixo deste breakpoint. */
+@media (min-width: 900px) {
+  .area-page,
+  .auth-layout,
+  .site-page-shell,
+  .page-shell,
+  .public-results-page {
+    width: min(100%, 1440px);
+    margin-inline: auto;
+  }
+
+  .area-page {
+    padding: 28px clamp(28px, 3vw, 48px);
+  }
+
+  .area-content,
+  .area-content-compact {
+    width: 100%;
+    padding-top: 24px;
+  }
+
+  .area-content > *,
+  .area-content .feature-card,
+  .admin-page-layout,
+  .admin-page-layout .admin-accordion-list,
+  .admin-page-layout .admin-accordion-content > .feature-card {
+    width: 100%;
+    max-width: none;
+  }
+
+  .area-page .feature-card {
+    padding: clamp(24px, 2.2vw, 34px);
+    border-radius: 18px;
+  }
+
+  .area-page .feature-card h2 {
+    font-size: clamp(1.6rem, 1.8vw, 2rem);
+  }
+
+  .area-page .purchase-form,
+  .area-page .login-form {
+    gap: 20px;
+  }
+
+  .area-page .purchase-form > label,
+  .area-page .plate-entry > label,
+  .area-page .purchase-form legend {
+    font-size: 1.05rem;
+  }
+
+  .area-page .purchase-form input:not([type="checkbox"]),
+  .area-page .login-form input,
+  .area-page .purchase-form button,
+  .area-page .round-option {
+    font-size: 1rem;
+  }
+
+  .area-page .purchase-form input:not([type="checkbox"]),
+  .area-page .login-form input {
+    min-height: 52px;
+  }
+
+  .auth-layout {
+    padding-inline: clamp(28px, 3vw, 48px);
+  }
+
+  .auth-layout .auth-card {
+    width: min(100%, 640px);
+    padding: clamp(32px, 3vw, 48px);
+  }
+
+  .auth-layout .login-form label,
+  .auth-layout .login-form input,
+  .auth-layout .auth-description {
+    font-size: 1.05rem;
+  }
+
+  .home-entry {
+    width: min(100%, 1100px);
+    padding: 32px 28px 44px;
+  }
+
+  .home-entry > .home-eyebrow {
+    font-size: clamp(1.4rem, 1.8vw, 1.75rem);
+  }
+
+  .home-entry .home-how-infographic figcaption {
+    font-size: clamp(1.15rem, 1.5vw, 1.35rem);
+  }
+
+  .home-entry-actions > a {
+    min-height: 68px;
+    font-size: 1.2rem;
+  }
+
+  .public-results-header,
+  .public-results-main,
+  .public-winners-section,
+  .public-results-footer {
+    width: 100%;
+    max-width: 1360px;
+  }
+
+  .site-page-shell > .feature-card,
+  .site-page-shell > article {
+    width: min(100%, 1100px);
+    max-width: none;
+    margin-inline: auto;
+  }
+
+  .area-logout-footer {
+    padding-top: 28px !important;
+  }
+}
