@@ -94,3 +94,7 @@ Para identificar a pasta e o arquivo responsável por cada mudança, consulte a 
 
 ## Administração — criação manual de rodadas
 O formulário de criação manual de rodadas fica oculto da interface administrativa, porque o agendador cria as rodadas automaticamente. O formulário e sua lógica devem permanecer no código para possível reativação futura; não apagar o componente nem a lógica. A listagem e as demais operações de rodadas permanecem disponíveis.
+
+
+## Painel do administrador — organização visual
+Os módulos administrativos ficam em menus suspensos com seta, fechados por padrão, para economizar espaço. As seções atuais são Rodadas e sorteios, Prêmios e carteira digital, Controle financeiro e saques, e Cadastro e gestão de cambistas. A mudança altera apenas a apresentação; não excluir funcionalidades do código. Detalhes técnicos e critérios de aceite em `MANUAL_TECNICO.md`.
