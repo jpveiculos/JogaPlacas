@@ -341,3 +341,51 @@ Este procedimento é obrigatório para solicitações futuras, não apenas para 
 - Logomarca centralizada, sem distorção: altura responsiva de 54–66 px em desktop/tablet e 54 px em celular; largura automática, limitada a 72vw/76vw e 320 px no desktop.
 - Manter `object-fit: contain`, sem recorte nem esticamento. O ajuste vale globalmente para página pública, login, cadastro e áreas autenticadas por meio de `SiteHeader`/`BrandLogo` compartilhados.
 - Implementado no CSS global da branch `feature/public-home-registration`. Build, deploy e inspeção visual em celular/desktop ainda precisam ser confirmados.
+
+
+## Auditoria estrutural e atualizações de interface — 2026-10-29
+
+### Página pública inicial
+- O título visível acima do infográfico é **“Como funciona o jogo das placas”**.
+- O texto abaixo do infográfico é: “Jogue uma placa e concorra automaticamente a seis prêmios: unidade, dezena, centena, milhar, as três letras e a placa inteira.”
+- A página inicial mantém somente o infográfico e os botões **Entrar** e **Criar conta**. Os botões usam estilos responsivos e empilham em telas estreitas.
+- O infográfico é carregado de `public/images/brand/como-funciona-duas-placas.PNG`. A arte gerada mais recentemente com QR Code reposicionado na placa Mercosul ainda precisa ser enviada ao repositório com este nome exato; uma imagem gerada na conversa não é automaticamente publicada.
+- Não considerar a arte nova implantada até verificar o arquivo versionado, a qualidade em zoom e o deploy.
+
+### Recibo e verificação por QR
+- O cabeçalho geral deve ser **APOSTA PREMIADA** quando ao menos uma placa de alguma rodada vinculada à compra for premiada; **APOSTA NÃO PREMIADA** quando todas as rodadas estiverem resolvidas e todas as placas não forem premiadas.
+- Cada placa continua exibindo seu próprio estado: **Premiada**, **Prêmio pago**, **Não premiada**, ou estado de espera quando o resultado/apuração ainda não estiver concluído.
+- Em 2026-10-29, a auditoria encontrou que `src/components/receipts/receipt-verification.tsx` ainda usava os rótulos antigos “BILHETE PREMIADO” e “BILHETE NÃO PREMIADO”, apesar da decisão anterior. A correção foi registrada nesta branch para usar “APOSTA PREMIADA” e “APOSTA NÃO PREMIADA”. Validar build e a tela real após deploy.
+- Não mostrar “Apuração pendente” como resultado final de uma rodada com resultado publicado e apuração concluída. O estado por placa deve vir da API oficial e respeitar o estado da rodada.
+
+### Alinhamento visual do painel administrativo
+- A página `src/app/admin/page.tsx` usa seções recolhíveis e preserva os módulos administrativos existentes.
+- Em 2026-10-29 foi adicionado um contêiner de layout administrativo e regras CSS para uniformizar largura, margens, campos, cartões e ações em desktop e celular. A mudança é apenas visual; não deve alterar permissões, APIs, apuração, saques, carteira nem cadastro de cambistas.
+- A necessidade original foi reportada no computador; o celular já estava visualmente bom. Por isso, o aceite final exige teste no desktop, além de regressão rápida no celular. Até o usuário conferir no computador, o resultado visual de desktop permanece **não confirmado**.
+
+### Auditoria de estrutura: estado e pendências
+A revisão documental/código desta data não autoriza afirmar que todo o projeto está tecnicamente concluído. Distinguir sempre os estados abaixo:
+
+**Encontrado no código desta branch**
+- Aplicação Next.js com páginas pública, login/cadastro, jogador, cambista e administrador.
+- Prisma/PostgreSQL com migrações versionadas, compras, participações por rodada, pagamentos, eventos de webhook, livro-razão, comissão e saques.
+- Módulos de placas cinza/Mercosul, snapshots das regras de prêmio, apuração e idempotência.
+- Agendador protegido em `POST /api/internal/round-scheduler`, projetado para ser chamado a cada minuto com `Authorization: Bearer <ROUND_SCHEDULER_SECRET>`. Mantém horizonte de rodadas e processa abertura/fechamento/sorteio.
+- Rotas e código de integração Mercado Pago/Pix, incluindo criação de cobrança, webhook e confirmação transacional descritos nas seções históricas abaixo.
+
+**Não comprovado apenas pela leitura do código**
+- Execução efetiva do agendador no serviço de hospedagem (cron/chamada a cada minuto), existência/configuração de `ROUND_SCHEDULER_SECRET` e criação automática real de rodadas.
+- Migrações aplicadas no banco de destino e provisionamento/login do administrador no ambiente efetivo.
+- Testes ponta a ponta com credenciais de teste do Mercado Pago, assinatura real do webhook, eventos duplicados/fora de ordem, valor divergente, pagamento tardio, reconciliação/estorno e confirmação do recibo.
+- Suíte completa de lint, typecheck, testes unitários/integrados, testes PostgreSQL, build e CI no commit mais recente.
+- Deploy do commit atual e inspeção visual em celular e desktop.
+- Atualização da imagem nova de alta resolução no repositório.
+
+**Próxima sequência estrutural recomendada**
+1. Executar e registrar CI, lint, typecheck, testes e build no commit atual.
+2. Conferir migrações e inicialização em banco de desenvolvimento, sem resetar nem apagar dados.
+3. Confirmar o agendador automático no host e sua autenticação/execução em logs.
+4. Homologar o Mercado Pago em sandbox/testes antes de habilitar cobrança real.
+5. Validar o fluxo de compra, QR/recibo, apuração por formato, crédito idempotente e saques.
+6. Fazer revisão de segurança e de autorização por papel (ADMIN, CASHIER, PLAYER).
+7. Verificar visualmente as rotas principais em desktop e celular; então avaliar publicação, domínio e DNS separadamente.
