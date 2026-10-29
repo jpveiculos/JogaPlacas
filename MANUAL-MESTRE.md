@@ -75,6 +75,6 @@ Para identificar a pasta e o arquivo responsável por cada mudança, consulte a 
 
 
 ## Implantação no Hydro — 2026-10-29
-- O build da aplicação aplica as migrações Prisma antes de iniciar o site e executa o provisionamento idempotente do primeiro administrador. Ver procedimento e requisitos em `MANUAL_TECNICO.md`.
+- O Hydro usa o `Dockerfile` do repositório. O build valida/genera o Prisma Client e compila o Next.js; na inicialização, `start` aplica migrações pendentes, executa o provisionamento idempotente do primeiro administrador e inicia o site. Ver procedimento e requisitos em `MANUAL_TECNICO.md`.
 - A configuração `preDeployCommand` de `railway.json` é específica do Railway; não presumir que o Hydro a execute.
 - Não resetar nem apagar o banco para corrigir tabelas ausentes. Confirmar logs de migração e login após o deploy.
