@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
-const logo = "/images/brand/iconi-getal.PNG";
+const logo = "/images/brand/iconi-geral.PNG";
 
 export const metadata: Metadata = {
   title: {
