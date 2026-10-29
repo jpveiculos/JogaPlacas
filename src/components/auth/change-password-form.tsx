@@ -43,7 +43,7 @@ export function ChangePasswordForm() {
     <input id="new-password" type="password" autoComplete="new-password" minLength={6} maxLength={1024} value={newPassword} onChange={e => setNewPassword(e.target.value)} required />
     <label htmlFor="confirm-password">Confirme a nova senha</label>
     <input id="confirm-password" type="password" autoComplete="new-password" minLength={6} maxLength={1024} value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required />
-    {error ? <p className="form-error" role="alert">{error}</p> : null}
     <button className="primary-button" type="submit" disabled={busy}>{busy ? "Atualizando..." : "Alterar senha"}</button>
+    {error ? <p className="form-error form-feedback-error" role="alert" aria-live="assertive">{error}</p> : null}
   </form>;
 }
