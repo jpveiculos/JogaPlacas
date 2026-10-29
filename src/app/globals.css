@@ -1337,3 +1337,83 @@ p, .intro, .auth-description, .area-description, .feature-card p,
 @media(prefers-reduced-motion:reduce){
   .home-entry-actions>a{transition:none}
 }
+
+
+/* Alinhamento exclusivo da área administrativa: mantém ações e lógica existentes. */
+.admin-page-layout{
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  align-items:start;
+  gap:16px;
+  width:100%;
+  min-width:0;
+  margin:0 auto;
+}
+.admin-page-layout .admin-accordion-list,
+.admin-page-layout .admin-accordion,
+.admin-page-layout .admin-accordion-content{
+  width:100%;
+  min-width:0;
+  box-sizing:border-box;
+}
+.admin-page-layout .admin-accordion-content>.feature-card,
+.admin-page-layout>.feature-card{
+  width:100%;
+  max-width:none;
+  min-width:0;
+  margin:0;
+  box-sizing:border-box;
+}
+.admin-page-layout .admin-accordion-content>.feature-card{
+  padding:clamp(12px,2.5vw,20px);
+  border-radius:12px;
+  box-shadow:none;
+}
+.admin-page-layout .admin-round-create,
+.admin-page-layout .admin-round-list,
+.admin-page-layout .round-options,
+.admin-page-layout .round-option{
+  width:100%;
+  min-width:0;
+  box-sizing:border-box;
+}
+.admin-page-layout .round-option{
+  justify-content:space-between;
+  flex-wrap:wrap;
+  overflow-wrap:anywhere;
+}
+.admin-page-layout .round-option>div{
+  min-width:0;
+  max-width:100%;
+}
+.admin-page-layout input,
+.admin-page-layout select,
+.admin-page-layout textarea{
+  max-width:100%;
+  min-width:0;
+}
+.admin-page-layout .admin-round-create label{
+  display:grid;
+  gap:6px;
+  min-width:0;
+}
+.admin-page-layout .round-actions,
+.admin-page-layout .round-options{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:10px;
+}
+.admin-page-layout button{
+  max-width:100%;
+  overflow-wrap:anywhere;
+}
+@media(max-width:480px){
+  .admin-page-layout{gap:12px}
+  .admin-page-layout .admin-accordion-content{padding:0 8px 10px}
+  .admin-page-layout .admin-accordion-content>.feature-card{padding:10px}
+  .admin-page-layout .round-actions,
+  .admin-page-layout .round-options{align-items:stretch}
+  .admin-page-layout .round-actions button,
+  .admin-page-layout .round-options button{flex:1 1 140px}
+}
