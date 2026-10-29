@@ -98,3 +98,9 @@ O formulário de criação manual de rodadas fica oculto da interface administra
 
 ## Painel do administrador — organização visual
 Os módulos administrativos ficam em menus suspensos com seta, fechados por padrão, para economizar espaço. As seções atuais são Rodadas e sorteios, Prêmios e carteira digital, Controle financeiro e saques, e Cadastro e gestão de cambistas. A mudança altera apenas a apresentação; não excluir funcionalidades do código. Detalhes técnicos e critérios de aceite em `MANUAL_TECNICO.md`.
+
+
+## Atualização — últimos resultados no painel administrativo (2026-10-29)
+- O painel administrativo também deve ter um menu recolhível **Últimos resultados**, fechado por padrão, mostrando até 10 resultados publicados com placa cinza, placa Mercosul e data/hora.
+- Reutilizar o componente existente de resultados e permitir acesso autenticado de administrador à API de resultados; não duplicar regras nem expor resultados a usuários sem sessão.
+- Estado: implementação registrada na branch `feature/public-home-registration`; build, testes e deploy ainda precisam ser confirmados.
