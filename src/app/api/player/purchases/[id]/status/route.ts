@@ -48,6 +48,8 @@ export async function GET(
   if (purchase.status === "CONFIRMED" && purchase.receiptCode) {
     return NextResponse.json({
       status: "CONFIRMED",
+      paymentStatus: "CONFIRMED",
+      purchaseStatus: "CONFIRMED",
       receiptReady: true,
       purchaseId: purchase.id,
       receiptCode: purchase.receiptCode,
@@ -56,7 +58,7 @@ export async function GET(
 
   const payment = purchase.payment;
   if (!payment || payment.provider !== "MERCADO_PAGO" || !payment.providerPaymentId) {
-    return NextResponse.json({ status: purchase.status, receiptReady: false }, { headers });
+    return NextResponse.json({ status: purchase.status, purchaseStatus: purchase.status, paymentStatus: payment?.status ?? null, receiptReady: false }, { headers });
   }
 
   try {
@@ -93,6 +95,8 @@ export async function GET(
       if (confirmation.outcome === "confirmed" || confirmation.outcome === "already_confirmed") {
         return NextResponse.json({
           status: "CONFIRMED",
+          paymentStatus: "CONFIRMED",
+          purchaseStatus: "CONFIRMED",
           receiptReady: true,
           purchaseId: purchase.id,
           receiptCode: confirmation.receiptCode,
@@ -101,6 +105,8 @@ export async function GET(
       if (confirmation.outcome === "late_or_unavailable") {
         return NextResponse.json({
           status: "RECONCILIATION_REQUIRED",
+          paymentStatus: payment.status,
+          purchaseStatus: purchase.status,
           receiptReady: false,
           message: "Pagamento recebido após o fechamento da rodada. É necessária uma conferência.",
         }, { headers });
@@ -109,12 +115,16 @@ export async function GET(
 
     return NextResponse.json({
       status: payment.status,
+      paymentStatus: payment.status,
+      purchaseStatus: purchase.status,
       providerStatus: classification.providerStatus,
       receiptReady: false,
     }, { headers });
   } catch {
     return NextResponse.json({
       status: payment.status,
+      paymentStatus: payment.status,
+      purchaseStatus: purchase.status,
       receiptReady: false,
       message: "Não foi possível consultar o pagamento agora. Tente novamente.",
     }, { status: 503, headers });
