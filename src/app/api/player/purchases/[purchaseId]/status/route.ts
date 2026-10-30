@@ -84,6 +84,8 @@ export async function GET(request: NextRequest, context: RouteContext) {
       || purchase.currency !== "BRL"
       || order.amountCents !== payment.amountCents
       || order.amountCents !== purchase.totalCents
+      || order.paymentMethodId !== "pix"
+      || order.paymentMethodType !== "bank_transfer"
       || order.paymentAmountCents === null
       || order.paymentAmountCents !== payment.amountCents) {
       return NextResponse.json({ error: "Os dados do pagamento não correspondem à compra." }, { status: 422, headers });
