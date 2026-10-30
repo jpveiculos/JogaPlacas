@@ -1555,3 +1555,33 @@ p, .intro, .auth-description, .area-description, .feature-card p,
     padding-top: 28px !important;
   }
 }
+
+
+/* Cabeçalho público: cenário panorâmico com a placa central e veículos nas laterais. */
+.site-header-scenery{
+  display:block;
+  width:100%;
+  min-height:0;
+  padding:0;
+  overflow:hidden;
+  border:0;
+  background:#07172e;
+  line-height:0;
+}
+.site-header-scenery-image{
+  display:block;
+  width:100%;
+  height:auto;
+  max-height:280px;
+  object-fit:cover;
+  object-position:center;
+}
+@media(max-width:600px){
+  .site-header-scenery-image{
+    width:100%;
+    min-height:118px;
+    max-height:160px;
+    object-fit:cover;
+    object-position:center;
+  }
+}
