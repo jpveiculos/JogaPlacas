@@ -104,7 +104,16 @@ describe("Mercado Pago order parsing", () => {
 
 
 describe("Mercado Pago order status classification", () => {
-  it("requires a processed order, processed Pix transaction, and accredited detail", () => {\n    expect(classifyPixOrderStatus({ status: "processed", paymentStatus: "processed", statusDetail: "accredited" })).toMatchObject({\n      providerStatus: "processed",\n      normalizedStatus: "processed",\n      approved: true,\n    });\n    expect(classifyPixOrderStatus({ status: "created", paymentStatus: "processed", statusDetail: "accredited" }).approved).toBe(false);\n    expect(classifyPixOrderStatus({ status: "processed", paymentStatus: "pending", statusDetail: "accredited" }).approved).toBe(false);\n    expect(classifyPixOrderStatus({ status: "processed", paymentStatus: "processed", statusDetail: "pending" }).approved).toBe(false);\n  });
+  it("requires a processed order, processed Pix transaction, and accredited detail", () => {
+    expect(classifyPixOrderStatus({ status: "processed", paymentStatus: "processed", statusDetail: "accredited" })).toMatchObject({
+      providerStatus: "processed",
+      normalizedStatus: "processed",
+      approved: true,
+    });
+    expect(classifyPixOrderStatus({ status: "created", paymentStatus: "processed", statusDetail: "accredited" }).approved).toBe(false);
+    expect(classifyPixOrderStatus({ status: "processed", paymentStatus: "pending", statusDetail: "accredited" }).approved).toBe(false);
+    expect(classifyPixOrderStatus({ status: "processed", paymentStatus: "processed", statusDetail: "pending" }).approved).toBe(false);
+  });
 
   it("does not mistake a refunded order for an approved payment", () => {
     expect(classifyPixOrderStatus({ status: "refunded", paymentStatus: "processed", statusDetail: "accredited" })).toMatchObject({
