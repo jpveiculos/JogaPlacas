@@ -88,7 +88,13 @@ export function verifyMercadoPagoWebhookSignature(input: {
   const supplied = fields.v1;
   if (!timestamp || !supplied || !/^[a-f0-9]{64}$/i.test(supplied)) return false;
   if (!/^\d+$/.test(timestamp)) return false;
-  const timestampMs = Number(timestamp) * 1000;
+  const timestampValue = Number(timestamp);
+  // Mercado Pago's webhook formats differ by product/API: some send Unix
+  // seconds (10 digits), while Orders notifications can send Unix milliseconds
+  // (13 digits). Normalize both to milliseconds before applying the replay window.
+  const timestampMs = timestampValue >= 1_000_000_000_000
+    ? timestampValue
+    : timestampValue * 1000;
   const nowMs = input.nowMs ?? Date.now();
   // Reject stale/future signed requests to limit replay; provider retries can
   // be retried normally while inside this bounded acceptance window.
