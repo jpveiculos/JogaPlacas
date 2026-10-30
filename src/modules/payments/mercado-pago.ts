@@ -56,20 +56,29 @@ export function parseVerifiedPixOrder(payload: MercadoPagoOrder): VerifiedPixOrd
 }
 
 
-export function classifyPixOrderStatus(order: Pick<VerifiedPixOrder, "status" | "paymentStatus">): {
+export function classifyPixOrderStatus(order: Pick<VerifiedPixOrder, "status" | "statusDetail" | "paymentStatus">): {
   providerStatus: string;
   normalizedStatus: string;
   approved: boolean;
 } {
-  const orderStatus = order.status.toLowerCase();
-  const transactionStatus = order.paymentStatus?.toLowerCase() ?? null;
-  const providerStatus = ["refunded", "cancelled", "canceled", "expired", "rejected", "failed", "failure"].includes(orderStatus)
+  const orderStatus = order.status.trim().toLowerCase();
+  const transactionStatus = order.paymentStatus?.trim().toLowerCase() ?? null;
+  const statusDetail = order.statusDetail?.trim().toLowerCase() ?? null;
+  const terminalStatuses = ["refunded", "cancelled", "canceled", "expired", "rejected", "failed", "failure"];
+  // Order-level terminal states take precedence over a transaction status that
+  // might still reflect an earlier successful state.
+  const providerStatus = terminalStatuses.includes(orderStatus)
     ? order.status
     : order.paymentStatus ?? order.status;
+
   return {
     providerStatus,
-    normalizedStatus: providerStatus.toLowerCase(),
-    approved: orderStatus === "processed" && transactionStatus === "approved",
+    normalizedStatus: providerStatus.trim().toLowerCase(),
+    // Orders API uses processed + accredited for a successfully credited Pix.
+    // Do not use the Payments API's "approved" vocabulary for Orders.
+    approved: orderStatus === "processed"
+      && transactionStatus === "processed"
+      && statusDetail === "accredited",
   };
 }
 
