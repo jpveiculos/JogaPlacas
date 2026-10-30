@@ -1557,7 +1557,7 @@ p, .intro, .auth-description, .area-description, .feature-card p,
 }
 
 
-/* Cabeçalho público: cenário panorâmico com a placa central e veículos nas laterais. */
+/* Cabeçalho panorâmico: cenário ocupa toda a largura útil sem grandes vazios. */
 .site-header-scenery{
   display:block;
   width:100%;
@@ -1571,17 +1571,17 @@ p, .intro, .auth-description, .area-description, .feature-card p,
 .site-header-scenery-image{
   display:block;
   width:100%;
-  height:auto;
-  max-height:280px;
+  height:clamp(200px, 24vw, 330px);
+  max-height:none;
   object-fit:cover;
-  object-position:center;
+  object-position:center 48%;
 }
 @media(max-width:600px){
   .site-header-scenery-image{
     width:100%;
-    min-height:118px;
-    max-height:160px;
-    object-fit:cover;
+    height:auto;
+    max-height:none;
+    object-fit:contain;
     object-position:center;
   }
 }
