@@ -56,6 +56,7 @@ describe("Mercado Pago order parsing", () => {
           status: "approved",
           payment_method: {
             id: "pix",
+            type: "bank_transfer",
             qr_code: "000201pix-copy-paste",
             qr_code_base64: "aGVsbG8=",
             ticket_url: "https://example.invalid/ticket",
@@ -73,6 +74,8 @@ describe("Mercado Pago order parsing", () => {
       amountCents: 1250,
       paymentStatus: "approved",
       paymentAmountCents: 1250,
+      paymentMethodId: "pix",
+      paymentMethodType: "bank_transfer",
     });
   });
 

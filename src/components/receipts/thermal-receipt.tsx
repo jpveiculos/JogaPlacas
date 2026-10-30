@@ -35,7 +35,7 @@ export function ThermalReceipt({
   qrCodeDataUrl,
   onClose,
 }: ThermalReceiptProps) {
-  if (paymentStatus !== "CONFIRMED" || !/^JP-[A-Z0-9]{8,32}$/.test(receiptCode)) return null;
+  const validReceipt = paymentStatus === "CONFIRMED" && /^JP-[A-Z0-9]{8,32}$/.test(receiptCode);
 
   const money = (cents: number) => new Intl.NumberFormat("pt-BR", {
     style: "currency",
@@ -66,11 +66,16 @@ export function ThermalReceipt({
   const qrStyle: CSSProperties = { width: 76, height: 76, objectFit: "contain" };
   const [generatedQrUrl, setGeneratedQrUrl] = useState<string | null>(null);
   useEffect(() => {
+    if (!validReceipt) return;
     // Build the absolute public URL after mount to avoid server/client hydration mismatch.
     const verificationUrl = `${window.location.origin}/verificar-recibo/${encodeURIComponent(receiptCode)}`;
     // The QR encodes only the public verification URL; receipt facts are loaded from the official database.
-    setGeneratedQrUrl(`https://api.qrserver.com/v1/create-qr-code/?size=240x240&format=png&data=${encodeURIComponent(verificationUrl)}`);
-  }, [receiptCode]);
+    const timeout = window.setTimeout(() => {
+      setGeneratedQrUrl(`https://api.qrserver.com/v1/create-qr-code/?size=240x240&format=png&data=${encodeURIComponent(verificationUrl)}`);
+    }, 0);
+    return () => window.clearTimeout(timeout);
+  }, [receiptCode, validReceipt]);
+  if (!validReceipt) return null;
   const effectiveQrUrl = qrCodeDataUrl ?? generatedQrUrl;
   const repetitionNumbers = getReceiptRepetitionNumbers(plates);
 

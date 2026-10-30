@@ -18,7 +18,7 @@ const validInput = (): PixPurchaseInput => ({
       plateDisplay: "ABC-1234",
       stakeCents: 100,
       ruleVersion: "test-v1",
-      ruleSnapshot: { version: "test-v1", multipliers: { unit: 6, tens: 20, hundreds: 200, thousands: 2_000, letters: 2_000, fullPlate: 200_000 } },
+      ruleSnapshot: { version: "test-v1", multipliers: { unit: 6, tens: 30, hundreds: 300, thousands: 3_000, letters: 3_000, fullPlate: 300_000 } },
     }],
   }],
 });
@@ -287,7 +287,7 @@ describe("createPendingPixPurchase idempotency replay", () => {
         lettersCents: 16,
         fullPlateCents: 16,
         ruleVersion: "test-v1",
-        ruleSnapshot: { version: "test-v1", multipliers: { unit: 6, tens: 20, hundreds: 200, thousands: 2_000, letters: 2_000, fullPlate: 200_000 } },
+        ruleSnapshot: { version: "test-v1", multipliers: { unit: 6, tens: 30, hundreds: 300, thousands: 3_000, letters: 3_000, fullPlate: 300_000 } },
       }],
     }],
     payment: { id: "payment-existing", status: "PENDING" },
