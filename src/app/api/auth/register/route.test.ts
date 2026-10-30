@@ -20,7 +20,7 @@ const passwordHash = vi.mocked(hashPassword);
 function request(body: unknown, origin = "https://example.test") {
   return new NextRequest("https://example.test/api/auth/register", {
     method: "POST",
-    headers: { "content-type": "application/json", origin },
+    headers: { "content-type": "application/json", origin, host: "example.test" },
     body: JSON.stringify(body),
   });
 }
