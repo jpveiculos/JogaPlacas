@@ -70,7 +70,10 @@ export function ThermalReceipt({
     // Build the absolute public URL after mount to avoid server/client hydration mismatch.
     const verificationUrl = `${window.location.origin}/verificar-recibo/${encodeURIComponent(receiptCode)}`;
     // The QR encodes only the public verification URL; receipt facts are loaded from the official database.
-    setGeneratedQrUrl(`https://api.qrserver.com/v1/create-qr-code/?size=240x240&format=png&data=${encodeURIComponent(verificationUrl)}`);
+    const timeout = window.setTimeout(() => {
+      setGeneratedQrUrl(`https://api.qrserver.com/v1/create-qr-code/?size=240x240&format=png&data=${encodeURIComponent(verificationUrl)}`);
+    }, 0);
+    return () => window.clearTimeout(timeout);
   }, [receiptCode, validReceipt]);
   if (!validReceipt) return null;
   const effectiveQrUrl = qrCodeDataUrl ?? generatedQrUrl;
