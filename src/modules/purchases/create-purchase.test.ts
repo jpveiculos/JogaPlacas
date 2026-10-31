@@ -273,7 +273,7 @@ describe("createPendingPixPurchase idempotency replay", () => {
   const existingPurchase = () => ({
     id: "purchase-existing",
     paymentMethod: "PIX",
-    receiptCode: "TEST-RECEIPT-001",
+    receiptCode: null,
     playerId: "player-1",
     cashierId: null,
     customerId: null,
