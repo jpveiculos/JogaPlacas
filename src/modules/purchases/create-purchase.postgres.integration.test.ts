@@ -248,6 +248,7 @@ suite("PostgreSQL purchase concurrency", () => {
         prisma,
         {
           ...input(key, `IT-RECEIPT-LOCK-${suffix}`),
+          receiptCode: undefined,
           participations: [{
             ...input(key, `IT-RECEIPT-LOCK-${suffix}`).participations[0]!,
             roundId: timedRoundId,
