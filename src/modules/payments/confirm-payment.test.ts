@@ -27,9 +27,8 @@ function setup(availableRounds = [nextRound]) {
   const auditCreate = vi.fn().mockResolvedValue({});
   const auditFindFirst = vi.fn().mockResolvedValue(null);
   const roundFindMany = vi.fn()
-    .mockImplementation(async (args: { where?: { id?: { in?: string[] } } }) =>
-      args.where?.id?.in?.includes("round-old") ? [oldRound] : availableRounds,
-    );
+    .mockResolvedValueOnce([oldRound])
+    .mockResolvedValueOnce(availableRounds);
   const tx = {
     payment: { findUnique: vi.fn().mockResolvedValue({
       id: "payment-1",
