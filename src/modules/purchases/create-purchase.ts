@@ -223,30 +223,12 @@ export async function createPurchase(
     const rounds = await tx.round.findMany({ where: { id: { in: roundIds } } });
     const roundsById = new Map(rounds.map((round) => [round.id, round]));
 
-    // Repetitions are a contiguous sequence, not a selection of arbitrary future rounds.
-    // The caller's order is authoritative: every result must be exactly 30 minutes after
-    // the previous one, with no skipped draw. Check database timestamps, not client claims.
-    const selectedRounds = input.participations.map((participation) => {
-      const round = roundsById.get(participation.roundId);
-      if (!round) {
-        throw new PurchaseServiceError("A selected round is not available", "ROUND_UNAVAILABLE");
-      }
-      return round;
-    });
-    // The client chooses only the number of repetitions. These round IDs are
-    // provisional placeholders; the definitive rounds are selected using the
-    // database clock when payment is confirmed (or immediately for cash/wallet).
-    if (!selectedRounds[0] || ![RoundStatus.OPEN, RoundStatus.SCHEDULED].includes(selectedRounds[0].status)) {
-      throw new PurchaseServiceError("There is no valid upcoming round for this purchase", "ROUND_UNAVAILABLE");
-    }
+    // The client sends the next available rows only as provisional placeholders.
+    // A canceled/missing slot may be skipped: the actual participation sequence is
+    // resolved again from eligible rounds at the payment-confirmation instant.
     for (let index = 1; index < selectedRounds.length; index += 1) {
-      const previous = selectedRounds[index - 1]!;
-      const current = selectedRounds[index]!;
-      if (current.resultAt.getTime() - previous.resultAt.getTime() !== 30 * 60 * 1000) {
-        throw new PurchaseServiceError(
-          "Repeated participations must use consecutive rounds with no skipped draw",
-          "INVALID_PURCHASE",
-        );
+      if (selectedRounds[index]!.resultAt.getTime() <= selectedRounds[index - 1]!.resultAt.getTime()) {
+        throw new PurchaseServiceError("Upcoming rounds must be ordered by result time", "INVALID_PURCHASE");
       }
     }
 
