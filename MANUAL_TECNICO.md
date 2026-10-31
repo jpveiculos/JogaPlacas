@@ -9,7 +9,7 @@ Atualizado em 28/10/2026.
 - Toda alteração de marca deve ser acompanhada de revisão de títulos, metadados, textos acessíveis, rodapé, fluxo Pix, recibos e documentação. Não renomear o repositório técnico sem revisão separada de URLs e deploy.
 
 ## Procedimento obrigatório antes de qualquer trabalho
-1. Ler `MANUAL-MESTRE.md` na raiz da branch `feature/public-home-registration`.
+1. Ler este `MANUAL_TECNICO.md` na branch de trabalho atual; a versão de `main` é a referência oficial até que uma atualização seja revisada e integrada. `MANUAL-MESTRE.md` serve apenas como índice/resumo, não substitui este manual.
 2. Consultar a seção pertinente de `docs/PRODUCT_SPEC.md`, fonte de verdade das decisões funcionais.
 3. Consultar este manual técnico e `docs/TECHNICAL_ROADMAP.md` para arquitetura, sequência e pendências.
 4. Confrontar a decisão solicitada com os documentos e com o código/testes atuais. Se houver contradição, não escolher silenciosamente uma versão: identificar a regra antiga, atualizar a documentação normativa e só então alterar o código.
@@ -19,7 +19,7 @@ Atualizado em 28/10/2026.
 
 ## Árvore do repositório e mapa de arquivos (branch de trabalho)
 
-Mapa operacional dos diretórios e arquivos principais, conferido na árvore Git desta branch. Use os caminhos exatos; não crie arquivos paralelos quando já existe um módulo responsável. [Abrir a árvore completa do repositório](https://github.com/jpveiculos/JogaPlacas/tree/feature/public-home-registration).
+Mapa operacional dos diretórios e arquivos principais, conferido na árvore Git desta branch. Use os caminhos exatos; não crie arquivos paralelos quando já existe um módulo responsável. [Abrir a árvore oficial do repositório](https://github.com/jpveiculos/JogaPlacas/tree/main).
 
 ```text
 JogaPlacas/
