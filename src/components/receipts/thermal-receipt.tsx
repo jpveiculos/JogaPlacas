@@ -35,6 +35,19 @@ export function ThermalReceipt({
   qrCodeDataUrl,
   onClose,
 }: ThermalReceiptProps) {
+  const [generatedQr, setGeneratedQr] = useState<{ receiptCode: string; url: string } | null>(null);
+  useEffect(() => {
+    if (paymentStatus !== "CONFIRMED" || !/^JP-[A-Z0-9]{8,32}$/.test(receiptCode)) return;
+    const timer = window.setTimeout(() => {
+      const verificationUrl = window.location.origin + "/verificar-recibo/" + encodeURIComponent(receiptCode);
+      setGeneratedQr({
+        receiptCode,
+        url: "https://api.qrserver.com/v1/create-qr-code/?size=240x240&format=png&data=" + encodeURIComponent(verificationUrl),
+      });
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [receiptCode, paymentStatus]);
+
   if (paymentStatus !== "CONFIRMED" || !/^JP-[A-Z0-9]{8,32}$/.test(receiptCode)) return null;
 
   const money = (cents: number) => new Intl.NumberFormat("pt-BR", {
@@ -64,14 +77,7 @@ export function ThermalReceipt({
   };
 
   const qrStyle: CSSProperties = { width: 76, height: 76, objectFit: "contain" };
-  const [generatedQrUrl, setGeneratedQrUrl] = useState<string | null>(null);
-  useEffect(() => {
-    // Build the absolute public URL after mount to avoid server/client hydration mismatch.
-    const verificationUrl = `${window.location.origin}/verificar-recibo/${encodeURIComponent(receiptCode)}`;
-    // The QR encodes only the public verification URL; receipt facts are loaded from the official database.
-    setGeneratedQrUrl(`https://api.qrserver.com/v1/create-qr-code/?size=240x240&format=png&data=${encodeURIComponent(verificationUrl)}`);
-  }, [receiptCode]);
-  const effectiveQrUrl = qrCodeDataUrl ?? generatedQrUrl;
+  const effectiveQrUrl = qrCodeDataUrl ?? (generatedQr?.receiptCode === receiptCode ? generatedQr.url : null);
   const repetitionNumbers = getReceiptRepetitionNumbers(plates);
 
   function downloadReceipt() {
@@ -97,6 +103,7 @@ export function ThermalReceipt({
           <strong className="thermal-receipt-brand">JOGA PLACA</strong>
           <span>COMPROVANTE DE APOSTA</span>
           <span>{date}</span>
+          <span className="thermal-receipt-payment">{paymentLabel}</span>
         </header>
 
         <section className="thermal-receipt-code-row" aria-label="Código e QR Code do recibo">
