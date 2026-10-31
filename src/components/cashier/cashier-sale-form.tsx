@@ -333,7 +333,15 @@ export function CashierSaleForm() {
           {!pixReconciliationRequired && pixCheckout?.copyPaste && <div className="pix-copy-paste">
             <label htmlFor="pix-copy-paste">Pix copia e cola</label>
             <textarea id="pix-copy-paste" readOnly value={pixCheckout.copyPaste} rows={4} onFocus={(event) => event.currentTarget.select()} />
-            {pixReconciliationRequired ? (
+            <button type="button" onClick={() => {
+              if (pixCheckout.copyPaste && navigator.clipboard) {
+                void navigator.clipboard.writeText(pixCheckout.copyPaste).then(() => setNotice("Código Pix copiado."));
+              }
+            }}>Copiar código Pix</button>
+          </div>}
+          {pixReconciliationRequired ? <p role="alert" className="note-inline">Pagamento confirmado pelo Mercado Pago. O sistema está procurando as próximas rodadas válidas para concluir sua participação e emitir o recibo. Não pague novamente nem inicie outra venda.</p> : !pixCheckout?.copyPaste && <p role="status">A cobrança ainda não está disponível. A compra permanece pendente; fechar esta janela não cancela nem confirma o pagamento.</p>}
+          <p>O recibo oficial só será exibido após a confirmação autêntica do pagamento.</p>
+          {pixReconciliationRequired ? (
             <button type="button" onClick={() => setPixModalOpen(false)}>Fechar aviso (a compra continua em acompanhamento)</button>
           ) : (
             <button type="button" onClick={() => {
@@ -346,22 +354,8 @@ export function CashierSaleForm() {
               setStake("1,00");
               setNotice("Tela liberada para iniciar outra venda. A cobrança anterior continua pendente até confirmação ou reconciliação.");
               fetch("/api/cashier/rounds", { cache: "no-store" }).then((response) => response.json()).then((body) => setRounds(body.rounds ?? [])).catch(() => undefined);
-            }}>Sair e iniciar outra venda</button>
+            }}> Sair e iniciar outra venda </button>
           )}
-          </div>}
-          {pixReconciliationRequired ? <p role="alert" className="note-inline">Pagamento confirmado pelo Mercado Pago. O sistema está procurando as próximas rodadas válidas para concluir sua participação e emitir o recibo. Não pague novamente nem inicie outra venda.</p> : !pixCheckout?.copyPaste && <p role="status">A cobrança ainda não está disponível. A compra permanece pendente; fechar esta janela não cancela nem confirma o pagamento.</p>}
-          <p>O recibo oficial só será exibido após a confirmação autêntica do pagamento.</p>
-          <button type="button" onClick={() => {
-            setPixModalOpen(false);
-            setReceiptPurchaseId(null);
-            setPurchase(null);
-            setPixCheckout(null);
-            setLegacyPlate(""); setMercosurPlate("");
-            setSelectedRounds([]);
-            setStake("1,00");
-            setNotice("Tela liberada para iniciar outra venda. A cobrança anterior continua pendente até confirmação ou reconciliação.");
-            fetch("/api/cashier/rounds", { cache: "no-store" }).then((response) => response.json()).then((body) => setRounds(body.rounds ?? [])).catch(() => undefined);
-          }}>Sair e iniciar outra venda</button>
         </section>
         </div>
       )}
