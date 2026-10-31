@@ -155,7 +155,7 @@ suite("PostgreSQL purchase concurrency", () => {
         ...participation,
         lines: participation.lines.map((line) => ({
           ...line,
-          ruleSnapshot: { version: "approved-v4", multipliers: { unit: 6, tens: 30, hundreds: 300, thousands: 3_000, letters: 3_000, fullPlate: 300_000 } },
+          ruleSnapshot: { version: "approved-v4", multipliers: { unit: 7, tens: 30, hundreds: 300, thousands: 3_000, letters: 3_000, fullPlate: 300_000 } },
         })),
       })),
     })],
@@ -208,7 +208,7 @@ suite("PostgreSQL purchase concurrency", () => {
     expect(await prisma.purchase.count({ where: { idempotencyKey: key } })).toBe(1);
     expect(await prisma.payment.count({ where: { purchase: { idempotencyKey: key } } })).toBe(1);
   });
-  it("rejects a purchase when its round lock is released after the real PostgreSQL cutoff", async () => {
+  it("moves a purchase to the next valid round when its provisional cutoff passes while locked", async () => {
     const timedRoundId = `it-cutoff-lock-${suffix}`;
     const key = `it-cutoff-lock-purchase-${suffix}`;
     const cutoffAt = new Date(Date.now() + 1_500);
@@ -217,9 +217,9 @@ suite("PostgreSQL purchase concurrency", () => {
       data: {
         id: timedRoundId,
         code: `IT-LOCK-${suffix}`,
-        startsAt: new Date(cutoffAt.getTime() + 60_000),
+        startsAt: new Date(cutoffAt.getTime() - 29 * 60_000),
         cutoffAt,
-        resultAt: new Date(cutoffAt.getTime() + 120_000),
+        resultAt: new Date(cutoffAt.getTime() + 60_000),
         status: "OPEN",
       },
     });
@@ -283,10 +283,16 @@ suite("PostgreSQL purchase concurrency", () => {
       releaseLock!();
       await holdingTransaction;
 
-      await expect(purchasePromise).rejects.toMatchObject({ code: "ROUND_UNAVAILABLE" });
-      expect(await prisma.purchase.count({ where: { idempotencyKey: key } })).toBe(0);
-      expect(await prisma.payment.count({ where: { purchase: { idempotencyKey: key } } })).toBe(0);
-      expect(await prisma.purchaseParticipation.count({ where: { purchase: { idempotencyKey: key } } })).toBe(0);
+      const purchase = await purchasePromise;
+      expect(purchase.status).toBe("PENDING_PAYMENT");
+      expect(purchase.receiptCode).toBeNull();
+      const participation = await prisma.purchaseParticipation.findFirst({
+        where: { purchaseId: purchase.id },
+        select: { roundId: true, status: true },
+      });
+      expect(participation).toMatchObject({ roundId, status: "PENDING" });
+      expect(await prisma.purchase.count({ where: { idempotencyKey: key } })).toBe(1);
+      expect(await prisma.payment.count({ where: { purchase: { idempotencyKey: key } } })).toBe(1);
     } finally {
       releaseLock?.();
       await holdingTransaction.catch(() => undefined);
