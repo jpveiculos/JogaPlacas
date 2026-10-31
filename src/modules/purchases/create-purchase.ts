@@ -4,6 +4,7 @@ import { calculateCommissionCents } from "../../domain/cashier-commission";
 import { normalizePlate } from "../plates/normalize-plate";
 import { APPROVED_PRIZE_MULTIPLIERS, PRIZE_CATEGORIES, readPrizeMultipliers } from "../../domain/prize-rule-snapshot";
 import { allocatePlateStake } from "../../domain/allocate-plate-stake";
+import { selectNextValidRounds } from "../payments/select-next-valid-rounds";
 import {
   MAX_REPETITIONS,
   MIN_REPETITIONS,
@@ -225,7 +226,7 @@ export async function createPurchase(
       where: { status: { in: [RoundStatus.OPEN, RoundStatus.SCHEDULED] }, cutoffAt: { gt: decisionTime } },
       orderBy: [{ resultAt: "asc" }, { id: "asc" }],
     });
-    const selectedRounds = availableRounds.slice(0, input.repetitions);
+    const selectedRounds = selectNextValidRounds(availableRounds, input.repetitions, decisionTime);
     if (selectedRounds.length !== input.repetitions) {
       throw new PurchaseServiceError("There are not enough upcoming valid rounds for this purchase", "ROUND_UNAVAILABLE");
     }
