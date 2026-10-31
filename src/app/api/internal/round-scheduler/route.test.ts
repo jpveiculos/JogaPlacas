@@ -82,6 +82,8 @@ describe("POST /api/internal/round-scheduler", () => {
   });
 
   it("accepts a valid scheduler credential and is idempotent after the schedule is populated", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-10-25T15:00:00.000Z"));
     const firstResponse = await POST(request("Bearer test-secret-long-enough"));
     expect(firstResponse.status).toBe(200);
     const scheduledCodes = mocks.createRound.mock.calls.map((call) => ({
@@ -97,6 +99,7 @@ describe("POST /api/internal/round-scheduler", () => {
       pixChecked: 0, pixConfirmed: 0, pixNeedsReconciliation: 0,
     });
     expect(mocks.findMany).toHaveBeenCalledTimes(8);
+    vi.useRealTimers();
   });
 
   it("reconciles pending Pix payments even when no browser is polling", async () => {
