@@ -73,7 +73,15 @@ export async function confirmPixPayment(
             where: { id: paymentRow.id },
             data: { providerStatus: input.providerStatus, providerStatusDetail: input.providerStatusDetail },
           });
-          await tx.auditEvent.create({
+          const priorReconciliation = await tx.auditEvent.findFirst({
+            where: {
+              action: "PIX_PAYMENT_APPROVED_WITHOUT_AVAILABLE_ROUNDS",
+              entityType: "Purchase",
+              entityId: paymentRow.purchaseId,
+            },
+            select: { id: true },
+          });
+          if (!priorReconciliation) await tx.auditEvent.create({
             data: {
               action: "PIX_PAYMENT_APPROVED_WITHOUT_AVAILABLE_ROUNDS",
               entityType: "Purchase",
