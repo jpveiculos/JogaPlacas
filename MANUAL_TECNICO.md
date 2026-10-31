@@ -355,7 +355,7 @@ Este procedimento é obrigatório para solicitações futuras, não apenas para 
 ### Recibo e verificação por QR
 - O cabeçalho da consulta QR é fixo e neutro: **RESULTADOS**, fundo marrom (`#92400e`) e texto branco. Não classificar o talão inteiro como premiado/não premiado nem alternar título/cor no cabeçalho.
 - Cada placa continua exibindo seu próprio estado: **Premiada** (verde), **Prêmio pago** quando houver confirmação financeira, **Não premiada** (vermelho), ou estado de espera quando o resultado/apuração ainda não estiver concluído.
-- Em 2026-10-29, a auditoria encontrou que `src/components/receipts/receipt-verification.tsx` ainda usava os rótulos antigos “BILHETE PREMIADO” e “BILHETE NÃO PREMIADO”, apesar da decisão anterior. A correção foi registrada nesta branch para usar “APOSTA PREMIADA” e “APOSTA NÃO PREMIADA”. Validar build e a tela real após deploy.
+- Em 2026-10-30, a regra foi corrigida: o cabeçalho da página QR é fixo em **RESULTADOS**, marrom (`#92400e`), sem classificação agregada do recibo. A lógica individual de cada placa permanece: premiada, prêmio pago, não premiada ou aguardando. A alteração está incluída nesta branch; build e inspeção visual ainda pendentes.
 - Não mostrar “Apuração pendente” como resultado final de uma rodada com resultado publicado e apuração concluída. O estado por placa deve vir da API oficial e respeitar o estado da rodada.
 
 ### Alinhamento visual do painel administrativo
