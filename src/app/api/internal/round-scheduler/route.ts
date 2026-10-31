@@ -62,7 +62,7 @@ function resultSlots(from: Date, through: Date): Date[] {
     // Never create a brand-new round after its cutoff. Existing due rounds are
     // still processed below, but a fresh installation must not create a round
     // whose sales window has already ended.
-    if (cursor.getTime() - MINUTE_MS > from.getTime()) slots.push(new Date(cursor));
+    if (cursor.getTime() - MINUTE_MS >= from.getTime()) slots.push(new Date(cursor));
     cursor = new Date(cursor.getTime() + HALF_HOUR_MS);
   }
   return slots;
