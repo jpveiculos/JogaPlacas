@@ -200,57 +200,47 @@ export async function createPurchase(
       }
     }
 
-    const roundIds = input.participations.map((p) => p.roundId).sort();
+    const provisionalRoundIds = input.participations.map((p) => p.roundId).sort();
 
-    // Purchases and round closure must acquire this same row lock before
-    // deciding whether the round accepts entries. Sorted IDs avoid lock-order
-    // inversions for purchases that span more than one round.
+    // Lock the client-provided placeholders and all upcoming valid rounds in
+    // the same deterministic order used by round closure and Pix confirmation.
+    // The placeholder IDs do not determine the final allocation.
     await tx.$queryRaw`
       SELECT "id" FROM "Round"
-      WHERE "id" IN (${Prisma.join(roundIds)})
+      WHERE "id" IN (${Prisma.join(provisionalRoundIds)})
+         OR ("status" IN ('OPEN', 'SCHEDULED') AND "cutoffAt" > clock_timestamp())
       ORDER BY "id"
       FOR UPDATE
     `;
 
-    // Use PostgreSQL wall-clock time after acquiring the lock. Transaction
-    // start time or a timestamp captured before waiting could be stale at cutoff.
+    // The decision is made only after acquiring the locks, using PostgreSQL's
+    // wall clock. For PIX this is provisional; confirmation re-evaluates it.
     const decisionTime = decisionTimeOverride ?? (
       await tx.$queryRaw<Array<{ decisionTime: Date }>>`
         SELECT clock_timestamp() AS "decisionTime"
       `
     )[0]!.decisionTime;
 
-    const rounds = await tx.round.findMany({ where: { id: { in: roundIds } } });
-    const roundsById = new Map(rounds.map((round) => [round.id, round]));
-
-    // The client sends the next available rows only as provisional placeholders.
-    // A canceled/missing slot may be skipped: the actual participation sequence is
-    // resolved again from eligible rounds at the payment-confirmation instant.
-    for (let index = 1; index < selectedRounds.length; index += 1) {
-      if (selectedRounds[index]!.resultAt.getTime() <= selectedRounds[index - 1]!.resultAt.getTime()) {
-        throw new PurchaseServiceError("Upcoming rounds must be ordered by result time", "INVALID_PURCHASE");
-      }
+    const availableRounds = await tx.round.findMany({
+      where: { status: { in: [RoundStatus.OPEN, RoundStatus.SCHEDULED] }, cutoffAt: { gt: decisionTime } },
+      orderBy: [{ resultAt: "asc" }, { id: "asc" }],
+    });
+    const selectedRounds = availableRounds.slice(0, input.repetitions);
+    if (selectedRounds.length !== input.repetitions) {
+      throw new PurchaseServiceError("There are not enough upcoming valid rounds for this purchase", "ROUND_UNAVAILABLE");
     }
 
     const draft: PurchaseDraft = {
       repetitions: input.repetitions,
       paymentMethod: paymentMethod === PaymentMethod.CASH ? "CASH" : "PIX",
-      participations: input.participations.map((participation) => {
-        const round = roundsById.get(participation.roundId);
-        if (!round || (round.status !== RoundStatus.SCHEDULED && round.status !== RoundStatus.OPEN)) {
-          throw new PurchaseServiceError("A selected round is not available", "ROUND_UNAVAILABLE");
-        }
-        return {
-          roundId: round.id,
-          // Do not bind the purchase to the round's start time. A scheduled
-          // round can be the next valid target when the current cutoff has passed.
-          cutoffAt: round.cutoffAt,
-          lines: participation.lines.map((line) => ({
-            plateDisplay: line.plateDisplay,
-            ...allocatePlateStake(line.stakeCents),
-          })),
-        };
-      }),
+      participations: selectedRounds.map((round, index) => ({
+        roundId: round.id,
+        cutoffAt: round.cutoffAt,
+        lines: input.participations[index]!.lines.map((line) => ({
+          plateDisplay: line.plateDisplay,
+          ...allocatePlateStake(line.stakeCents),
+        })),
+      })),
     };
 
     let totals: ReturnType<typeof validatePurchaseDraft>;
@@ -302,13 +292,13 @@ export async function createPurchase(
         confirmedAt: isConfirmed ? decisionTime : null,
         idempotencyKey: input.idempotencyKey,
         participations: {
-          create: input.participations.map((participation) => ({
+          create: draft.participations.map((participation, index) => ({
             roundId: participation.roundId,
             status: isConfirmed ? "CONFIRMED" : "PENDING",
             totalCents: totalByRound.get(participation.roundId)!,
             ...(isConfirmed ? { confirmedAt: decisionTime } : {}),
             lines: {
-              create: participation.lines.map((line) => {
+              create: input.participations[index]!.lines.map((line) => {
                 const normalized = normalizePlate(line.plateDisplay);
                 const allocation = allocatePlateStake(line.stakeCents);
                 return {
