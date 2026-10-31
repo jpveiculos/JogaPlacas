@@ -159,6 +159,9 @@ export function CashierSaleForm() {
           setPurchase(null);
           setPixCheckout(null);
           setPixReconciliationRequired(false);
+          setLegacyPlate(""); setMercosurPlate(""); setAddedPlates([]);
+          setSelectedRounds([]);
+          setStake("1,00");
           setNotice("Pagamento confirmado. O recibo oficial está na tela.");
           return;
         }
@@ -233,7 +236,6 @@ export function CashierSaleForm() {
       const body = await response.json();
       if (!response.ok) throw new Error(body.error ?? "Não foi possível registrar a compra.");
       const created = body.purchase as CreatedPurchase;
-      setPurchase(created);
       idempotencyKey.current = null;
       if (paymentMethod === "CASH") {
         setReceiptPurchaseId(created.id);
@@ -243,6 +245,7 @@ export function CashierSaleForm() {
         setNotice(body.message ?? "Venda em dinheiro confirmada. O recibo está disponível.");
         fetch("/api/cashier/rounds", { cache: "no-store" }).then((roundResponse) => roundResponse.json()).then((roundBody) => setRounds(roundBody.rounds ?? [])).catch(() => undefined);
       } else {
+        setPurchase(created);
         setPixCheckout((body.pixCheckout as PixCheckout | null) ?? null);
         setPixModalOpen(true);
         setNotice(body.message ?? "Compra registrada.");
