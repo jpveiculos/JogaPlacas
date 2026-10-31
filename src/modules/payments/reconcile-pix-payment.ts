@@ -1,4 +1,4 @@
-import { Prisma, type PrismaClient } from "@/generated/prisma/client";
+import { type PrismaClient } from "@/generated/prisma/client";
 import { classifyPixOrderStatus, getVerifiedPixOrder } from "@/modules/payments/mercado-pago";
 import { confirmPixPayment } from "@/modules/payments/confirm-payment";
 
