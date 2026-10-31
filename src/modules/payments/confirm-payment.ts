@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto";
-import { Prisma, RoundStatus, type PrismaClient } from "../../generated/prisma/client";
+import { Prisma, type PrismaClient } from "../../generated/prisma/client";
 import { calculateCommissionCents } from "../../domain/cashier-commission";
 
 export type ConfirmPaymentResult =
@@ -38,7 +38,7 @@ export async function confirmPixPayment(
         const participations = await tx.purchaseParticipation.findMany({
           where: { purchaseId: paymentRow.purchaseId, status: "PENDING" },
           select: { id: true, roundId: true, totalCents: true },
-          orderBy: { createdAt: "asc" },
+          orderBy: [{ round: { resultAt: "asc" } }, { id: "asc" }],
         });
         if (!participations.length) throw new Error("Purchase has no pending participations");
 
