@@ -1573,10 +1573,10 @@ p, .intro, .auth-description, .area-description, .feature-card p,
 .site-header-scenery-image{
   display:block;
   width:100%;
-  height:clamp(220px, 27vw, 360px);
+  height:clamp(132px, 16.2vw, 216px);
   max-height:none;
-  object-fit:cover;
-  object-position:center 56%;
+  object-fit:fill;
+  object-position:center;
 }
 .site-header-scenery-logo{
   position:absolute;
@@ -1597,9 +1597,9 @@ p, .intro, .auth-description, .area-description, .feature-card p,
 @media(max-width:600px){
   .site-header-scenery-image{
     width:100%;
-    height:clamp(150px, 40vw, 220px);
-    object-fit:cover;
-    object-position:center 56%;
+    height:clamp(90px, 24vw, 132px);
+    object-fit:fill;
+    object-position:center;
   }
   .site-header-scenery-logo{
     bottom:4%;
