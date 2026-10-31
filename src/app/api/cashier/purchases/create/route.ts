@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
 
   const parsed = requestSchema.safeParse(body);
   if (!parsed.success || new Set(parsed.data?.roundIds ?? []).size !== (parsed.data?.roundIds.length ?? 0)) {
-    return NextResponse.json({ error: "Informe rodadas distintas, placas válidas e valores em centavos." }, { status: 400 });
+    return NextResponse.json({ error: "Informe a quantidade de rodadas, placas válidas e valores em centavos." }, { status: 400 });
   }
 
   const snapshot = createCurrentPrizeRuleSnapshot();

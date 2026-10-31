@@ -32,10 +32,11 @@ describe("GET /api/player/results", () => {
     expect(mocks.roundFindMany).not.toHaveBeenCalled();
   });
 
-  it.each(["ADMIN", "CASHIER"])("rejects role %s", async (role) => {
+  it.each(["ADMIN", "CASHIER"])("allows role %s to view recent results", async (role) => {
     mocks.getSessionUser.mockResolvedValue({ id: "user-1", username: "user", role, status: "ACTIVE", mustChangePassword: false });
-    expect((await GET(request())).status).toBe(403);
-    expect(mocks.roundFindMany).not.toHaveBeenCalled();
+    const response = await GET(request());
+    expect(response.status).toBe(200);
+    expect(mocks.roundFindMany).toHaveBeenCalledOnce();
   });
 
   it("returns the two independent plate results from the last 24 hours without caching", async () => {

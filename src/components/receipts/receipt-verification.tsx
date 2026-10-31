@@ -96,26 +96,11 @@ export function ReceiptVerification({ receiptCode }: { receiptCode: string }) {
   if (!data) return <p role="alert" style={{ color: "#b91c1c", fontWeight: 700 }}>Não foi possível consultar o recibo.</p>;
 
   const rounds = data.valid ? data.rounds ?? [] : [];
-  const hasPrize = rounds.some((round) => round.plates.some((plate) => plate.resultStatus === "PREMIADA"));
-  const allRoundsResolved = rounds.length > 0 && rounds.every((round) =>
-    round.status === "RESULTADO_PUBLICADO" || round.status === "RODADA_CANCELADA",
-  );
-  const noPrize = allRoundsResolved && rounds.every((round) =>
-    round.plates.length > 0 && round.plates.every((plate) => plate.resultStatus === "NAO_PREMIADA"),
-  );
-  const overallLabel = !data.valid
-    ? "RECIBO NÃO VALIDADO"
-    : hasPrize
-      ? "APOSTA PREMIADA"
-      : noPrize
-        ? "APOSTA NÃO PREMIADA"
-        : "RESULTADO";
-  const overallColor = !data.valid || noPrize ? "#b91c1c" : hasPrize ? "#15803d" : "#92400e";
 
   return (
     <section aria-live="polite" style={{ border: "2px solid #9ca3af", borderRadius: 10, padding: 16, background: "#ffffff", color: "#111827", fontSize: 16, lineHeight: 1.5 }}>
-      <div style={{ padding: "13px 10px", borderRadius: 7, background: overallColor, color: "#ffffff", textAlign: "center", marginBottom: 16 }}>
-        <h2 style={{ margin: 0, fontSize: 21, fontWeight: 800, letterSpacing: "0.02em" }}>{overallLabel}</h2>
+      <div style={{ padding: "13px 10px", borderRadius: 7, background: "#92400e", color: "#ffffff", textAlign: "center", marginBottom: 16 }}>
+        <h2 style={{ margin: 0, fontSize: 21, fontWeight: 800, letterSpacing: "0.02em" }}>RESULTADOS</h2>
       </div>
       {!data.valid && <p role="alert" style={{ color: "#991b1b", fontWeight: 700 }}>{data.message}</p>}
       <p style={{ margin: "0 0 16px", fontSize: 16, color: "#111827" }}><strong>Recibo:</strong> {data.receiptCode ?? receiptCode.toUpperCase()}</p>

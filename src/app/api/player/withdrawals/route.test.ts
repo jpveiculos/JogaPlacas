@@ -34,7 +34,7 @@ describe("player withdrawals API", () => {
     mocks.aggregate.mockResolvedValue({ _sum: { amountCents: 5000 } });
     mocks.findMany.mockResolvedValue([]);
     mocks.queryRaw.mockResolvedValue([]);
-    mocks.withdrawalCreate.mockResolvedValue({ id: "withdrawal-1", amountCents: 2500, status: "PENDING", createdAt: new Date("2026-01-01T00:00:00Z") });
+    mocks.withdrawalCreate.mockResolvedValue({ id: "withdrawal-1", amountCents: 5000, status: "PENDING", createdAt: new Date("2026-01-01T00:00:00Z") });
     mocks.ledgerCreate.mockResolvedValue({});
     mocks.historyCreate.mockResolvedValue({});
     mocks.auditCreate.mockResolvedValue({});
@@ -48,15 +48,15 @@ describe("player withdrawals API", () => {
     expect((await GET(request())).status).toBe(403);
   });
 
-  it("reserves the requested amount atomically and records an audit event", async () => {
-    const response = await POST(request("/api/player/withdrawals", { amountCents: 2500, pixKey: "pix@example.com" }));
+  it("reserves the full available balance atomically and records an audit event", async () => {
+    const response = await POST(request("/api/player/withdrawals", { pixKey: "pix@example.com" }));
     expect(response.status).toBe(201);
-    expect(await response.json()).toMatchObject({ success: true, withdrawal: { id: "withdrawal-1", availableCents: 2500, status: "PENDING" } });
+    expect(await response.json()).toMatchObject({ success: true, withdrawal: { id: "withdrawal-1", amountCents: 5000, availableCents: 0, status: "PENDING" } });
     expect(mocks.transaction).toHaveBeenCalledOnce();
     expect(mocks.queryRaw).toHaveBeenCalledOnce();
     expect(mocks.ledgerCreate).toHaveBeenCalledWith({ data: expect.objectContaining({
       userId: "player-1", withdrawalId: "withdrawal-1", type: "WITHDRAWAL_RESERVE",
-      amountCents: -2500, idempotencyKey: "withdrawal-reserve:withdrawal-1",
+      amountCents: -5000, idempotencyKey: "withdrawal-reserve:withdrawal-1",
     }) });
     expect(mocks.historyCreate).toHaveBeenCalledOnce();
     expect(mocks.auditCreate).toHaveBeenCalledWith({ data: expect.objectContaining({
@@ -64,9 +64,9 @@ describe("player withdrawals API", () => {
     }) });
   });
 
-  it("rejects a request above available balance without reserving funds", async () => {
-    mocks.aggregate.mockResolvedValue({ _sum: { amountCents: 1000 } });
-    const response = await POST(request("/api/player/withdrawals", { amountCents: 2500, pixKey: "pix@example.com" }));
+  it("rejects a withdrawal when no balance is available", async () => {
+    mocks.aggregate.mockResolvedValue({ _sum: { amountCents: 0 } });
+    const response = await POST(request("/api/player/withdrawals", { pixKey: "pix@example.com" }));
     expect(response.status).toBe(409);
     expect(mocks.ledgerCreate).not.toHaveBeenCalled();
     expect(mocks.withdrawalCreate).not.toHaveBeenCalled();

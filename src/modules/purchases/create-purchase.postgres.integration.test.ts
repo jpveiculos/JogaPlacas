@@ -31,8 +31,8 @@ suite("PostgreSQL purchase concurrency", () => {
       lines: [{
         plateDisplay: "ABC-1234",
         stakeCents: 100,
-        ruleVersion: "integration-v1",
-        ruleSnapshot: { version: "integration-v1", multipliers: { unit: 6, tens: 20, hundreds: 200, thousands: 2_000, letters: 2_000, fullPlate: 200_000 } },
+        ruleVersion: "approved-v4",
+        ruleSnapshot: { version: "approved-v4", multipliers: { unit: 6, tens: 30, hundreds: 300, thousands: 3_000, letters: 3_000, fullPlate: 300_000 } },
       }],
     }],
   });
@@ -133,7 +133,6 @@ suite("PostgreSQL purchase concurrency", () => {
   });
 
   it.each([
-    ["receipt code", (request: PixPurchaseInput) => ({ ...request, receiptCode: "DIFFERENT-RECEIPT" })],
     ["actor", (request: PixPurchaseInput) => ({ ...request, playerId: "different-player" })],
     ["plate", (request: PixPurchaseInput) => ({
       ...request,
@@ -155,7 +154,7 @@ suite("PostgreSQL purchase concurrency", () => {
         ...participation,
         lines: participation.lines.map((line) => ({
           ...line,
-          ruleSnapshot: { version: "integration-v2", multipliers: { unit: 6, tens: 20, hundreds: 200, thousands: 2_000, letters: 2_000, fullPlate: 200_000 } },
+          ruleSnapshot: { version: "approved-v4", multipliers: { unit: 7, tens: 30, hundreds: 300, thousands: 3_000, letters: 3_000, fullPlate: 300_000 } },
         })),
       })),
     })],
@@ -183,7 +182,7 @@ suite("PostgreSQL purchase concurrency", () => {
         input(key, `IT-RECEIPT-CUTOFF-${suffix}-${String(_label).replaceAll(" ", "-")}`),
         decisionTime,
       ),
-    ).rejects.toMatchObject({ code: "INVALID_PURCHASE" });
+    ).rejects.toMatchObject({ code: "ROUND_UNAVAILABLE" });
 
     expect(await prisma.purchase.count({ where: { idempotencyKey: key } })).toBe(0);
     expect(await prisma.payment.count({ where: { purchase: { idempotencyKey: key } } })).toBe(0);
@@ -192,23 +191,20 @@ suite("PostgreSQL purchase concurrency", () => {
 
 
 
-  it("rejects concurrent requests with the same key but different receipt codes", async () => {
+  it("replays concurrent pending Pix requests even if they supply different ignored receipt codes", async () => {
     const key = `it-conflict-${suffix}`;
-    const outcomes = await Promise.allSettled([
+    const outcomes = await Promise.all([
       createPendingPixPurchase(prisma, input(key, `IT-RECEIPT-A-${suffix}`), fixedNow),
       createPendingPixPurchase(prisma, input(key, `IT-RECEIPT-B-${suffix}`), fixedNow),
     ]);
 
-    expect(outcomes.filter((outcome) => outcome.status === "fulfilled")).toHaveLength(1);
-    const rejected = outcomes.find((outcome) => outcome.status === "rejected");
-    expect(rejected?.status).toBe("rejected");
-    if (rejected?.status === "rejected") {
-      expect(rejected.reason).toMatchObject({ code: "IDEMPOTENCY_CONFLICT" });
-    }
+    expect(outcomes).toHaveLength(2);
+    expect(outcomes[0]!.id).toBe(outcomes[1]!.id);
+    expect(outcomes[0]!.receiptCode).toBeNull();
     expect(await prisma.purchase.count({ where: { idempotencyKey: key } })).toBe(1);
     expect(await prisma.payment.count({ where: { purchase: { idempotencyKey: key } } })).toBe(1);
   });
-  it("rejects a purchase when its round lock is released after the real PostgreSQL cutoff", async () => {
+  it("moves a purchase to the next valid round when its provisional cutoff passes while locked", async () => {
     const timedRoundId = `it-cutoff-lock-${suffix}`;
     const key = `it-cutoff-lock-purchase-${suffix}`;
     const cutoffAt = new Date(Date.now() + 1_500);
@@ -217,9 +213,9 @@ suite("PostgreSQL purchase concurrency", () => {
       data: {
         id: timedRoundId,
         code: `IT-LOCK-${suffix}`,
-        startsAt: new Date(cutoffAt.getTime() + 60_000),
+        startsAt: new Date(cutoffAt.getTime() - 29 * 60_000),
         cutoffAt,
-        resultAt: new Date(cutoffAt.getTime() + 120_000),
+        resultAt: new Date(cutoffAt.getTime() + 60_000),
         status: "OPEN",
       },
     });
@@ -248,6 +244,7 @@ suite("PostgreSQL purchase concurrency", () => {
         prisma,
         {
           ...input(key, `IT-RECEIPT-LOCK-${suffix}`),
+          receiptCode: undefined,
           participations: [{
             ...input(key, `IT-RECEIPT-LOCK-${suffix}`).participations[0]!,
             roundId: timedRoundId,
@@ -283,16 +280,22 @@ suite("PostgreSQL purchase concurrency", () => {
       releaseLock!();
       await holdingTransaction;
 
-      await expect(purchasePromise).rejects.toMatchObject({ code: "INVALID_PURCHASE" });
-      expect(await prisma.purchase.count({ where: { idempotencyKey: key } })).toBe(0);
-      expect(await prisma.payment.count({ where: { purchase: { idempotencyKey: key } } })).toBe(0);
-      expect(await prisma.purchaseParticipation.count({ where: { purchase: { idempotencyKey: key } } })).toBe(0);
+      const purchase = await purchasePromise;
+      expect(purchase.status).toBe("PENDING_PAYMENT");
+      expect(purchase.receiptCode).toBeNull();
+      const participation = await prisma.purchaseParticipation.findFirst({
+        where: { purchaseId: purchase.id },
+        select: { roundId: true, status: true },
+      });
+      expect(participation).toMatchObject({ roundId, status: "PENDING" });
+      expect(await prisma.purchase.count({ where: { idempotencyKey: key } })).toBe(1);
+      expect(await prisma.payment.count({ where: { purchase: { idempotencyKey: key } } })).toBe(1);
     } finally {
       releaseLock?.();
       await holdingTransaction.catch(() => undefined);
-      await prisma.participationLine.deleteMany({ where: { participation: { roundId: timedRoundId } } });
-      await prisma.payment.deleteMany({ where: { purchase: { participations: { some: { roundId: timedRoundId } } } } });
-      await prisma.purchaseParticipation.deleteMany({ where: { roundId: timedRoundId } });
+      await prisma.participationLine.deleteMany({ where: { participation: { purchase: { idempotencyKey: key } } } });
+      await prisma.payment.deleteMany({ where: { purchase: { idempotencyKey: key } } });
+      await prisma.purchaseParticipation.deleteMany({ where: { purchase: { idempotencyKey: key } } });
       await prisma.purchase.deleteMany({ where: { idempotencyKey: key } });
       await prisma.round.deleteMany({ where: { id: timedRoundId } });
     }

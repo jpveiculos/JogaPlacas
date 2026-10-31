@@ -30,7 +30,7 @@ import { POST } from "./route";
 function request(body: unknown, origin = "https://example.test", token = "current-token") {
   return new NextRequest("https://example.test/api/auth/change-password", {
     method: "POST",
-    headers: { "content-type": "application/json", origin, ...(token ? { cookie: `jogaplacas_session=${token}` } : {}) },
+    headers: { "content-type": "application/json", origin, host: "example.test", ...(token ? { cookie: `jogaplacas_session=${token}` } : {}) },
     body: JSON.stringify(body),
   });
 }

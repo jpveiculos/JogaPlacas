@@ -5,6 +5,7 @@ import { authPrisma } from "@/lib/auth/session";
 import { closeRound } from "@/modules/rounds/close-round";
 import { openRound } from "@/modules/rounds/open-round";
 import { drawRoundResults } from "@/modules/rounds/draw-round-results";
+import { reconcilePixPaymentFromProvider } from "@/modules/payments/reconcile-pix-payment";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -61,7 +62,7 @@ function resultSlots(from: Date, through: Date): Date[] {
     // Never create a brand-new round after its cutoff. Existing due rounds are
     // still processed below, but a fresh installation must not create a round
     // whose sales window has already ended.
-    if (cursor.getTime() - MINUTE_MS > from.getTime()) slots.push(new Date(cursor));
+    if (cursor.getTime() - MINUTE_MS >= from.getTime()) slots.push(new Date(cursor));
     cursor = new Date(cursor.getTime() + HALF_HOUR_MS);
   }
   return slots;
@@ -87,6 +88,9 @@ export async function POST(request: NextRequest) {
   let closed = 0;
   let drawn = 0;
   let failures = 0;
+  let pixChecked = 0;
+  let pixConfirmed = 0;
+  let pixNeedsReconciliation = 0;
 
   // Keep a rolling 48-hour schedule so every 30-minute slot, including tomorrow's
   // matching time, is already scheduled. One Round stores both independent draws.
@@ -126,6 +130,40 @@ export async function POST(request: NextRequest) {
     }
   }
 
+  // Reconcile pending Pix orders independently of the browser. Closing the QR modal
+  // must not disable the direct-provider fallback. updatedAt is only a throttle/claim,
+  // never the game decision clock.
+  const stalePendingPix = await authPrisma.payment.findMany({
+    where: {
+      provider: "MERCADO_PAGO",
+      status: "PENDING",
+      providerPaymentId: { not: null },
+      updatedAt: { lt: new Date(now.getTime() - 10_000) },
+    },
+    select: { id: true },
+    orderBy: [{ updatedAt: "asc" }, { createdAt: "asc" }],
+    take: 50,
+  });
+  for (const payment of stalePendingPix) {
+    const claimed = await authPrisma.payment.updateMany({
+      where: {
+        id: payment.id,
+        status: "PENDING",
+        updatedAt: { lt: new Date(now.getTime() - 10_000) },
+      },
+      data: { updatedAt: now },
+    });
+    if (claimed.count !== 1) continue;
+    pixChecked += 1;
+    try {
+      const outcome = await reconcilePixPaymentFromProvider(authPrisma, payment.id);
+      if (outcome === "confirmed" || outcome === "already_confirmed") pixConfirmed += 1;
+      if (outcome === "late_or_unavailable") pixNeedsReconciliation += 1;
+    } catch {
+      failures += 1;
+    }
+  }
+
   // Process closures before draws; both operations lock the round and are safe to retry.
   const dueToClose = await authPrisma.round.findMany({
     where: { status: { in: ["SCHEDULED", "OPEN"] }, cutoffAt: { lte: now } },
@@ -151,7 +189,10 @@ export async function POST(request: NextRequest) {
     try { await drawRoundResults(authPrisma, round.id); drawn += 1; } catch { failures += 1; }
   }
 
-  return NextResponse.json({ ok: failures === 0, created, closed, drawn, failures, timeZone: TIME_ZONE }, {
+  return NextResponse.json({
+    ok: failures === 0, created, closed, drawn, failures, timeZone: TIME_ZONE,
+    pixChecked, pixConfirmed, pixNeedsReconciliation,
+  }, {
     status: failures === 0 ? 200 : 207, headers: { "Cache-Control": "no-store" },
   });
 }

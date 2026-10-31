@@ -4,6 +4,7 @@ import { calculateCommissionCents } from "../../domain/cashier-commission";
 import { normalizePlate } from "../plates/normalize-plate";
 import { APPROVED_PRIZE_MULTIPLIERS, PRIZE_CATEGORIES, readPrizeMultipliers } from "../../domain/prize-rule-snapshot";
 import { allocatePlateStake } from "../../domain/allocate-plate-stake";
+import { selectNextValidRounds } from "../payments/select-next-valid-rounds";
 import {
   MAX_REPETITIONS,
   MIN_REPETITIONS,
@@ -144,8 +145,7 @@ export async function createPurchase(
       include: { participations: { include: { lines: true } }, payment: true },
     });
     if (existing) {
-      const incomingByRound = new Map(input.participations.map((participation) => [
-        participation.roundId,
+      const incomingParticipations = input.participations.map((participation) =>
         participation.lines.map((line) => {
           const normalized = normalizePlate(line.plateDisplay);
           return [
@@ -156,9 +156,8 @@ export async function createPurchase(
             stableJsonStringify(line.ruleSnapshot),
           ].join("|");
         }).sort().join("\\n"),
-      ]));
-      const existingByRound = new Map(existing.participations.map((participation) => [
-        participation.roundId,
+      ).sort();
+      const existingParticipations = existing.participations.map((participation) =>
         participation.lines.map((line) => [
           String(line.plateFormat).toLowerCase(),
           line.normalizedPlate,
@@ -167,16 +166,16 @@ export async function createPurchase(
           line.ruleVersion,
           stableJsonStringify(line.ruleSnapshot),
         ].join("|")).sort().join("\\n"),
-      ]));
+      ).sort();
       const sameRequest =
         existing.paymentMethod === paymentMethod &&
-        (paymentMethod === PaymentMethod.CASH ? Boolean(existing.receiptCode) : existing.receiptCode === (input.receiptCode ?? null)) &&
+        (paymentMethod === PaymentMethod.CASH ? Boolean(existing.receiptCode) : true) &&
         existing.playerId === (input.playerId ?? null) &&
         existing.cashierId === (input.cashierId ?? null) &&
         existing.customerId === (input.customerId ?? null) &&
         existing.participations.length === input.repetitions &&
-        existingByRound.size === incomingByRound.size &&
-        [...incomingByRound].every(([roundId, lines]) => existingByRound.get(roundId) === lines);
+        existingParticipations.length === incomingParticipations.length &&
+        existingParticipations.every((lines, index) => lines === incomingParticipations[index]);
       if (!sameRequest) {
         throw new PurchaseServiceError(
           "The idempotency key was already used for a different purchase",
@@ -202,74 +201,48 @@ export async function createPurchase(
       }
     }
 
-    const roundIds = input.participations.map((p) => p.roundId).sort();
+    const provisionalRoundIds = input.participations.map((p) => p.roundId).sort();
 
-    // Purchases and round closure must acquire this same row lock before
-    // deciding whether the round accepts entries. Sorted IDs avoid lock-order
-    // inversions for purchases that span more than one round.
-    await tx.$queryRaw`
+    // Lock the client-provided placeholders and all upcoming valid rounds in
+    // the same deterministic order used by round closure and Pix confirmation.
+    // The placeholder IDs do not determine the final allocation.
+    const lockedRoundRows = await tx.$queryRaw<Array<{ id: string }>>`
       SELECT "id" FROM "Round"
-      WHERE "id" IN (${Prisma.join(roundIds)})
+      WHERE "id" IN (${Prisma.join(provisionalRoundIds)})
+         OR ("status" IN ('OPEN', 'SCHEDULED') AND "cutoffAt" > clock_timestamp())
       ORDER BY "id"
       FOR UPDATE
     `;
+    const lockedRoundIds = lockedRoundRows.map((round) => round.id);
 
-    // Use PostgreSQL wall-clock time after acquiring the lock. Transaction
-    // start time or a timestamp captured before waiting could be stale at cutoff.
+    // The decision is made only after acquiring the locks, using PostgreSQL's
+    // wall clock. For PIX this is provisional; confirmation re-evaluates it.
     const decisionTime = decisionTimeOverride ?? (
       await tx.$queryRaw<Array<{ decisionTime: Date }>>`
         SELECT clock_timestamp() AS "decisionTime"
       `
     )[0]!.decisionTime;
 
-    const rounds = await tx.round.findMany({ where: { id: { in: roundIds } } });
-    const roundsById = new Map(rounds.map((round) => [round.id, round]));
-
-    // Repetitions are a contiguous sequence, not a selection of arbitrary future rounds.
-    // The caller's order is authoritative: every result must be exactly 30 minutes after
-    // the previous one, with no skipped draw. Check database timestamps, not client claims.
-    const selectedRounds = input.participations.map((participation) => {
-      const round = roundsById.get(participation.roundId);
-      if (!round) {
-        throw new PurchaseServiceError("A selected round is not available", "ROUND_UNAVAILABLE");
-      }
-      return round;
+    const availableRounds = await tx.round.findMany({
+      where: { id: { in: lockedRoundIds }, status: { in: [RoundStatus.OPEN, RoundStatus.SCHEDULED] }, cutoffAt: { gt: decisionTime } },
+      orderBy: [{ resultAt: "asc" }, { id: "asc" }],
     });
-    if (selectedRounds[0]?.status !== RoundStatus.OPEN) {
-      throw new PurchaseServiceError(
-        "A repeated purchase must begin with the currently open round",
-        "ROUND_UNAVAILABLE",
-      );
-    }
-    for (let index = 1; index < selectedRounds.length; index += 1) {
-      const previous = selectedRounds[index - 1]!;
-      const current = selectedRounds[index]!;
-      if (current.resultAt.getTime() - previous.resultAt.getTime() !== 30 * 60 * 1000) {
-        throw new PurchaseServiceError(
-          "Repeated participations must use consecutive rounds with no skipped draw",
-          "INVALID_PURCHASE",
-        );
-      }
+    const selectedRounds = selectNextValidRounds(availableRounds, input.repetitions, decisionTime);
+    if (selectedRounds.length !== input.repetitions) {
+      throw new PurchaseServiceError("There are not enough upcoming valid rounds for this purchase", "ROUND_UNAVAILABLE");
     }
 
     const draft: PurchaseDraft = {
       repetitions: input.repetitions,
       paymentMethod: paymentMethod === PaymentMethod.CASH ? "CASH" : "PIX",
-      participations: input.participations.map((participation) => {
-        const round = roundsById.get(participation.roundId);
-        if (!round || (round.status !== RoundStatus.SCHEDULED && round.status !== RoundStatus.OPEN)) {
-          throw new PurchaseServiceError("A selected round is not available", "ROUND_UNAVAILABLE");
-        }
-        return {
-          roundId: round.id,
-          startsAt: round.startsAt,
-          cutoffAt: round.cutoffAt,
-          lines: participation.lines.map((line) => ({
-            plateDisplay: line.plateDisplay,
-            ...allocatePlateStake(line.stakeCents),
-          })),
-        };
-      }),
+      participations: selectedRounds.map((round, index) => ({
+        roundId: round.id,
+        cutoffAt: round.cutoffAt,
+        lines: input.participations[index]!.lines.map((line) => ({
+          plateDisplay: line.plateDisplay,
+          ...allocatePlateStake(line.stakeCents),
+        })),
+      })),
     };
 
     let totals: ReturnType<typeof validatePurchaseDraft>;
@@ -307,7 +280,7 @@ export async function createPurchase(
         throw new PurchaseServiceError(`Saldo insuficiente. Disponível: R$ ${(availableCents / 100).toFixed(2).replace(".", ",")}; total da aposta: R$ ${(totals.totalCents / 100).toFixed(2).replace(".", ",")}.`, "INSUFFICIENT_BALANCE");
       }
     }
-    const receiptCode = isConfirmed ? `JP-${randomBytes(8).toString("hex").toUpperCase()}` : (input.receiptCode ?? null);
+    const receiptCode = isConfirmed ? (input.receiptCode ?? `JP-${randomBytes(8).toString("hex").toUpperCase()}`) : null;
     const created = await tx.purchase.create({
       data: {
         playerId: input.playerId ?? null,
@@ -321,13 +294,13 @@ export async function createPurchase(
         confirmedAt: isConfirmed ? decisionTime : null,
         idempotencyKey: input.idempotencyKey,
         participations: {
-          create: input.participations.map((participation) => ({
+          create: draft.participations.map((participation, index) => ({
             roundId: participation.roundId,
             status: isConfirmed ? "CONFIRMED" : "PENDING",
             totalCents: totalByRound.get(participation.roundId)!,
             ...(isConfirmed ? { confirmedAt: decisionTime } : {}),
             lines: {
-              create: participation.lines.map((line) => {
+              create: input.participations[index]!.lines.map((line) => {
                 const normalized = normalizePlate(line.plateDisplay);
                 const allocation = allocatePlateStake(line.stakeCents);
                 return {

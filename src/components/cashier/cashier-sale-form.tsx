@@ -27,12 +27,6 @@ function sanitizePlateInput(value: string, format: PlateFormat): string {
 
 type PixCheckout = { copyPaste: string | null; qrCodeBase64: string | null; ticketUrl: string | null };
 
-function formatDate(value: string) {
-  const date = new Date(value);
-  const dateLabel = new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeZone: "America/Sao_Paulo" }).format(date);
-  const timeLabel = new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit", hourCycle: "h23", timeZone: "America/Sao_Paulo" }).format(date);
-  return `${dateLabel} ${timeLabel}`;
-}
 function formatMoney(cents: number) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
 }
@@ -62,6 +56,7 @@ export function CashierSaleForm() {
   const [purchase, setPurchase] = useState<CreatedPurchase | null>(null);
   const [pixCheckout, setPixCheckout] = useState<PixCheckout | null>(null);
   const [pixModalOpen, setPixModalOpen] = useState(false);
+  const [pixReconciliationRequired, setPixReconciliationRequired] = useState(false);
   const [receiptPurchaseId, setReceiptPurchaseId] = useState<string | null>(null);
   const idempotencyKey = useRef<string | null>(null);
 
@@ -79,11 +74,7 @@ export function CashierSaleForm() {
         const items = body.rounds as AvailableRound[];
         if (!active) return;
         setRounds(items);
-        setSelectedRounds((current) => {
-          const availableIds = new Set(items.map((round) => round.id));
-          const next = current.filter((id) => availableIds.has(id));
-          return next.length === current.length ? current : next;
-        });
+        setSelectedRounds((current) => items.slice(0, current.length).map((round) => round.id));
         setError("");
       } catch (reason) {
         if (active) setError(reason instanceof Error ? reason.message : "Erro ao atualizar as rodadas.");
@@ -147,7 +138,7 @@ export function CashierSaleForm() {
 
 
   useEffect(() => {
-    if (!pixModalOpen || !purchase?.id) return;
+    if (!purchase?.id) return;
     let active = true;
     const checkPayment = async () => {
       try {
@@ -158,6 +149,8 @@ export function CashierSaleForm() {
           paymentStatus?: string;
           purchaseStatus?: string;
           providerStatus?: string | null;
+          reconciliationRequired?: boolean;
+          message?: string | null;
         };
         if (!active) return;
         if (body.receiptReady) {
@@ -165,14 +158,17 @@ export function CashierSaleForm() {
           setPixModalOpen(false);
           setPurchase(null);
           setPixCheckout(null);
+          setPixReconciliationRequired(false);
           setNotice("Pagamento confirmado. O recibo oficial está na tela.");
           return;
         }
+        setPixReconciliationRequired(Boolean(body.reconciliationRequired));
         if (["FAILED", "CANCELLED", "EXPIRED", "REFUNDED"].includes(body.paymentStatus ?? "")
           || ["CANCELLED", "REFUNDED"].includes(body.purchaseStatus ?? "")) {
           setPixModalOpen(false);
           setPurchase(null);
           setPixCheckout(null);
+          setPixReconciliationRequired(false);
           setLegacyPlate(""); setMercosurPlate(""); setAddedPlates([]);
           setSelectedRounds([]);
           setStake("1,00");
@@ -185,7 +181,7 @@ export function CashierSaleForm() {
     void checkPayment();
     const timer = window.setInterval(() => { void checkPayment(); }, 3000);
     return () => { active = false; window.clearInterval(timer); };
-  }, [pixModalOpen, purchase?.id]);
+  }, [purchase?.id]);
 
   const stakeCents = useMemo(() => parseStake(stake), [stake]);
   const normalizedLegacyPlate = legacyPlate.trim().toUpperCase();
@@ -210,28 +206,6 @@ export function CashierSaleForm() {
     setAddedPlates((current) => current.filter((item) => item !== plate));
   }
 
-  function toggleRound(id: string) {
-    const index = visibleRounds.findIndex((round) => round.id === id);
-    if (index < 0) return;
-    setSelectedRounds((current) => {
-      const selectedIndex = current.indexOf(id);
-      if (selectedIndex >= 0) {
-        // Removing one round also removes every later repetition so the sequence stays contiguous.
-        return current.slice(0, selectedIndex);
-      }
-      if (current.length >= 10 || index !== current.length) return current;
-      const round = visibleRounds[index]!;
-      if (current.length === 0 && round.status !== "OPEN") return current;
-      if (current.length > 0) {
-        const previous = visibleRounds.find((item) => item.id === current[current.length - 1]);
-        if (!previous || new Date(round.resultAt).getTime() - new Date(previous.resultAt).getTime() !== 30 * 60_000) {
-          return current;
-        }
-      }
-      return [...current, id];
-    });
-  }
-
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(""); setNotice(""); setPurchase(null); setPixCheckout(null);
@@ -240,13 +214,10 @@ export function CashierSaleForm() {
       return;
     }
     if (stakeCents === null) { setError("O valor mínimo por placa e rodada é R$ 1,00. Use até duas casas decimais."); return; }
-    if (!selectedRounds.length) { setError("Selecione pelo menos uma rodada."); return; }
-    const activeRoundIds = new Set(visibleRounds.map((round) => round.id));
-    if (selectedRounds.some((id) => !activeRoundIds.has(id))) {
-      setSelectedRounds((current) => current.filter((id) => activeRoundIds.has(id)));
-      setError("Uma rodada encerrou enquanto você preparava a aposta. Selecione a rodada aberta atual e tente novamente.");
-      fetch("/api/cashier/rounds", { cache: "no-store" })
-        .then((response) => response.json()).then((body) => setRounds(body.rounds ?? [])).catch(() => undefined);
+    if (!selectedRounds.length) { setError("Escolha quantas rodadas deseja concorrer."); return; }
+    const provisionalRoundIds = visibleRounds.slice(0, selectedRounds.length).map((round) => round.id);
+    if (provisionalRoundIds.length !== selectedRounds.length) {
+      setError("Não há rodadas futuras suficientes no momento. Atualize a tela e tente novamente.");
       return;
     }
 
@@ -256,7 +227,7 @@ export function CashierSaleForm() {
         method: "POST", headers: { "content-type": "application/json" },
         body: JSON.stringify({
           idempotencyKey: idempotencyKey.current ?? (idempotencyKey.current = crypto.randomUUID()),
-          roundIds: selectedRounds, lines: plateLines,
+          roundIds: provisionalRoundIds, lines: plateLines,
         }),
       });
       const body = await response.json();
@@ -307,16 +278,22 @@ export function CashierSaleForm() {
           </div>}
         </div>
         <fieldset>
-          <legend>Rodadas</legend>
-          {loadingRounds ? <p>Carregando rodadas…</p> : visibleRounds.length === 0 ? <p>Não há rodadas disponíveis para compra no momento.</p> : (
-            <div className="round-options round-carousel">{visibleRounds.slice(0, 10).map((round, index) => (
-              <label key={round.id} className="round-option">
-                <input type="checkbox" checked={selectedRounds.includes(round.id)} disabled={index > selectedRounds.length || (index === 0 && (round.status !== "OPEN" || new Date(round.cutoffAt).getTime() <= clockNow)) || (index === selectedRounds.length && selectedRounds.length > 0 && new Date(round.resultAt).getTime() - new Date(visibleRounds[index - 1]!.resultAt).getTime() !== 30 * 60_000)} onChange={() => toggleRound(round.id)} />
-                <span><strong>{round.code}</strong><br />Início: {formatDate(round.startsAt)}<br />Encerra: {formatDate(round.cutoffAt)}</span>
-              </label>
-            ))}</div>
+          <legend>Quantidade de rodadas</legend>
+          {loadingRounds ? <p>Carregando disponibilidade…</p> : visibleRounds.length === 0 ? <p>Não há rodadas futuras disponíveis no momento.</p> : (
+            <>
+              <select value={selectedRounds.length} onChange={(event) => {
+                const count = Number(event.target.value);
+                setSelectedRounds(visibleRounds.slice(0, count).map((round) => round.id));
+              }}>
+                <option value={0}>Selecione a quantidade</option>
+                {Array.from({ length: Math.min(10, visibleRounds.length) }, (_, index) => index + 1).map((count) => (
+                  <option key={count} value={count}>{count} {count === 1 ? "rodada" : "rodadas"}</option>
+                ))}
+              </select>
+              <small>A jogada será vinculada à próxima rodada válida quando o pagamento for confirmado. Na venda em dinheiro, a vinculação ocorre no momento da confirmação.</small>
+            </>
           )}
-          {selectedRounds.length === 10 && <small>Limite: 10 rodadas.</small>}
+          {selectedRounds.length === 10 && <small>Limite de 10 rodadas por venda.</small>}
         </fieldset>
         <label>Valor total por placa e rodada (R$)
           <input inputMode="decimal" value={stake} onChange={(event) => setStake(event.target.value)} placeholder="1,00" required />
@@ -333,14 +310,15 @@ export function CashierSaleForm() {
           </label>
         </fieldset>
         {stakeCents !== null && selectedRounds.length > 0 && <p>Total estimado: <strong>{formatMoney(stakeCents * selectedRounds.length * plateLines.length)}</strong> ({plateLines.length} placa(s), {selectedRounds.length} rodada(s)).</p>}
-        <button type="submit" disabled={submitting || loadingRounds || visibleRounds.length === 0}>{submitting ? "Registrando…" : paymentMethod === "CASH" ? "Confirmar venda em dinheiro" : "Registrar venda e preparar Pix"}</button>
+        <button type="submit" disabled={submitting || loadingRounds || visibleRounds.length === 0 || pixReconciliationRequired}>{submitting ? "Registrando…" : paymentMethod === "CASH" ? "Confirmar venda em dinheiro" : "Registrar venda e preparar Pix"}</button>
       </form>
       {error && <p role="alert" className="note-inline">{error}</p>}
       {notice && <p role="status" className="note-inline">{notice}</p>}
+      {pixReconciliationRequired && !pixModalOpen && <p role="status" className="note-inline">O Mercado Pago confirmou o Pix. Estamos vinculando a compra às próximas rodadas válidas. Não faça outro pagamento. <button type="button" onClick={() => setPixModalOpen(true)}>Ver situação</button></p>}
       {purchase && pixModalOpen && (
         <div className="modal-backdrop" role="presentation">
         <section className="modal-panel pix-modal" role="dialog" aria-modal="true" aria-labelledby="pix-modal-heading">
-          <img className="pix-brand-logo" src="/images/brand/joga-placa-logo.jpg" alt="Joga Placa" /><h3 id="pix-modal-heading">Pix da venda</h3><p>Status: aguardando confirmação do pagamento</p><p>Total: <strong>{formatMoney(purchase.totalCents)}</strong></p>
+          <img className="pix-brand-logo" src="/images/brand/joga-placa-logo.jpg" alt="Joga Placa" /><h3 id="pix-modal-heading">Pix da venda</h3><p>Status: {pixReconciliationRequired ? "pagamento confirmado; aguardando atribuição da rodada" : "aguardando confirmação do pagamento"}</p><p>Total: <strong>{formatMoney(purchase.totalCents)}</strong></p>
           {purchase.participations.flatMap((participation) => participation.lines.map((line, index) => (
             <div key={participation.roundId + line.plateDisplay + index} className="receipt-plate-line">
               <PlateVisual format={/^[A-Z]{3}-?\d{4}$/.test(line.plateDisplay) ? "LEGACY" : "MERCOSUR"} value={line.plateDisplay} />
@@ -348,11 +326,11 @@ export function CashierSaleForm() {
               <small>Unidade: {formatMoney(line.allocationCents.unit)} · Dezena: {formatMoney(line.allocationCents.tens)} · Centena: {formatMoney(line.allocationCents.hundreds)} · Milhar: {formatMoney(line.allocationCents.thousands)} · Letras: {formatMoney(line.allocationCents.letters)} · Placa completa: {formatMoney(line.allocationCents.fullPlate)}</small>
             </div>
           )))}
-          {pixCheckout?.qrCodeBase64 && <div className="pix-checkout">
+          {!pixReconciliationRequired && pixCheckout?.qrCodeBase64 && <div className="pix-checkout">
             <h4>Escaneie o QR Code Pix</h4>
             <img src={"data:image/png;base64," + pixCheckout.qrCodeBase64} alt="QR Code para pagar a compra via Pix" width={240} height={240} />
           </div>}
-          {pixCheckout?.copyPaste && <div className="pix-copy-paste">
+          {!pixReconciliationRequired && pixCheckout?.copyPaste && <div className="pix-copy-paste">
             <label htmlFor="pix-copy-paste">Pix copia e cola</label>
             <textarea id="pix-copy-paste" readOnly value={pixCheckout.copyPaste} rows={4} onFocus={(event) => event.currentTarget.select()} />
             <button type="button" onClick={() => {
@@ -361,19 +339,23 @@ export function CashierSaleForm() {
               }
             }}>Copiar código Pix</button>
           </div>}
-          {!pixCheckout?.copyPaste && <p role="status">A cobrança ainda não está disponível. A compra permanece pendente; fechar esta janela não cancela nem confirma o pagamento.</p>}
+          {pixReconciliationRequired ? <p role="alert" className="note-inline">Pagamento confirmado pelo Mercado Pago. O sistema está procurando as próximas rodadas válidas para concluir sua participação e emitir o recibo. Não pague novamente nem inicie outra venda.</p> : !pixCheckout?.copyPaste && <p role="status">A cobrança ainda não está disponível. A compra permanece pendente; fechar esta janela não cancela nem confirma o pagamento.</p>}
           <p>O recibo oficial só será exibido após a confirmação autêntica do pagamento.</p>
-          <button type="button" onClick={() => {
-            setPixModalOpen(false);
-            setReceiptPurchaseId(null);
-            setPurchase(null);
-            setPixCheckout(null);
-            setLegacyPlate(""); setMercosurPlate("");
-            setSelectedRounds([]);
-            setStake("1,00");
-            setNotice("Tela liberada para iniciar outra venda. A cobrança anterior continua pendente até confirmação ou reconciliação.");
-            fetch("/api/cashier/rounds", { cache: "no-store" }).then((response) => response.json()).then((body) => setRounds(body.rounds ?? [])).catch(() => undefined);
-          }}>Sair e iniciar outra venda</button>
+          {pixReconciliationRequired ? (
+            <button type="button" onClick={() => setPixModalOpen(false)}>Fechar aviso (a compra continua em acompanhamento)</button>
+          ) : (
+            <button type="button" onClick={() => {
+              setPixModalOpen(false);
+              setReceiptPurchaseId(null);
+              setPurchase(null);
+              setPixCheckout(null);
+              setLegacyPlate(""); setMercosurPlate("");
+              setSelectedRounds([]);
+              setStake("1,00");
+              setNotice("Tela liberada para iniciar outra venda. A cobrança anterior continua pendente até confirmação ou reconciliação.");
+              fetch("/api/cashier/rounds", { cache: "no-store" }).then((response) => response.json()).then((body) => setRounds(body.rounds ?? [])).catch(() => undefined);
+            }}> Sair e iniciar outra venda </button>
+          )}
         </section>
         </div>
       )}
