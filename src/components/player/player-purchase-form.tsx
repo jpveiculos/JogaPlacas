@@ -28,12 +28,6 @@ function sanitizePlateInput(value: string, format: PlateFormat): string {
 
 type PixCheckout = { copyPaste: string | null; qrCodeBase64: string | null; ticketUrl: string | null };
 
-function formatDate(value: string) {
-  const date = new Date(value);
-  const dateLabel = new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeZone: "America/Sao_Paulo" }).format(date);
-  const timeLabel = new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit", hourCycle: "h23", timeZone: "America/Sao_Paulo" }).format(date);
-  return `${dateLabel} ${timeLabel}`;
-}
 function formatMoney(cents: number) {
   return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(cents / 100);
 }
@@ -203,7 +197,6 @@ export function PlayerPurchaseForm() {
   const normalizedMercosurPlate = mercosurPlate.trim().toUpperCase().replace(/-/g, "");
   const legacyPlateValid = /^[A-Z]{3}-?\d{4}$/.test(normalizedLegacyPlate);
   const mercosurPlateValid = /^[A-Z]{3}\d[A-Z]\d{2}$/.test(normalizedMercosurPlate);
-  const plateCount = (legacyPlateValid ? 1 : 0) + (mercosurPlateValid ? 1 : 0);
   const currentPlateDisplays = [
     ...(legacyPlateValid ? [normalizedLegacyPlate.replace(/-/g, "")] : []),
     ...(mercosurPlateValid ? [normalizedMercosurPlate] : []),
