@@ -1584,10 +1584,10 @@ p, .intro, .auth-description, .area-description, .feature-card p,
   top:50%;
   left:50%;
   display:block;
-  width:clamp(260px, 34vw, 500px);
-  max-width:72%;
+  width:clamp(190px, 24vw, 360px);
+  max-width:60%;
   height:auto;
-  max-height:72%;
+  max-height:60%;
   object-fit:contain;
   transform:translate(-50%,-50%);
   filter:drop-shadow(0 3px 8px rgba(0,0,0,.45));
@@ -1601,8 +1601,8 @@ p, .intro, .auth-description, .area-description, .feature-card p,
     object-position:center 56%;
   }
   .site-header-scenery-logo{
-    width:48%;
-    max-width:250px;
-    max-height:68%;
+    width:34%;
+    max-width:190px;
+    max-height:56%;
   }
 }
