@@ -283,7 +283,7 @@ suite("PostgreSQL purchase concurrency", () => {
       releaseLock!();
       await holdingTransaction;
 
-      await expect(purchasePromise).rejects.toMatchObject({ code: "INVALID_PURCHASE" });
+      await expect(purchasePromise).rejects.toMatchObject({ code: "ROUND_UNAVAILABLE" });
       expect(await prisma.purchase.count({ where: { idempotencyKey: key } })).toBe(0);
       expect(await prisma.payment.count({ where: { purchase: { idempotencyKey: key } } })).toBe(0);
       expect(await prisma.purchaseParticipation.count({ where: { purchase: { idempotencyKey: key } } })).toBe(0);
