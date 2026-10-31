@@ -1557,11 +1557,13 @@ p, .intro, .auth-description, .area-description, .feature-card p,
 }
 
 
-/* Cabeçalho panorâmico: cenário ocupa toda a largura útil sem grandes vazios. */
+/* Cabeçalho fotográfico com a logomarca original em camada independente. */
 .site-header-scenery{
+  position:relative;
   display:block;
   width:100%;
   min-height:0;
+  margin:0;
   padding:0;
   overflow:hidden;
   border:0;
@@ -1571,17 +1573,36 @@ p, .intro, .auth-description, .area-description, .feature-card p,
 .site-header-scenery-image{
   display:block;
   width:100%;
-  height:clamp(200px, 24vw, 330px);
+  height:clamp(220px, 27vw, 360px);
   max-height:none;
   object-fit:cover;
-  object-position:center 48%;
+  object-position:center 56%;
+}
+.site-header-scenery-logo{
+  position:absolute;
+  z-index:1;
+  top:50%;
+  left:50%;
+  display:block;
+  width:clamp(260px, 34vw, 500px);
+  max-width:72%;
+  height:auto;
+  max-height:72%;
+  object-fit:contain;
+  transform:translate(-50%,-50%);
+  filter:drop-shadow(0 3px 8px rgba(0,0,0,.45));
+  pointer-events:none;
 }
 @media(max-width:600px){
   .site-header-scenery-image{
     width:100%;
-    height:auto;
-    max-height:none;
-    object-fit:contain;
-    object-position:center;
+    height:clamp(150px, 40vw, 220px);
+    object-fit:cover;
+    object-position:center 56%;
+  }
+  .site-header-scenery-logo{
+    width:48%;
+    max-width:250px;
+    max-height:68%;
   }
 }
