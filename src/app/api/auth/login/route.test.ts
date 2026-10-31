@@ -30,7 +30,7 @@ const clearFailures = vi.mocked(clearLoginFailures);
 function request(body: unknown, origin = "https://example.test") {
   return new NextRequest("https://example.test/api/auth/login", {
     method: "POST",
-    headers: { "content-type": "application/json", origin },
+    headers: { "content-type": "application/json", origin, host: "example.test" },
     body: JSON.stringify(body),
   });
 }
