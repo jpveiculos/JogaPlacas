@@ -1,6 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { Prisma, RoundStatus, type PrismaClient } from "../../generated/prisma/client";
 import { calculateCommissionCents } from "../../domain/cashier-commission";
+import { selectNextValidRounds } from "./select-next-valid-rounds";
 
 export type ConfirmPaymentResult =
   | { outcome: "confirmed"; receiptCode: string }
@@ -67,7 +68,7 @@ export async function confirmPixPayment(
             orderBy: [{ resultAt: "asc" }, { id: "asc" }],
           }),
         ]);
-        const targetRounds = availableRounds.slice(0, participations.length);
+        const targetRounds = selectNextValidRounds(availableRounds, participations.length, decisionTime);
         if (targetRounds.length !== participations.length) {
           await tx.payment.update({
             where: { id: paymentRow.id },
