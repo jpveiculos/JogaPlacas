@@ -22,12 +22,16 @@ const paymentLabels: Record<string, string> = {
   CARD: "Cartão confirmado",
 };
 
+const MAX_MANUAL_RETRIES = 2;
+
 export function PlayerPurchaseReceipt({ purchaseId, autoOpen = false, onClose }: { purchaseId: string; autoOpen?: boolean; onClose?: () => void }) {
   const [receipt, setReceipt] = useState<ReceiptData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [manualRetries, setManualRetries] = useState(0);
 
-  async function loadReceipt() {
+  async function loadReceipt(isManualRetry = false) {
+    if (loading) return;
     setLoading(true);
     setError("");
     try {
@@ -41,6 +45,7 @@ export function PlayerPurchaseReceipt({ purchaseId, autoOpen = false, onClose }:
       setReceipt(body.receipt);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : "Não foi possível carregar o recibo.");
+      if (isManualRetry) setManualRetries((count) => count + 1);
     } finally {
       setLoading(false);
     }
@@ -48,22 +53,34 @@ export function PlayerPurchaseReceipt({ purchaseId, autoOpen = false, onClose }:
 
   useEffect(() => {
     if (!autoOpen) return;
-    // Defer the initial fetch until after the effect commits so loading state
-    // is updated from the async callback rather than synchronously in the effect.
     const timer = window.setTimeout(() => { void loadReceipt(); }, 0);
     return () => window.clearTimeout(timer);
     // The purchase ID is stable for this mounted receipt component.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoOpen, purchaseId]);
 
+  const canRetry = manualRetries < MAX_MANUAL_RETRIES;
+
   return (
     <div className="player-purchase-receipt">
       {!receipt && !autoOpen && (
-        <button type="button" onClick={loadReceipt} disabled={loading}>
+        <button type="button" onClick={() => { void loadReceipt(); }} disabled={loading}>
           {loading ? "Carregando recibo…" : "Consultar / imprimir recibo oficial"}
         </button>
       )}
-      {error && <p className="note-inline" role="alert">{error}</p>}
+      {error && (
+        <div className="note-inline" role="alert">
+          <p>{error}</p>
+          <p>Referência da venda: <strong>{purchaseId}</strong>. Informe esse código à administração se o recibo continuar indisponível.</p>
+          {canRetry ? (
+            <button type="button" onClick={() => { void loadReceipt(true); }} disabled={loading}>
+              {loading ? "Consultando…" : `Tentar buscar recibo novamente (${manualRetries + 1}/${MAX_MANUAL_RETRIES})`}
+            </button>
+          ) : (
+            <p>As tentativas foram concluídas. Encaminhe a referência acima à administração para recuperar o recibo original. Não faça outra venda nem outro pagamento.</p>
+          )}
+        </div>
+      )}
       {receipt && (
         <div className="modal-backdrop" role="presentation">
           <section className="modal-panel receipt-modal" role="dialog" aria-modal="true" aria-labelledby="receipt-heading">
