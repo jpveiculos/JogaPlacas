@@ -1,13 +1,27 @@
 /** Cabeçalho visual público com cenário fotográfico e logomarca oficial sobreposta. */
 const HEADER_IMAGE_BASE = "/images/brand/header-cenario-joga-placa";
+
+function getImageExtensionVariants(extension: string): string[] {
+  return extension.split("").reduce(
+    (variants, character) => {
+      const lower = character.toLowerCase();
+      const upper = character.toUpperCase();
+      return lower === upper
+        ? variants.map((variant) => variant + character)
+        : [
+            ...variants.map((variant) => variant + lower),
+            ...variants.map((variant) => variant + upper),
+          ];
+    },
+    [""],
+  );
+}
+
 const HEADER_IMAGE_EXTENSIONS = [
-  ".PNG", ".png",
-  ".JPG", ".jpg",
-  ".JPEG", ".jpeg",
-  ".WEBP", ".webp",
-  ".GIF", ".gif",
-  ".SVG", ".svg",
-];
+  "png", "jpg", "jpeg", "webp", "gif", "svg", "avif",
+].flatMap((extension) =>
+  getImageExtensionVariants(extension).map((variant) => "." + variant),
+);
 
 export function SiteHeader() {
   return (
