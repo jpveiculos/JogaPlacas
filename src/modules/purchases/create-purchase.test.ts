@@ -17,8 +17,8 @@ const validInput = (): PixPurchaseInput => ({
     lines: [{
       plateDisplay: "ABC-1234",
       stakeCents: 100,
-      ruleVersion: "test-v1",
-      ruleSnapshot: { version: "test-v1", multipliers: { unit: 6, tens: 20, hundreds: 200, thousands: 2_000, letters: 2_000, fullPlate: 200_000 } },
+      ruleVersion: "approved-v4",
+      ruleSnapshot: { version: "approved-v4", multipliers: { unit: 6, tens: 30, hundreds: 300, thousands: 3_000, letters: 3_000, fullPlate: 300_000 } },
     }],
   }],
 });
@@ -101,7 +101,7 @@ describe("createPendingPixPurchase input validation", () => {
 
   it("rejects a rule snapshot without historical multipliers before opening a transaction", async () => {
     const input = validInput();
-    input.participations[0]!.lines[0]!.ruleSnapshot = { version: "test-v1" };
+    input.participations[0]!.lines[0]!.ruleSnapshot = { version: "approved-v4" };
 
     await expect(createPendingPixPurchase(service(), input))
       .rejects.toMatchObject({ code: "INVALID_PURCHASE" });
@@ -138,7 +138,7 @@ describe("createPendingPixPurchase automatic allocation", () => {
     const input = validInput();
     input.participations[0]!.lines[0]!.ruleSnapshot = {
       version: "old-v1",
-      multipliers: { unit: 2, tens: 20, hundreds: 200, thousands: 2_000, letters: 2_000, fullPlate: 200_000 },
+      multipliers: { unit: 2, tens: 30, hundreds: 300, thousands: 3_000, letters: 3_000, fullPlate: 300_000 },
     };
     input.participations[0]!.lines[0]!.ruleVersion = "old-v1";
     await expect(createPendingPixPurchase({ $transaction: transaction } as unknown as PrismaClient, input))
@@ -288,8 +288,8 @@ describe("createPendingPixPurchase idempotency replay", () => {
         thousandsCents: 16,
         lettersCents: 16,
         fullPlateCents: 16,
-        ruleVersion: "test-v1",
-        ruleSnapshot: { version: "test-v1", multipliers: { unit: 6, tens: 20, hundreds: 200, thousands: 2_000, letters: 2_000, fullPlate: 200_000 } },
+        ruleVersion: "approved-v4",
+        ruleSnapshot: { version: "approved-v4", multipliers: { unit: 6, tens: 30, hundreds: 300, thousands: 3_000, letters: 3_000, fullPlate: 300_000 } },
       }],
     }],
     payment: { id: "payment-existing", status: "PENDING" },
@@ -407,7 +407,7 @@ describe("createPendingPixPurchase sequential repetitions", () => {
     transaction.mockReset();
   });
 
-  it("rejects a repeated purchase that skips a scheduled draw", async () => {
+  it("allows the next valid scheduled round after a canceled or missing slot", async () => {
     const now = new Date("2026-10-23T20:00:00.000Z");
     const input = validInput();
     input.repetitions = 2;
@@ -441,11 +441,18 @@ describe("createPendingPixPurchase sequential repetitions", () => {
     };
     transaction.mockImplementation(async (callback: (client: unknown) => unknown) => callback(tx));
 
-    await expect(createPendingPixPurchase(
+    await createPendingPixPurchase(
       { $transaction: transaction } as unknown as PrismaClient,
       input,
       now,
-    )).rejects.toMatchObject({ code: "INVALID_PURCHASE" });
-    expect(tx.purchase.create).not.toHaveBeenCalled();
+    );
+    expect(tx.purchase.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({
+        participations: { create: expect.arrayContaining([
+          expect.objectContaining({ roundId: "round-1" }),
+          expect.objectContaining({ roundId: "round-3" }),
+        ]) },
+      }),
+    }));
   });
 });
