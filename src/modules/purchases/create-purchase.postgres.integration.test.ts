@@ -296,9 +296,9 @@ suite("PostgreSQL purchase concurrency", () => {
     } finally {
       releaseLock?.();
       await holdingTransaction.catch(() => undefined);
-      await prisma.participationLine.deleteMany({ where: { participation: { roundId: timedRoundId } } });
-      await prisma.payment.deleteMany({ where: { purchase: { participations: { some: { roundId: timedRoundId } } } } });
-      await prisma.purchaseParticipation.deleteMany({ where: { roundId: timedRoundId } });
+      await prisma.participationLine.deleteMany({ where: { participation: { purchase: { idempotencyKey: key } } } });
+      await prisma.payment.deleteMany({ where: { purchase: { idempotencyKey: key } } });
+      await prisma.purchaseParticipation.deleteMany({ where: { purchase: { idempotencyKey: key } } });
       await prisma.purchase.deleteMany({ where: { idempotencyKey: key } });
       await prisma.round.deleteMany({ where: { id: timedRoundId } });
     }
