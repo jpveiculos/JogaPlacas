@@ -353,10 +353,24 @@ Este procedimento é obrigatório para solicitações futuras, não apenas para 
 - Não considerar a arte nova implantada até verificar o arquivo versionado, a qualidade em zoom e o deploy.
 
 ### Recibo e verificação por QR
-- O cabeçalho geral deve ser **APOSTA PREMIADA** quando ao menos uma placa de alguma rodada vinculada à compra for premiada; **APOSTA NÃO PREMIADA** quando todas as rodadas estiverem resolvidas e todas as placas não forem premiadas.
-- Cada placa continua exibindo seu próprio estado: **Premiada**, **Prêmio pago**, **Não premiada**, ou estado de espera quando o resultado/apuração ainda não estiver concluído.
-- Em 2026-10-29, a auditoria encontrou que `src/components/receipts/receipt-verification.tsx` ainda usava os rótulos antigos “BILHETE PREMIADO” e “BILHETE NÃO PREMIADO”, apesar da decisão anterior. A correção foi registrada nesta branch para usar “APOSTA PREMIADA” e “APOSTA NÃO PREMIADA”. Validar build e a tela real após deploy.
-- Não mostrar “Apuração pendente” como resultado final de uma rodada com resultado publicado e apuração concluída. O estado por placa deve vir da API oficial e respeitar o estado da rodada.
+
+- O QR Code impresso no recibo abre a página específica `/verificar-recibo/{receiptCode}`, que consulta o registro oficial, a situação do pagamento, as rodadas e os resultados vinculados àquela compra.
+- O cabeçalho da página de consulta deve permanecer **fixo e neutro**, exibindo somente **RESULTADOS**, com fundo marrom (`#92400e`) e texto branco. Não deve mudar o texto nem a cor conforme o resultado agregado do talão.
+- É proibido exibir no cabeçalho expressões como **BILHETE PREMIADO**, **APOSTA PREMIADA**, **APOSTA NÃO PREMIADA**, **RESULTADO PENDENTE** ou equivalentes. Também não deve existir lógica de cabeçalho que agregue os resultados das placas/rodadas para classificar o recibo inteiro.
+- Os resultados continuam sendo apresentados individualmente dentro de cada rodada e para cada placa: **Premiada** (verde), **Prêmio pago** quando houver confirmação financeira, **Não premiada** (vermelho) e os estados de espera aplicáveis, como **Aguardando sorteio** ou **Aguardando resultado**. Essa sinalização individual não deve ser removida nem alterada por esta regra.
+- A página específica do QR não exige login, pois precisa abrir diretamente pela câmera do celular, mas não é um painel geral de resultados: só mostra os dados associados ao código único presente no recibo escaneado.
+- A consulta do recibo é somente de leitura: não permite emitir, reimprimir nem recuperar um recibo perdido.
+- Não oferecer segunda via de recibo por placa, código, pedido ao cambista ou qualquer outro fluxo. Se o recibo impresso for perdido, não há recuperação nem reemissão.
+- Na área do cambista, manter o formulário de registrar uma nova aposta e o menu suspenso financeiro definido na decisão vigente abaixo. Remover histórico detalhado de vendas e opções de consulta de apostas individuais, segunda via ou reimpressão. A antiga instrução de remover todo resumo financeiro foi substituída pela decisão mais recente.
+- O cambista orienta o jogador a consultar o recibo original pelo QR Code impresso. A área do jogador continua separada e mantém seu próprio histórico de jogadas e consultas; essa alteração não modifica essa área.
+- A página pública específica do QR e a API de verificação devem continuar disponíveis para validar o código do recibo, sem incluir reemissão, regeneração ou impressão de uma nova via.
+
+**Implementação desta correção — 30/10/2026**
+- Arquivo alterado: `src/components/receipts/receipt-verification.tsx`.
+- Removida a classificação agregada do recibo (`hasPrize`, `allRoundsResolved`, `noPrize`, `overallLabel` e `overallColor`) que fazia o cabeçalho oscilar entre títulos e cores.
+- O cabeçalho agora usa rótulo literal **RESULTADOS**, fundo marrom `#92400e` e texto branco, independentemente do estado das rodadas ou placas.
+- Preservada a lógica de situação individual de cada placa e o status de cada rodada.
+- Estado: alteração commitada na branch `fix/receipt-results-header`; arquivo conferido após gravação. Testes automatizados, lint/typecheck, build, deploy e inspeção visual ainda não foram executados nesta etapa. Não considerar publicado na produção até essas verificações.
 
 ### Alinhamento visual do painel administrativo
 - A página `src/app/admin/page.tsx` usa seções recolhíveis e preserva os módulos administrativos existentes.
