@@ -158,6 +158,7 @@ describe("createPendingPixPurchase automatic allocation", () => {
           id: "round-1",
           status: "OPEN",
           cutoffAt: new Date("2026-10-23T21:00:00.000Z"),
+          resultAt: new Date("2026-10-23T21:01:00.000Z"),
         }]),
       },
     };
