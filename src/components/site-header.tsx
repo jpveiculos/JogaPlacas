@@ -1,3 +1,5 @@
+"use client";
+
 /** Cabeçalho visual público com cenário fotográfico e logomarca oficial sobreposta. */
 const HEADER_IMAGE_BASE = "/images/brand/header-cenario-joga-placa";
 
