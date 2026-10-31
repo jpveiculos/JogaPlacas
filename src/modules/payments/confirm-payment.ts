@@ -36,15 +36,20 @@ export async function confirmPixPayment(
         }
 
         const participations = await tx.purchaseParticipation.findMany({
-          where: { purchaseId: paymentRow.purchaseId },
+          where: { purchaseId: paymentRow.purchaseId, status: "PENDING" },
           select: { id: true, roundId: true },
-          orderBy: { roundId: "asc" },
+          orderBy: { createdAt: "asc" },
         });
-        if (!participations.length) throw new Error("Purchase has no participations");
-        const roundIds = [...new Set(participations.map((item) => item.roundId))].sort();
+        if (!participations.length) throw new Error("Purchase has no pending participations");
+
+        const originalRoundIds = [...new Set(participations.map((item) => item.roundId))].sort();
+        // Lock the provisional rounds and every currently eligible future round
+        // in one deterministic order. The target round is selected only after
+        // these locks are acquired and PostgreSQL's wall clock is read.
         await tx.$queryRaw`
           SELECT "id" FROM "Round"
-          WHERE "id" IN (${Prisma.join(roundIds)})
+          WHERE "id" IN (${Prisma.join(originalRoundIds)})
+             OR ("status" IN ('OPEN', 'SCHEDULED') AND "cutoffAt" > clock_timestamp())
           ORDER BY "id"
           FOR UPDATE
         `;
@@ -52,32 +57,55 @@ export async function confirmPixPayment(
         const decisionTime = (await tx.$queryRaw<Array<{ decisionTime: Date }>>`
           SELECT clock_timestamp() AS "decisionTime"
         `)[0]!.decisionTime;
-        const rounds = await tx.round.findMany({ where: { id: { in: roundIds } } });
-        const roundById = new Map(rounds.map((round) => [round.id, round]));
-        const eligible = participations.every((participation) => {
-          const round = roundById.get(participation.roundId);
-          return Boolean(round
-            && round.cutoffAt.getTime() > decisionTime.getTime()
-            && (round.status === RoundStatus.OPEN || round.status === RoundStatus.SCHEDULED));
-        });
-
-        if (!eligible) {
-          // Money may have reached the provider after a cutoff. Keep the local
-          // purchase and receipt pending for explicit reconciliation/refund;
-          // never issue retroactive participation or an official receipt.
+        const [originalRounds, availableRounds] = await Promise.all([
+          tx.round.findMany({ where: { id: { in: originalRoundIds } } }),
+          tx.round.findMany({
+            where: {
+              status: { in: [RoundStatus.OPEN, RoundStatus.SCHEDULED] },
+              cutoffAt: { gt: decisionTime },
+            },
+            orderBy: [{ resultAt: "asc" }, { id: "asc" }],
+          }),
+        ]);
+        const targetRounds = availableRounds.slice(0, participations.length);
+        if (targetRounds.length !== participations.length) {
           await tx.payment.update({
             where: { id: paymentRow.id },
             data: { providerStatus: input.providerStatus, providerStatusDetail: input.providerStatusDetail },
           });
           await tx.auditEvent.create({
             data: {
-              action: "PIX_PAYMENT_APPROVED_AFTER_CUTOFF",
+              action: "PIX_PAYMENT_APPROVED_WITHOUT_AVAILABLE_ROUNDS",
               entityType: "Purchase",
               entityId: paymentRow.purchaseId,
-              metadata: { paymentId: paymentRow.id, providerStatus: input.providerStatus, outcome: "manual_reconciliation_required" },
+              metadata: {
+                paymentId: paymentRow.id,
+                decisionTime: decisionTime.toISOString(),
+                requiredParticipations: participations.length,
+                availableParticipations: targetRounds.length,
+                originalRounds: originalRounds.map((round) => ({
+                  code: round.code, startsAt: round.startsAt.toISOString(),
+                  cutoffAt: round.cutoffAt.toISOString(), resultAt: round.resultAt.toISOString(),
+                })),
+                outcome: "manual_reconciliation_required",
+              },
             },
           });
-          return { outcome: "late_or_unavailable", reason: "CUTOFF_OR_ROUND_STATUS" } as const;
+          return { outcome: "late_or_unavailable", reason: "NO_NEXT_VALID_ROUND" } as const;
+        }
+
+        const originalById = new Map(originalRounds.map((round) => [round.id, round]));
+        // Move from the last participation backwards so overlapping old/new
+        // round IDs cannot violate the unique (purchaseId, roundId) constraint.
+        for (let index = participations.length - 1; index >= 0; index -= 1) {
+          const participation = participations[index]!;
+          const target = targetRounds[index]!;
+          if (participation.roundId !== target.id) {
+            await tx.purchaseParticipation.update({
+              where: { id: participation.id },
+              data: { roundId: target.id, totalCents: participation.totalCents },
+            });
+          }
         }
 
         const now = decisionTime;
@@ -121,7 +149,20 @@ export async function confirmPixPayment(
             action: "PIX_PAYMENT_CONFIRMED",
             entityType: "Purchase",
             entityId: paymentRow.purchaseId,
-            metadata: { paymentId: paymentRow.id, receiptCode, providerStatus: input.providerStatus },
+            metadata: {
+              paymentId: paymentRow.id,
+              receiptCode,
+              providerStatus: input.providerStatus,
+              decisionTime: now.toISOString(),
+              originalRounds: participations.map((participation) => {
+                const round = originalById.get(participation.roundId);
+                return round ? { code: round.code, startsAt: round.startsAt.toISOString(), cutoffAt: round.cutoffAt.toISOString(), resultAt: round.resultAt.toISOString() } : { roundId: participation.roundId };
+              }),
+              assignedRounds: targetRounds.map((round) => ({
+                code: round.code, startsAt: round.startsAt.toISOString(),
+                cutoffAt: round.cutoffAt.toISOString(), resultAt: round.resultAt.toISOString(),
+              })),
+            },
           },
         });
         return { outcome: "confirmed", receiptCode } as const;
