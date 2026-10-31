@@ -309,13 +309,13 @@ describe("createPendingPixPurchase idempotency replay", () => {
     expect(transaction).toHaveBeenCalledTimes(1);
   });
 
-  it("rejects reuse of an idempotency key with a different receipt code", async () => {
-    const { prisma } = serviceWithExistingPurchase(existingPurchase());
+  it("ignores caller-supplied receipt codes for pending Pix idempotency replay", async () => {
+    const existing = existingPurchase();
+    const { prisma } = serviceWithExistingPurchase(existing);
     const input = validInput();
     input.receiptCode = "DIFFERENT-RECEIPT";
 
-    await expect(createPendingPixPurchase(prisma, input))
-      .rejects.toMatchObject({ code: "IDEMPOTENCY_CONFLICT" });
+    await expect(createPendingPixPurchase(prisma, input)).resolves.toBe(existing);
     expect(transaction).toHaveBeenCalledTimes(1);
   });
 
