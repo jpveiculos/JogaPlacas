@@ -433,7 +433,6 @@ describe("createPendingPixPurchase sequential repetitions", () => {
             id: "round-3",
             status: "SCHEDULED",
             startsAt: new Date(now.getTime() + 31 * 60_000),
-            startsAt: new Date(now.getTime() + 31 * 60_000),
             cutoffAt: new Date(now.getTime() + 59 * 60_000),
             resultAt: new Date("2026-10-23T21:30:00.000Z"),
           },
