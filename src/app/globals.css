@@ -1555,3 +1555,33 @@ p, .intro, .auth-description, .area-description, .feature-card p,
     padding-top: 28px !important;
   }
 }
+
+
+/* Cabeçalho panorâmico: cenário ocupa toda a largura útil sem grandes vazios. */
+.site-header-scenery{
+  display:block;
+  width:100%;
+  min-height:0;
+  padding:0;
+  overflow:hidden;
+  border:0;
+  background:#07172e;
+  line-height:0;
+}
+.site-header-scenery-image{
+  display:block;
+  width:100%;
+  height:clamp(200px, 24vw, 330px);
+  max-height:none;
+  object-fit:cover;
+  object-position:center 48%;
+}
+@media(max-width:600px){
+  .site-header-scenery-image{
+    width:100%;
+    height:auto;
+    max-height:none;
+    object-fit:contain;
+    object-position:center;
+  }
+}

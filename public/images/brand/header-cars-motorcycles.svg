@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 25 1600 305" role="img" aria-labelledby="title desc">
+<title id="title">Joga Placa — carros e motos</title>
+<desc id="desc">Cenário noturno azul com carros e motos nas laterais e a placa Joga Placa ao centro.</desc>
+<defs>
+ <linearGradient id="sky" x2="0" y2="1"><stop stop-color="#07172e"/><stop offset=".65" stop-color="#124d91"/><stop offset="1" stop-color="#071322"/></linearGradient>
+ <linearGradient id="road" x2="0" y2="1"><stop stop-color="#1c3653"/><stop offset="1" stop-color="#030914"/></linearGradient>
+ <linearGradient id="plate" x2="0" y2="1"><stop stop-color="#f9fbff"/><stop offset="1" stop-color="#c6d6e8"/></linearGradient>
+ <linearGradient id="blue" x2="1"><stop stop-color="#008cff"/><stop offset="1" stop-color="#31d4ff"/></linearGradient>
+ <linearGradient id="red" x2="1"><stop stop-color="#7d1727"/><stop offset="1" stop-color="#f34855"/></linearGradient>
+ <filter id="glow"><feGaussianBlur stdDeviation="7"/></filter>
+</defs>
+<rect width="1600" height="330" fill="url(#sky)"/>
+<g fill="#8bb9e8" opacity=".2"><path d="M0 135h55v-54h22v54h27V95h16v40h45V64h25v71h32V105h18v30h34v-50h23v50h35v-25h20v25h65v-55h22v55h38v-34h24v34h47v-65h21v65h42v-35h18v35h42v-48h18v48h52v-31h20v31h70v-52h22v52h38v-35h22v35h50v-57h21v57h45v-28h18v28h70v-44h22v44h54v-70h23v70h45v-39h21v39h55v-54h20v54h55v-30h20v30h80v55H0z"/></g>
+<path d="M0 220 320 202 550 222 800 200 1050 221 1290 199 1600 219V330H0Z" fill="url(#road)"/>
+<path d="M800 218 775 330h50Z" fill="#f5c84b" opacity=".9"/><path d="M800 218 790 260h20Z" fill="#fff0a0" opacity=".9"/><path d="M800 274 785 330h30Z" fill="#f5c84b" opacity=".7"/>
+<path d="M0 247H1600" stroke="#21baff" stroke-width="3" opacity=".5"/><path d="M0 252H1600" stroke="#21baff" stroke-width="12" opacity=".18" filter="url(#glow)"/>
+<!-- left car -->
+<g transform="translate(35 150)">
+ <path d="M0 71 18 39Q25 28 45 26L93 17Q111 14 124 29L150 54 177 61 189 81 184 111H8L0 92Z" fill="#dbe9f7" stroke="#8eb9e7" stroke-width="3"/>
+ <path d="M48 30 91 23Q105 22 114 34L130 52H34Z" fill="#152d49" stroke="#8db4d8" stroke-width="2"/>
+ <path d="M8 75 36 66 43 80 9 87Z" fill="#fff3bd"/><path d="M150 65 178 72 180 83 150 81Z" fill="#e6f6ff"/>
+ <path d="M15 100H180" stroke="#17283b" stroke-width="7"/>
+ <circle cx="44" cy="108" r="20" fill="#050a12" stroke="#7d91a6" stroke-width="5"/><circle cx="44" cy="108" r="8" fill="#a6b8c9"/>
+ <circle cx="150" cy="108" r="20" fill="#050a12" stroke="#7d91a6" stroke-width="5"/><circle cx="150" cy="108" r="8" fill="#a6b8c9"/>
+ <rect x="72" y="79" width="53" height="16" rx="3" fill="#f6f9fc" stroke="#243c54"/><text x="98" y="90" text-anchor="middle" font-size="8" font-weight="bold" fill="#143b67">JOGA PLACA</text>
+</g>
+<!-- left motorcycle -->
+<g transform="translate(270 195)">
+ <circle cx="20" cy="72" r="22" fill="#080d17" stroke="#9eb9d1" stroke-width="4"/><circle cx="20" cy="72" r="8" fill="#7d9ab4"/>
+ <circle cx="113" cy="72" r="22" fill="#080d17" stroke="#9eb9d1" stroke-width="4"/><circle cx="113" cy="72" r="8" fill="#7d9ab4"/>
+ <path d="M20 72 48 43 80 44 113 72 64 72 48 43 39 29" fill="none" stroke="#138fff" stroke-width="9" stroke-linejoin="round"/>
+ <path d="M37 30 63 22 84 37 78 47 51 48Z" fill="#1466b6" stroke="#8edaff" stroke-width="2"/>
+ <path d="M39 29 28 15 13 17 22 24 38 23" fill="none" stroke="#d7eaff" stroke-width="4"/>
+ <path d="M64 22 78 11 99 12" fill="none" stroke="#a9c5df" stroke-width="5"/>
+ <path d="M42 18 49 4 66 7 72 18" fill="#101b2c" stroke="#8ea9c5" stroke-width="2"/>
+ <path d="M47 7 63 9 67 17 45 17Z" fill="#0e8fff"/>
+</g>
+<!-- right motorcycle -->
+<g transform="translate(1210 195)">
+ <circle cx="20" cy="72" r="22" fill="#080d17" stroke="#9eb9d1" stroke-width="4"/><circle cx="20" cy="72" r="8" fill="#7d9ab4"/>
+ <circle cx="113" cy="72" r="22" fill="#080d17" stroke="#9eb9d1" stroke-width="4"/><circle cx="113" cy="72" r="8" fill="#7d9ab4"/>
+ <path d="M20 72 48 43 80 44 113 72 64 72 48 43 39 29" fill="none" stroke="#e83c4f" stroke-width="9" stroke-linejoin="round"/>
+ <path d="M37 30 63 22 84 37 78 47 51 48Z" fill="#a51d32" stroke="#ffb0b7" stroke-width="2"/>
+ <path d="M39 29 28 15 13 17 22 24 38 23" fill="none" stroke="#d7eaff" stroke-width="4"/>
+ <path d="M64 22 78 11 99 12" fill="none" stroke="#a9c5df" stroke-width="5"/>
+ <path d="M42 18 49 4 66 7 72 18" fill="#101b2c" stroke="#8ea9c5" stroke-width="2"/>
+ <path d="M47 7 63 9 67 17 45 17Z" fill="#ff364d"/>
+</g>
+<!-- right SUV -->
+<g transform="translate(1370 150)">
+ <path d="M0 66 21 35Q28 25 47 23L105 18Q125 17 139 32L161 55 184 62 195 83 190 111H6L0 91Z" fill="#192b42" stroke="#6486a9" stroke-width="3"/>
+ <path d="M43 29 98 25Q116 25 127 37L141 52H28Z" fill="#071729" stroke="#658db7" stroke-width="2"/>
+ <path d="M9 73 34 66 39 80 8 86Z" fill="#e9f6ff"/><path d="M157 65 184 72 186 83 157 81Z" fill="#ff5966"/>
+ <path d="M13 100H188" stroke="#03070d" stroke-width="7"/>
+ <circle cx="45" cy="108" r="20" fill="#050a12" stroke="#7d91a6" stroke-width="5"/><circle cx="45" cy="108" r="8" fill="#a6b8c9"/>
+ <circle cx="155" cy="108" r="20" fill="#050a12" stroke="#7d91a6" stroke-width="5"/><circle cx="155" cy="108" r="8" fill="#a6b8c9"/>
+ <rect x="73" y="79" width="53" height="16" rx="3" fill="#f6f9fc" stroke="#243c54"/><text x="99" y="90" text-anchor="middle" font-size="8" font-weight="bold" fill="#143b67">JOGA PLACA</text>
+</g>
+<!-- centered brand plate -->
+<g transform="translate(520 73)">
+ <rect x="-10" y="-8" width="580" height="166" rx="25" fill="#16aaff" opacity=".42" filter="url(#glow)"/>
+ <rect x="0" y="0" width="560" height="144" rx="19" fill="url(#plate)" stroke="#f3f8ff" stroke-width="5"/>
+ <rect x="8" y="8" width="544" height="37" rx="10" fill="url(#blue)"/>
+ <text x="280" y="33" text-anchor="middle" font-family="Arial,sans-serif" font-size="23" font-weight="900" fill="#fff" letter-spacing="3">BRASIL</text>
+ <rect x="9" y="49" width="542" height="86" rx="8" fill="#f7fbff"/>
+ <text x="280" y="111" text-anchor="middle" font-family="Arial,sans-serif" font-size="61" font-weight="900" letter-spacing="-1.5" fill="#13263f">JOGA<tspan fill="#0875d9">PLACA</tspan></text>
+ <rect x="15" y="17" width="25" height="17" rx="2" fill="#f6f8fb"/><text x="27" y="29" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" font-weight="900" fill="#163e68">BR</text>
+ <rect x="508" y="15" width="29" height="20" rx="3" fill="#168448"/><path d="M522 18 533 25 522 32 512 25Z" fill="#f5d94c"/><circle cx="522" cy="25" r="4" fill="#287ad2"/>
+</g>
+<path d="M0 319H1600" stroke="#248be5" stroke-width="2" opacity=".45"/>
+</svg>
