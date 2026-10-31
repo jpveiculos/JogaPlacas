@@ -419,6 +419,8 @@ A revisão documental/código desta data não autoriza afirmar que todo o projet
 - `src/app/api/player/purchases/[purchaseId]/status/route.ts` e `src/app/api/cashier/purchases/[purchaseId]/status/route.ts`: fazem consulta direta de fallback com intervalo mínimo de 10 segundos, sem substituir o webhook.
 - `src/app/api/internal/round-scheduler/route.ts`: também reconcilia até 50 pagamentos Pix pendentes por execução, mesmo sem navegador aberto; usa claim por `updatedAt` para evitar consultas simultâneas e limitar frequência.
 - `src/app/api/player/purchases/[purchaseId]/receipt/route.ts` e `src/app/api/public/receipt-verification/[receiptCode]/route.ts`: leem as participações efetivamente atribuídas; não precisam escolher rodadas pelo navegador.
+- `src/components/receipts/receipt-verification.tsx`: mantém o cabeçalho fixo **RESULTADOS** e mostra o estado por placa/rodada, sem classificar o talão inteiro.
+- `src/components/receipts/thermal-receipt.tsx`: mantém os hooks em ordem estável, gera o QR após a montagem e exibe o rótulo de pagamento no recibo.
 
 ### Estado desta branch
 - Implementação gravada na branch `feature/pix-next-valid-round`, derivada de `main`. Não foi feito merge, deploy ou alteração em produção.
