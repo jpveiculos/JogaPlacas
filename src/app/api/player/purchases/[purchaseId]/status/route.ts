@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { authPrisma, getSessionUser, SESSION_COOKIE } from "@/lib/auth/session";
+import { reconcilePixPaymentFromProvider } from "@/modules/payments/reconcile-pix-payment";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -18,16 +19,40 @@ export async function GET(request: NextRequest, context: RouteContext) {
     return NextResponse.json({ error: "Compra não encontrada." }, { status: 404, headers });
   }
 
-  const purchase = await authPrisma.purchase.findFirst({
+  let purchase = await authPrisma.purchase.findFirst({
     where: { id: purchaseId, playerId: user.id },
     select: {
       status: true,
       receiptCode: true,
       confirmedAt: true,
-      payment: { select: { status: true, providerStatus: true, providerStatusDetail: true, confirmedAt: true } },
+      payment: { select: { id: true, status: true, provider: true, providerPaymentId: true, providerStatus: true, providerStatusDetail: true, confirmedAt: true, updatedAt: true } },
     },
   });
   if (!purchase) return NextResponse.json({ error: "Compra não encontrada." }, { status: 404, headers });
+
+  // The browser polls every few seconds. Throttle direct provider reconciliation
+  // to one lookup per payment per 10 seconds. Webhook and fallback converge on
+  // the same idempotent confirmation transaction.
+  if (purchase.status === "PENDING_PAYMENT"
+    && purchase.payment?.status === "PENDING"
+    && purchase.payment.provider === "MERCADO_PAGO"
+    && purchase.payment.providerPaymentId
+    && Date.now() - purchase.payment.updatedAt.getTime() >= 10_000) {
+    try {
+      await reconcilePixPaymentFromProvider(authPrisma, purchase.payment.id);
+    } catch {
+      // Provider/API outages leave the purchase pending; the webhook can retry.
+    }
+    purchase = await authPrisma.purchase.findFirst({
+      where: { id: purchaseId, playerId: user.id },
+      select: {
+        status: true,
+        receiptCode: true,
+        confirmedAt: true,
+        payment: { select: { id: true, status: true, provider: true, providerPaymentId: true, providerStatus: true, providerStatusDetail: true, confirmedAt: true, updatedAt: true } },
+      },
+    });
+  }
 
   const confirmed = purchase.status === "CONFIRMED"
     && purchase.payment?.status === "CONFIRMED"
