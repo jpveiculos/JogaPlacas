@@ -314,10 +314,11 @@ export function CashierSaleForm() {
       </form>
       {error && <p role="alert" className="note-inline">{error}</p>}
       {notice && <p role="status" className="note-inline">{notice}</p>}
+      {pixReconciliationRequired && !pixModalOpen && <p role="status" className="note-inline">O Mercado Pago confirmou o Pix. Estamos vinculando a compra às próximas rodadas válidas. Não faça outro pagamento. <button type="button" onClick={() => setPixModalOpen(true)}>Ver situação</button></p>}
       {purchase && pixModalOpen && (
         <div className="modal-backdrop" role="presentation">
         <section className="modal-panel pix-modal" role="dialog" aria-modal="true" aria-labelledby="pix-modal-heading">
-          <img className="pix-brand-logo" src="/images/brand/joga-placa-logo.jpg" alt="Joga Placa" /><h3 id="pix-modal-heading">Pix da venda</h3><p>Status: aguardando confirmação do pagamento</p><p>Total: <strong>{formatMoney(purchase.totalCents)}</strong></p>
+          <img className="pix-brand-logo" src="/images/brand/joga-placa-logo.jpg" alt="Joga Placa" /><h3 id="pix-modal-heading">Pix da venda</h3><p>Status: {pixReconciliationRequired ? "pagamento confirmado; aguardando atribuição da rodada" : "aguardando confirmação do pagamento"}</p><p>Total: <strong>{formatMoney(purchase.totalCents)}</strong></p>
           {purchase.participations.flatMap((participation) => participation.lines.map((line, index) => (
             <div key={participation.roundId + line.plateDisplay + index} className="receipt-plate-line">
               <PlateVisual format={/^[A-Z]{3}-?\d{4}$/.test(line.plateDisplay) ? "LEGACY" : "MERCOSUR"} value={line.plateDisplay} />
@@ -325,20 +326,30 @@ export function CashierSaleForm() {
               <small>Unidade: {formatMoney(line.allocationCents.unit)} · Dezena: {formatMoney(line.allocationCents.tens)} · Centena: {formatMoney(line.allocationCents.hundreds)} · Milhar: {formatMoney(line.allocationCents.thousands)} · Letras: {formatMoney(line.allocationCents.letters)} · Placa completa: {formatMoney(line.allocationCents.fullPlate)}</small>
             </div>
           )))}
-          {pixCheckout?.qrCodeBase64 && <div className="pix-checkout">
+          {!pixReconciliationRequired && pixCheckout?.qrCodeBase64 && <div className="pix-checkout">
             <h4>Escaneie o QR Code Pix</h4>
             <img src={"data:image/png;base64," + pixCheckout.qrCodeBase64} alt="QR Code para pagar a compra via Pix" width={240} height={240} />
           </div>}
-          {pixCheckout?.copyPaste && <div className="pix-copy-paste">
+          {!pixReconciliationRequired && pixCheckout?.copyPaste && <div className="pix-copy-paste">
             <label htmlFor="pix-copy-paste">Pix copia e cola</label>
             <textarea id="pix-copy-paste" readOnly value={pixCheckout.copyPaste} rows={4} onFocus={(event) => event.currentTarget.select()} />
+            {pixReconciliationRequired ? (
+            <button type="button" onClick={() => setPixModalOpen(false)}>Fechar aviso (a compra continua em acompanhamento)</button>
+          ) : (
             <button type="button" onClick={() => {
-              if (pixCheckout.copyPaste && navigator.clipboard) {
-                void navigator.clipboard.writeText(pixCheckout.copyPaste).then(() => setNotice("Código Pix copiado."));
-              }
-            }}>Copiar código Pix</button>
+              setPixModalOpen(false);
+              setReceiptPurchaseId(null);
+              setPurchase(null);
+              setPixCheckout(null);
+              setLegacyPlate(""); setMercosurPlate("");
+              setSelectedRounds([]);
+              setStake("1,00");
+              setNotice("Tela liberada para iniciar outra venda. A cobrança anterior continua pendente até confirmação ou reconciliação.");
+              fetch("/api/cashier/rounds", { cache: "no-store" }).then((response) => response.json()).then((body) => setRounds(body.rounds ?? [])).catch(() => undefined);
+            }}>Sair e iniciar outra venda</button>
+          )}
           </div>}
-          {!pixCheckout?.copyPaste && <p role="status">A cobrança ainda não está disponível. A compra permanece pendente; fechar esta janela não cancela nem confirma o pagamento.</p>}
+          {pixReconciliationRequired ? <p role="alert" className="note-inline">Pagamento confirmado pelo Mercado Pago. O sistema está procurando as próximas rodadas válidas para concluir sua participação e emitir o recibo. Não pague novamente nem inicie outra venda.</p> : !pixCheckout?.copyPaste && <p role="status">A cobrança ainda não está disponível. A compra permanece pendente; fechar esta janela não cancela nem confirma o pagamento.</p>}
           <p>O recibo oficial só será exibido após a confirmação autêntica do pagamento.</p>
           <button type="button" onClick={() => {
             setPixModalOpen(false);
