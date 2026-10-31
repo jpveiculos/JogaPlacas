@@ -1,5 +1,8 @@
 # Plano de construção de pagamentos e integração Pix
 
+> **Atualização de implementação — 30/10/2026:** o plano histórico abaixo foi complementado pela implementação isolada na branch `feature/pix-next-valid-round`. A regra vigente não exige que o Pix seja confirmado antes do cutoff da rodada provisória: no instante da confirmação, a compra é remapeada para as próximas rodadas válidas, mantendo a quantidade comprada. Webhook e consulta direta ao Mercado Pago convergem para a mesma confirmação idempotente; o agendador do servidor também verifica pagamentos pendentes sem depender do navegador. O recibo só é emitido na confirmação e mostra as rodadas efetivamente atribuídas. Esta branch ainda aguarda CI, testes, homologação e revisão; não foi integrada à `main` nem implantada. Consulte `MANUAL_TECNICO.md` e `docs/PRODUCT_SPEC.md` para as regras atuais. As instruções antigas deste plano que exigem confirmação antes do cutoff ou proíbem remapeamento estão superadas por esta atualização.
+
+
 > **Nota de reconciliação — 2026-10-26:** as seções iniciais abaixo são registros históricos de quando o adaptador/webhook ainda não existiam. A seção “Estado real após implementação incremental — 2026-10-26” registra a evolução posterior, mas também deve ser lida junto ao estado consolidado em `docs/TECHNICAL_ROADMAP.md`. O código de integração já existe na branch; a integração não está liberada para produção e ainda precisa dos testes/gates explicitados neste documento.
 
 Documento de planejamento atualizado: 2026-10-25
