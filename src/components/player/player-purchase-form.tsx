@@ -174,6 +174,10 @@ export function PlayerPurchaseForm() {
           setPurchase(null);
           setPixCheckout(null);
           setPixReconciliationRequired(false);
+          setLegacyPlate(""); setMercosurPlate(""); setAddedPlates([]);
+          setSelectedRounds([]);
+          setStake("1,00");
+          setPaymentMethod("PIX");
           setNotice("Pagamento confirmado. Seu recibo oficial está na tela.");
           return;
         }
