@@ -183,7 +183,7 @@ suite("PostgreSQL purchase concurrency", () => {
         input(key, `IT-RECEIPT-CUTOFF-${suffix}-${String(_label).replaceAll(" ", "-")}`),
         decisionTime,
       ),
-    ).rejects.toMatchObject({ code: "INVALID_PURCHASE" });
+    ).rejects.toMatchObject({ code: "ROUND_UNAVAILABLE" });
 
     expect(await prisma.purchase.count({ where: { idempotencyKey: key } })).toBe(0);
     expect(await prisma.payment.count({ where: { purchase: { idempotencyKey: key } } })).toBe(0);
