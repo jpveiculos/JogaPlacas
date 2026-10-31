@@ -80,15 +80,18 @@
 - Valor mínimo total por placa em cada rodada: R$ 1,00. Para cada placa, o sistema divide automaticamente o total em centavos inteiros entre as seis categorias: calcula `base = floor(totalCents / 6)`, atribui `base` às seis categorias e direciona todo o resíduo (`totalCents % 6`) exclusivamente à unidade. A soma das seis alocações deve ser exatamente igual ao total da placa. Exemplo: R$ 1,00 (100 centavos) resulta em unidade 20 centavos e 16 centavos para cada uma das outras cinco categorias. A unidade paga 6x sua alocação conforme a regra vigente `approved-v4`; nesse exemplo, o prêmio é R$ 1,20. A alocação de 20 centavos da unidade é multiplicada pelo multiplicador da versão gravada na aposta. O cálculo deve usar apenas inteiros, ser determinístico e ter testes.
 - Rodadas devem ter data/hora e fuso explícitos (`America/Sao_Paulo`). Recorrências geram rodadas individuais. Rodadas concluídas/fechadas não podem ser editadas silenciosamente; correções e cancelamentos devem ser auditados.
 
-## 4. Pagamentos, Pix e carteira do jogador
-- Uma transação é paga integralmente pela carteira ou integralmente por Pix; não combinar saldo e Pix na mesma transação.
-- Pix deve ser confirmado pelo provedor/webhook validado, nunca apenas pela interface do cliente. A confirmação precisa ocorrer até o fechamento para que a aposta participe daquela rodada.
-- Fechar/ocultar a tela do QR não cancela a cobrança; o estado continua sendo acompanhado.
-- Pagamentos confirmados após o cutoff ou quando a rodada já não está elegível não geram participação nem recibo retroativos; o caso permanece pendente e auditado para reconciliação manual. A política operacional final de estorno/devolução desses pagamentos tardios continua pendente de decisão e teste antes de produção.
-- Prêmios elegíveis de compras online são creditados diretamente na carteira do jogador autenticado, com idempotência contra crédito duplicado. Prêmios de compras presenciais de cambista sem carteira vinculada são reivindicados pelo QR do recibo e atendimento oficial da plataforma; nunca são pagos pelo cambista.
-- Livro-razão financeiro rastreável para créditos, prêmios, débitos de apostas, depósitos, estornos e saques.
-- Saques somente do saldo disponível integral, com chave Pix e reserva do valor para evitar gasto duplo. Enquanto pendente, a área administrativa oferece somente duas ações: Pagar ou Rejeitar. Ao pagar, sai da lista de pendentes e aparece no histórico como pago. Ao rejeitar, o valor reservado retorna ao saldo disponível.
-- Notificações para confirmação/pendência de pagamento, fechamento e resultado da rodada, crédito de prêmio e mudanças no saque.
+## 4. Pagamentos, Pix e carteira do jogador — regra vigente (2026-10-30)
+- Uma transação é paga integralmente pela carteira ou integralmente por Pix; não combinar saldo e Pix.
+- **Pagamento confirmado não é sinônimo de aposta concluída.** A compra/aposta só é concluída quando o servidor valida que ela ainda pode participar da rodada, registra as participações de forma transacional e emite o recibo oficial. O recibo comprova a aposta concluída e identifica placas/participações, pagamento e QR Code de consulta dos resultados.
+- O Pix é confirmado por fonte autêntica do Mercado Pago, nunca por clique, retorno do navegador, captura de tela ou declaração do cliente. Há dois caminhos complementares: (a) webhook autenticado e idempotente; (b) consulta autenticada da ordem diretamente ao Mercado Pago pelo endpoint de status do sistema. Ambos validam referência, moeda, valor e dados da cobrança e usam o mesmo serviço transacional/idempotente de confirmação. A consulta direta não substitui o webhook.
+- A consulta da PR #14 ocorre quando o endpoint de status é chamado; não é um processo contínuo de background independente de chamadas. O webhook continua recebendo eventos no servidor mesmo com a tela Pix fechada. Ao retornar à aplicação, uma compra pendente deve continuar identificável e poder ser consultada/reconciliada sem gerar nova cobrança.
+- **Fechar, ocultar ou sair da tela do QR Code não cancela, não confirma, não conclui nem apaga a compra.** O botão Sair fecha a apresentação do QR e limpa o formulário visual para permitir nova venda. A compra pendente permanece registrada no servidor e pode ser paga enquanto a cobrança estiver válida.
+- **Cutoff:** no horário oficial de fechamento, o servidor bloqueia novas apostas e não permite participações retroativas. Sempre que o Mercado Pago oferecer suporte à expiração efetiva da cobrança, configurar a validade do Pix para terminar no cutoff. Esconder o QR não basta: QR fotografado e código Pix copiado/compartilhado também devem deixar de ser pagáveis após o prazo. A capacidade real do provedor precisa ser confirmada em homologação.
+- Se o Mercado Pago confirmar pagamento depois do cutoff, ou se o valor tiver sido recebido mas a aposta não puder ser concluída e o recibo não puder ser emitido, a compra **não está concluída**. Não criar participação nem recibo retroativo; registrar a exceção e encaminhar exclusivamente à administração.
+- **Tratamento administrativo:** a administração analisa e providencia o reembolso/devolução quando não houve emissão do recibo. Registrar valor, referência, motivo, responsável, data/hora e resultado, com proteção contra reembolso duplicado. O sistema não deve aprovar automaticamente a aposta nem emitir recibo retroativo.
+- Preservar estados distintos: compra pendente; pagamento confirmado; aposta concluída (participações confirmadas e recibo emitido); cobrança expirada/cancelada sem pagamento; pagamento recebido sem aposta concluída (exceção administrativa/reembolso).
+- Prêmios elegíveis de compras online são creditados diretamente na carteira do jogador autenticado, com idempotência. Prêmios de compras presenciais de cambista sem carteira são reivindicados pelo QR do recibo e atendimento oficial; nunca pagos pelo cambista.
+- Manter livro-razão financeiro rastreável para créditos, prêmios, débitos de apostas, depósitos, estornos/reembolsos e saques. Saques somente do saldo disponível integral, com reserva para evitar gasto duplo. Notificar confirmação/pendência, fechamento, resultado, crédito de prêmio e mudanças no saque.
 
 ## 5. Jogador
 - **Cadastro mínimo de jogador:** somente nome de usuário e senha. Não exigir nome completo, CPF, telefone, WhatsApp, e-mail ou outros dados pessoais para criar a conta, entrar ou jogar. Guardar a senha apenas em hash forte; nome de usuário normalizado e único. Não solicitar dados pessoais dentro do fluxo da aposta.
@@ -158,7 +161,7 @@
 ### Decisões de negócio/técnicas ainda pendentes
 - Provedor Pix e contrato exato dos webhooks, autenticação/assinatura e reconciliação; Mercado Pago permanece adiado para a fase final.
 - Fonte oficial dos resultados, controles de integridade e processo auditável de correção.
-- Política definitiva para pagamento confirmado depois do cutoff, expiração, devolução/estorno e rodadas canceladas.
+- A capacidade efetiva de expirar cobranças Pix no cutoff depende do contrato/capacidade do Mercado Pago e precisa de homologação; pagamento recebido sem recibo é exceção administrativa com reembolso/devolução, sem aposta retroativa.
 - Detalhes de fórmula/arredondamento de prêmios, empates e limites ainda não especificados no manual.
 - Política de retenção de dados e parâmetros operacionais de segurança.
 
@@ -299,29 +302,27 @@ A revisão de `prisma/schema.prisma` e das quatro migrações encontrou invarian
 - A consulta pública por recibo continua retornando apenas dados necessários para conferir as placas/resultados e nunca revela identificador de conta, telefone, nome real ou o código completo do recibo na resposta.
 
 
-## 21. Regra obrigatória de emissão do recibo — 2026-10-25
+## 21. Regra obrigatória de emissão do recibo — atualizada em 2026-10-30
 
-O recibo oficial só pode ser emitido depois que o pagamento da compra estiver confirmado. Criar uma compra pendente, gerar QR Code, iniciar checkout ou receber um evento intermediário não autoriza emitir nem apresentar um recibo como válido. Sem confirmação, a compra não pode ser finalizada como paga e o jogador não deve receber um código de recibo emitido.
+O recibo oficial exige duas condições cumulativas: (1) pagamento confirmado por fonte autêntica; e (2) validação do servidor de que a compra ainda pode participar da rodada, com registro transacional das participações. **A aposta só é considerada concluída com a emissão do recibo oficial.** Pagamento confirmado sem recibo não equivale a venda/aposta concluída.
 
 ### Pagamento Pix na plataforma
-- A compra permanece pendente enquanto aguarda confirmação final autenticada do provedor por webhook.
-- Somente após processar de forma segura e idempotente a confirmação final do pagamento, o sistema confirma a compra/participações e emite o recibo.
-- Webhooks duplicados, atrasados ou fora de ordem não podem criar recibos duplicados nem confirmar compra sem evidência de pagamento confirmado.
-- O fluxo de integração Pix ainda não está implementado/ativado; esta seção define o comportamento exigido quando for implementado.
+- A compra permanece pendente enquanto aguarda confirmação final autenticada do Mercado Pago.
+- Webhook autenticado e consulta direta da ordem são mecanismos complementares. Ambos validam os mesmos dados e usam o mesmo serviço transacional/idempotente de confirmação.
+- A confirmação financeira só conclui a aposta se o cutoff ainda permitir a participação. A conclusão registra as participações e emite o recibo.
+- Eventos duplicados, atrasados ou fora de ordem não podem duplicar venda, participação, lançamento financeiro ou recibo.
+- Se o pagamento for confirmado após o cutoff ou outra condição impedir a conclusão válida, não criar participação nem recibo retroativo. Registrar a exceção para a administração providenciar reembolso/devolução.
 
 ### Venda feita por cambista
-- O recibo só é emitido depois de o sistema confirmar o pagamento.
-- Para dinheiro em espécie, o cambista deve acionar explicitamente o botão de confirmação de recebimento. O servidor registra o ator e o instante da confirmação; só então confirma a compra e emite o recibo.
-- Para Pix ou outro meio integrado, a confirmação deve vir da fonte confiável definida para esse meio, não apenas de uma ação visual do cambista.
-- A confirmação por botão deve ser autorizada, transacional e idempotente, impedindo que cliques repetidos emitam recibos ou registrem a venda duas vezes.
+- Para dinheiro em espécie, o cambista confirma explicitamente o recebimento; o servidor registra ator e instante e emite o recibo após a validação da venda.
+- Para Pix ou outro meio integrado, a confirmação vem da fonte confiável, nunca apenas de ação visual do cambista.
+- Em qualquer meio, a venda só é concluída quando a participação válida é registrada e o recibo oficial é emitido. Confirmação financeira isolada não basta.
+- A confirmação deve ser autorizada, transacional e idempotente.
 
 ### Identificador e estado do recibo
-- O formato visível previsto permanece `JP-` seguido de caracteres alfanuméricos maiúsculos; o comprimento final e a geração precisam ser alinhados ao fluxo implementado e testados.
-- O código deve ser único e associado à compra confirmada. A consulta pública por recibo e a consulta na área do cambista não devem revelar compras pendentes como recibos emitidos.
-- Não basta ocultar o código na interface: a API e o modelo de persistência devem impedir a emissão prematura. Revisar o `receiptCode` atualmente obrigatório na compra pendente e a rota que hoje devolve um código antes da confirmação.
-- Atualizar testes para cobrir compra pendente sem recibo, confirmação Pix final, confirmação de dinheiro pelo cambista, repetição de webhook/clique e consulta de código inexistente ou não emitido.
-- Nenhuma cobrança real, ativação de webhook, migração de produção, merge ou deploy é autorizada por esta decisão.
-
+- O código é único e associado à aposta concluída. Consultas não devem revelar compras pendentes nem pagamentos recebidos sem aposta concluída como recibos emitidos.
+- Compra pendente, pagamento sem conclusão e cobrança expirada/recusada não recebem recibo oficial.
+- Não emitir recibo retroativo para pagamento recebido depois do cutoff; encaminhar a exceção à administração para reembolso/devolução.
 
 ### Estado da implementação da regra de recibo — 2026-10-25
 
@@ -617,18 +618,21 @@ A venda do cambista tem duas formas de recebimento, selecionadas depois de infor
 **Estado técnico:** esta é a regra de produto aprovada; a sequência ponta a ponta (cobrança Pix, confirmação Mercado Pago, atualização/notificação da tela, confirmação de dinheiro e emissão automática de recibo/QR/impressão) ainda precisa ser implementada e validada por testes. Não marcar como funcional nem ativar pagamentos reais antes de comprovar a integração em ambiente de teste.
 
 
-## Comportamento das telas Pix e recibo — saída e limpeza para próxima venda (2026-10-26)
+## Comportamento das telas Pix e recibo — regra atualizada em 2026-10-30
 
-Esta regra vale para a área do cambista e deve manter o mesmo padrão de usabilidade na área do jogador:
+Esta regra vale para a área do cambista e deve manter o mesmo padrão na área do jogador:
 
-- **Tela de pagamento Pix:** deve existir um botão visível **“Sair”** / **“Fechar tela Pix”**, disponível mesmo se o QR Code não carregar, a cobrança demorar ou a tela aparentar travar. Sair fecha a tela/modal e libera a interface para continuar trabalhando; isso, por si só, **não cancela nem confirma** a cobrança pendente. O sistema deve preservar o estado da compra para reconciliação e impedir que o usuário interprete o fechamento como pagamento cancelado.
-- **Tela do recibo oficial:** deve existir um botão visível **“Sair”** / **“Fechar recibo”**, além dos botões **“Imprimir”** e **“Baixar recibo”**. O botão de saída deve funcionar mesmo quando impressão ou download falharem e retornar à tela limpa de nova venda.
-- **Limpeza após ação concluída:** quando o navegador/sistema aceitar a solicitação de impressão e o fluxo de impressão retornar como concluído, fechar o recibo e limpar os dados temporários da venda da tela para o próximo jogo. Quando o download do arquivo for efetivamente iniciado/aceito pelo navegador, fazer a mesma limpeza. Ao clicar em **“Sair”**, também fechar o recibo e limpar a interface. Não limpar antes de a ação de impressão/download ser aceita; se falhar ou for cancelada, manter o recibo visível e permitir tentar novamente ou sair.
-- **Limite técnico da impressão:** uma aplicação web não consegue garantir que a impressora física realmente colocou papel na bandeja. O comportamento verificável é tratar o retorno/fechamento do diálogo de impressão como fim do fluxo do navegador; falha física de papel, conexão ou dispositivo pode exigir nova tentativa. Em qualquer cenário, o botão de sair continua disponível.
-- **Integridade:** imprimir, baixar, fechar ou reimprimir nunca cria outra compra, participação, cobrança ou código de recibo. Uma segunda via deve reutilizar o mesmo recibo confirmado. O QR Pix continua sendo para pagamento e o QR do recibo para consulta pública.
+- **Tela Pix:** o botão **Sair/Fechar tela Pix** fecha somente o modal e limpa o formulário visual para permitir outra venda. **Não cancela, não expira, não confirma, não conclui nem apaga a compra pendente.** A compra permanece registrada no servidor e pode ser paga enquanto o Pix estiver válido.
+- **Acompanhamento após sair:** fechar a tela não pode apagar a referência da compra pendente. O webhook continua ativo no servidor e pode confirmar a cobrança sem a tela aberta. A consulta direta ao Mercado Pago é complementar e ocorre quando o endpoint de status é chamado; não é um worker contínuo em background. Ao retornar à aplicação, a compra deve poder ser consultada/reconciliada.
+- **Pagamento confirmado após sair:** se a compra ainda estiver dentro do cutoff e passar nas validações, registrar participações e emitir um único recibo. Se a interface ainda acompanhar aquela compra, mostrar o recibo automaticamente. Se o operador já estiver preenchendo outra venda, notificar a conclusão e permitir abrir o recibo sem sobrescrever os dados da nova venda.
+- **Fechamento da rodada:** bloquear novas apostas no cutoff e, se o Mercado Pago suportar, configurar a expiração da cobrança no próprio provedor. QR fotografado e código copiado também devem deixar de ser pagáveis após a validade. Fechar o modal não expira a cobrança.
+- **Pagamento sem conclusão:** se o pagamento for recebido, mas a rodada tiver fechado ou outra condição impedir a emissão válida do recibo, não registrar aposta nem emitir recibo retroativo. Encaminhar à administração para análise e reembolso/devolução.
+- **Tela do recibo:** manter botão **Sair/Fechar recibo**, além das ações de imprimir e baixar previstas para a emissão original. Sair fecha o recibo e limpa os dados temporários; não desfaz a compra concluída.
+- **Limpeza após impressão/download:** após o navegador aceitar a impressão ou iniciar o download, fechar o recibo e limpar os dados temporários. Se a ação falhar ou for cancelada, manter o recibo visível e permitir nova tentativa ou saída.
+- **Limite técnico:** a aplicação web não garante que a impressora física colocou papel na bandeja. O evento verificável é o retorno/fechamento do diálogo de impressão.
+- **Integridade:** fechar a tela Pix nunca cancela a cobrança; imprimir, baixar ou sair do recibo nunca cria outra compra, participação, cobrança ou código. O recibo original é emitido uma única vez. QR Pix serve para pagamento; QR do recibo, para consulta pública.
 
-**Conferência do código existente:** a tela Pix do jogador já tem um botão “Sair e iniciar outro jogo”; o componente de recibo do jogador já tem “Fechar recibo” e o componente térmico tem “Imprimir recibo / Salvar como PDF”. Porém, o componente térmico usa apenas `window.print()`, não tem botão de baixar arquivo dedicado nem fecha/limpa automaticamente após o fluxo; a tela do cambista e o fluxo ponta a ponta não estão concluídos. Portanto, a exigência está parcialmente coberta na interface do jogador, mas ainda não está integralmente implementada/validada para o produto.
-
+**Nota histórica superada:** qualquer redação anterior que associe fechar a tela Pix ao encerramento/cancelamento da compra está substituída por esta regra. A cobrança pendente termina por sua validade e pelo cutoff da rodada, nunca pelo botão Sair.
 
 ## Reconciliação adicional do código Pix — 2026-10-27
 
@@ -813,3 +817,12 @@ Esta regra substitui qualquer instrução anterior que permita ao cambista pagar
 - Logomarca centralizada, sem distorção: altura responsiva de 54–66 px em desktop/tablet e 54 px em celular; largura automática, limitada a 72vw/76vw e 320 px no desktop.
 - Manter `object-fit: contain`, sem recorte nem esticamento. O ajuste vale globalmente para página pública, login, cadastro e áreas autenticadas por meio de `SiteHeader`/`BrandLogo` compartilhados.
 - Implementado no CSS global da branch `feature/public-home-registration`. Build, deploy e inspeção visual em celular/desktop ainda precisam ser confirmados.
+
+
+## Decisão consolidada — conclusão da aposta, saída do QR e exceções Pix (2026-10-30)
+
+- **Aposta concluída = participações válidas registradas + recibo oficial emitido.** Pagamento confirmado, isoladamente, não conclui a aposta.
+- Sair da tela Pix fecha o modal e limpa a interface para a próxima venda. A compra pendente permanece no servidor; fechar a tela não cancela nem apaga a cobrança.
+- A confirmação ocorre pelo webhook autenticado e pela consulta direta ao Mercado Pago implementada na PR #14. São caminhos complementares, com as mesmas validações e o mesmo serviço idempotente. A consulta da PR #14 ocorre quando o endpoint de status é chamado; não é um worker permanente de background.
+- O cutoff da rodada é o limite operacional. A cobrança deve expirar no Mercado Pago nesse horário se o provedor oferecer essa capacidade, inclusive para QR/código Pix copiado ou fotografado.
+- Pagamento recebido sem conclusão da aposta e sem recibo é exceção administrativa: não gerar aposta/recibo retroativo; encaminhar para análise e reembolso/devolução auditável.
