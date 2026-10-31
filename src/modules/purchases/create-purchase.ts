@@ -144,8 +144,7 @@ export async function createPurchase(
       include: { participations: { include: { lines: true } }, payment: true },
     });
     if (existing) {
-      const incomingByRound = new Map(input.participations.map((participation) => [
-        participation.roundId,
+      const incomingParticipations = input.participations.map((participation) =>
         participation.lines.map((line) => {
           const normalized = normalizePlate(line.plateDisplay);
           return [
@@ -156,9 +155,8 @@ export async function createPurchase(
             stableJsonStringify(line.ruleSnapshot),
           ].join("|");
         }).sort().join("\\n"),
-      ]));
-      const existingByRound = new Map(existing.participations.map((participation) => [
-        participation.roundId,
+      ).sort();
+      const existingParticipations = existing.participations.map((participation) =>
         participation.lines.map((line) => [
           String(line.plateFormat).toLowerCase(),
           line.normalizedPlate,
@@ -167,7 +165,7 @@ export async function createPurchase(
           line.ruleVersion,
           stableJsonStringify(line.ruleSnapshot),
         ].join("|")).sort().join("\\n"),
-      ]));
+      ).sort();
       const sameRequest =
         existing.paymentMethod === paymentMethod &&
         (paymentMethod === PaymentMethod.CASH ? Boolean(existing.receiptCode) : existing.receiptCode === (input.receiptCode ?? null)) &&
@@ -175,8 +173,8 @@ export async function createPurchase(
         existing.cashierId === (input.cashierId ?? null) &&
         existing.customerId === (input.customerId ?? null) &&
         existing.participations.length === input.repetitions &&
-        existingByRound.size === incomingByRound.size &&
-        [...incomingByRound].every(([roundId, lines]) => existingByRound.get(roundId) === lines);
+        existingParticipations.length === incomingParticipations.length &&
+        existingParticipations.every((lines, index) => lines === incomingParticipations[index]);
       if (!sameRequest) {
         throw new PurchaseServiceError(
           "The idempotency key was already used for a different purchase",
