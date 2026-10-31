@@ -411,7 +411,7 @@ A revisão documental/código desta data não autoriza afirmar que todo o projet
 
 ### Arquivos envolvidos nesta implementação
 - `src/components/player/player-purchase-form.tsx` e `src/components/cashier/cashier-sale-form.tsx`: selecionar quantidade de rodadas, sem escolher cards/IDs individuais.
-- `src/app/api/player/purchases/route.ts`, `src/app/api/cashier/purchases/create/route.ts` e `src/app/api/cashier/purchases/cash/route.ts`: recebem a quantidade e linhas da jogada; os IDs enviados pela interface são apenas referências provisórias para compatibilidade do contrato atual.
+- `src/app/api/player/purchases/route.ts`, `src/app/api/cashier/purchases/create/route.ts` e `src/app/api/cashier/purchases/cash/route.ts`: ainda recebem `roundIds` como contrato interno legado; a interface os gera automaticamente a partir da quantidade escolhida, sem exibir nem permitir seleção de códigos. O serviço usa somente a quantidade/linhas para determinar as rodadas válidas no banco; não confia nos IDs do navegador para a atribuição final.
 - `src/modules/purchases/create-purchase.ts`: usa relógio do banco e determina a primeira sequência provisória; dinheiro/carteira confirma imediatamente.
 - `src/modules/payments/confirm-payment.ts`: reavalia as rodadas no instante real de confirmação do Pix, remapeia as participações pendentes e emite o recibo na mesma transação.
 - `src/modules/payments/reconcile-pix-payment.ts`: consulta diretamente a ordem Mercado Pago, valida referência, valor, moeda e método Pix e usa o mesmo serviço de confirmação.
