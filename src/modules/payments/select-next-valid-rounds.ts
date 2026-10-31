@@ -1,6 +1,7 @@
 export type EligibleRoundCandidate = {
   id: string;
   status: string;
+  startsAt: Date;
   cutoffAt: Date;
   resultAt: Date;
 };
@@ -19,10 +20,14 @@ export function selectNextValidRounds<T extends EligibleRoundCandidate>(
   return [...rounds]
     .filter((round) =>
       (round.status === "OPEN" || round.status === "SCHEDULED")
+      && round.startsAt instanceof Date
       && round.cutoffAt instanceof Date
       && round.resultAt instanceof Date
+      && !Number.isNaN(round.startsAt.getTime())
       && !Number.isNaN(round.cutoffAt.getTime())
       && !Number.isNaN(round.resultAt.getTime())
+      && round.startsAt.getTime() < round.cutoffAt.getTime()
+      && round.cutoffAt.getTime() < round.resultAt.getTime()
       && round.cutoffAt.getTime() > decisionTime.getTime()
       && round.resultAt.getTime() > decisionTime.getTime(),
     )
