@@ -424,5 +424,6 @@ A revisão documental/código desta data não autoriza afirmar que todo o projet
 
 ### Estado desta branch
 - Implementação gravada na branch `feature/pix-next-valid-round`, derivada de `main`. Não foi feito merge, deploy ou alteração em produção.
+- Não foi necessária migração de banco: as participações `PENDING` existentes são referências provisórias e são remapeadas dentro da transação antes de passarem a `CONFIRMED`. Apuração, consulta pública e emissão do recibo consideram somente participações confirmadas.
 - Testes específicos, typecheck, lint, build, integração PostgreSQL, CI e homologação com credenciais de teste Mercado Pago ainda precisam ser executados antes de considerar o fluxo fechado.
 - A política operacional para um Pix aprovado quando não há rodadas suficientes continua sendo reconciliação/reembolso manual; não existe reembolso automático implementado nesta alteração.
