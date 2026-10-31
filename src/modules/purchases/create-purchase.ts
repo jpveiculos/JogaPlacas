@@ -169,7 +169,7 @@ export async function createPurchase(
       ).sort();
       const sameRequest =
         existing.paymentMethod === paymentMethod &&
-        (paymentMethod === PaymentMethod.CASH ? Boolean(existing.receiptCode) : input.receiptCode == null || existing.receiptCode === input.receiptCode) &&
+        (paymentMethod === PaymentMethod.CASH ? Boolean(existing.receiptCode) : true) &&
         existing.playerId === (input.playerId ?? null) &&
         existing.cashierId === (input.cashierId ?? null) &&
         existing.customerId === (input.customerId ?? null) &&
@@ -280,7 +280,7 @@ export async function createPurchase(
         throw new PurchaseServiceError(`Saldo insuficiente. Disponível: R$ ${(availableCents / 100).toFixed(2).replace(".", ",")}; total da aposta: R$ ${(totals.totalCents / 100).toFixed(2).replace(".", ",")}.`, "INSUFFICIENT_BALANCE");
       }
     }
-    const receiptCode = isConfirmed ? `JP-${randomBytes(8).toString("hex").toUpperCase()}` : (input.receiptCode ?? null);
+    const receiptCode = isConfirmed ? (input.receiptCode ?? `JP-${randomBytes(8).toString("hex").toUpperCase()}`) : null;
     const created = await tx.purchase.create({
       data: {
         playerId: input.playerId ?? null,
