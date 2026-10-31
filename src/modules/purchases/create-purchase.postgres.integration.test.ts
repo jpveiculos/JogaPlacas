@@ -191,19 +191,16 @@ suite("PostgreSQL purchase concurrency", () => {
 
 
 
-  it("rejects concurrent requests with the same key but different receipt codes", async () => {
+  it("replays concurrent pending Pix requests even if they supply different ignored receipt codes", async () => {
     const key = `it-conflict-${suffix}`;
-    const outcomes = await Promise.allSettled([
+    const outcomes = await Promise.all([
       createPendingPixPurchase(prisma, input(key, `IT-RECEIPT-A-${suffix}`), fixedNow),
       createPendingPixPurchase(prisma, input(key, `IT-RECEIPT-B-${suffix}`), fixedNow),
     ]);
 
-    expect(outcomes.filter((outcome) => outcome.status === "fulfilled")).toHaveLength(1);
-    const rejected = outcomes.find((outcome) => outcome.status === "rejected");
-    expect(rejected?.status).toBe("rejected");
-    if (rejected?.status === "rejected") {
-      expect(rejected.reason).toMatchObject({ code: "IDEMPOTENCY_CONFLICT" });
-    }
+    expect(outcomes).toHaveLength(2);
+    expect(outcomes[0]!.id).toBe(outcomes[1]!.id);
+    expect(outcomes[0]!.receiptCode).toBeNull();
     expect(await prisma.purchase.count({ where: { idempotencyKey: key } })).toBe(1);
     expect(await prisma.payment.count({ where: { purchase: { idempotencyKey: key } } })).toBe(1);
   });
