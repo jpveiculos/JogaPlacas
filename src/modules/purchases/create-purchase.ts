@@ -206,13 +206,14 @@ export async function createPurchase(
     // Lock the client-provided placeholders and all upcoming valid rounds in
     // the same deterministic order used by round closure and Pix confirmation.
     // The placeholder IDs do not determine the final allocation.
-    await tx.$queryRaw`
+    const lockedRoundRows = await tx.$queryRaw<Array<{ id: string }>>`
       SELECT "id" FROM "Round"
       WHERE "id" IN (${Prisma.join(provisionalRoundIds)})
          OR ("status" IN ('OPEN', 'SCHEDULED') AND "cutoffAt" > clock_timestamp())
       ORDER BY "id"
       FOR UPDATE
-    `;
+
+    const lockedRoundIds = lockedRoundRows.map((round) => round.id);    `;
 
     // The decision is made only after acquiring the locks, using PostgreSQL's
     // wall clock. For PIX this is provisional; confirmation re-evaluates it.
@@ -223,7 +224,7 @@ export async function createPurchase(
     )[0]!.decisionTime;
 
     const availableRounds = await tx.round.findMany({
-      where: { status: { in: [RoundStatus.OPEN, RoundStatus.SCHEDULED] }, cutoffAt: { gt: decisionTime } },
+      where: { id: { in: lockedRoundIds }, status: { in: [RoundStatus.OPEN, RoundStatus.SCHEDULED] }, cutoffAt: { gt: decisionTime } },
       orderBy: [{ resultAt: "asc" }, { id: "asc" }],
     });
     const selectedRounds = selectNextValidRounds(availableRounds, input.repetitions, decisionTime);
