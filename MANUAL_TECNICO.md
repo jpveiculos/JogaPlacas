@@ -389,3 +389,49 @@ A revisão documental/código desta data não autoriza afirmar que todo o projet
 5. Validar o fluxo de compra, QR/recibo, apuração por formato, crédito idempotente e saques.
 6. Fazer revisão de segurança e de autorização por papel (ADMIN, CASHIER, PLAYER).
 7. Verificar visualmente as rotas principais em desktop e celular; então avaliar publicação, domínio e DNS separadamente.
+
+
+## Fluxo Pix — estados, saída do QR, confirmação e exceções (regra vigente em 2026-10-30)
+
+### Princípio funcional
+- **Pagamento confirmado não significa venda concluída.** A venda/aposta só está concluída quando as participações válidas são registradas e o recibo oficial é emitido. O recibo identifica a compra, placas/participações, pagamento e QR Code de consulta dos resultados.
+- Não emitir recibo para compra pendente, cobrança expirada/recusada ou pagamento recebido sem possibilidade de concluir a aposta dentro do cutoff.
+
+### Dois mecanismos complementares
+1. **Webhook Mercado Pago:** recebe evento no servidor, valida assinatura/autenticidade, consulta a ordem no provedor e valida referência, moeda, valor e estado final antes de encaminhar ao serviço transacional.
+2. **Consulta direta pelo sistema:** o endpoint de status consulta a ordem autenticada no Mercado Pago quando é chamado. A PR #14 (`Consultar status Pix diretamente no Mercado Pago`) implementa esse fallback e reutiliza `confirmPixPayment`; não cria um segundo serviço de emissão de recibo. O webhook permanece ativo.
+3. Ambos devem compartilhar validações e confirmação idempotente. Eventos/consultas simultâneos, duplicados ou fora de ordem não podem duplicar participações, recibos, comissões ou lançamentos financeiros.
+4. **Limite da PR #14:** a consulta direta ocorre em resposta a uma chamada do endpoint de status; não é um worker permanente que consulta todas as compras pendentes sem ser acionado. O webhook é independente da tela aberta. Ao voltar à aplicação, a compra pendente deve continuar identificável e poder ser consultada novamente. Não descartar o identificador da compra só porque o modal foi fechado.
+
+### Botão Sair e continuidade
+- **Sair/Fechar tela Pix** fecha apenas a interface do QR e limpa os campos temporários para permitir outra venda. Não cancela a cobrança, não altera o estado pendente e não apaga a compra.
+- A compra anterior continua registrada no servidor e pode ser paga enquanto o Pix estiver válido. O webhook pode confirmar mesmo com o modal fechado.
+- Se o pagamento for confirmado e a compra ainda puder participar, concluir transacionalmente e emitir um único recibo. Se o operador estiver em outra venda, não sobrescrever seus campos: notificar a conclusão anterior e permitir abrir o recibo correspondente.
+
+### Cutoff e expiração
+- No cutoff oficial, bloquear novas apostas e impedir conclusão retroativa de participações.
+- Configurar a expiração da cobrança no próprio Mercado Pago para coincidir com o cutoff, **desde que a API/contrato suporte e confirme essa validade**. QR fotografado e código Pix copia-e-cola também precisam deixar de ser pagáveis; esconder o QR na interface não atende ao requisito.
+- Homologar horário efetivo de expiração, fuso `America/Sao_Paulo`, tolerância do provedor e cobranças já criadas. Não declarar o bloqueio externo garantido antes dessa prova.
+
+### Pagamento recebido sem recibo — exceção administrativa
+- Se o Mercado Pago confirmar pagamento depois do cutoff, ou outra condição impedir o registro válido das participações e a emissão do recibo, a aposta não foi concluída. Não criar participação retroativa nem emitir recibo automaticamente.
+- Registrar como **pagamento recebido sem aposta concluída**, preservar evidências do provedor e encaminhar à administração.
+- A administração decide e executa reembolso/devolução. Registrar referência, valor, motivo, responsável, data/hora e resultado; impedir reembolso duplicado. Não simular o tratamento por alteração manual de status ou emissão de recibo.
+
+### Estados distintos
+- Compra/cobrança pendente.
+- Pagamento confirmado no provedor: valor recebido, ainda sujeito à validação do cutoff e à conclusão da aposta.
+- **Aposta concluída:** participações válidas confirmadas e recibo oficial emitido.
+- Cobrança expirada/cancelada/recusada: sem aposta concluída e sem recibo.
+- **Pagamento recebido sem aposta concluída:** exceção administrativa, sem recibo, sujeita a reembolso/devolução.
+
+### Arquivos relacionados
+- `src/app/api/webhooks/mercado-pago/route.ts`: autenticação do webhook e entrada do fluxo de confirmação.
+- `src/app/api/player/purchases/[purchaseId]/status/route.ts`: status da compra e consulta direta ao Mercado Pago (PR #14).
+- `src/modules/payments/mercado-pago.ts`: leitura e validação da ordem.
+- `src/modules/payments/confirm-payment.ts`: confirmação transacional/idempotente e cutoff.
+- `src/components/player/player-purchase-form.tsx` e formulário do cambista: estado visual do QR, botão Sair, retenção do identificador pendente e apresentação do recibo.
+
+**Estado da PR #14:** aberta, não mesclada, com base `main` e branch `fix/pix-confirmation-fallback-clean`. A branch oficial de desenvolvimento indicada pelo `MANUAL-MESTRE.md` continua sendo `feature/public-home-registration`. A PR foi consultada, mas não alterada nem mesclada nesta atualização documental. Antes de integrar, reconciliar sua base com a branch oficial e revisar arquivos/testes alterados.
+
+**Pendências de validação:** comprovar expiração efetiva da cobrança no cutoff; testar webhook e consulta direta concorrentes/duplicados; testar pagamento no limite do cutoff; validar pagamento recebido sem recibo e procedimento administrativo de reembolso; validar a interface após fechar o QR e iniciar outra venda. Não declarar esses pontos homologados apenas porque a PR implementa a consulta direta.
