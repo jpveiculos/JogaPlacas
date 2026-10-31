@@ -65,14 +65,21 @@ export async function POST(request: NextRequest) {
       return response({ error: "Payment mapping not found yet." }, 503);
     }
 
-    const expectedReference = `jogaplacas_purchase_${payment.purchaseId}`;
+    const expectedReference = "jogaplacas_purchase_" + payment.purchaseId;
+    const { providerStatus, normalizedStatus, approved } = classifyPixOrderStatus(order);
+    const methodMismatch = (order.paymentMethodId !== null && order.paymentMethodId.toLowerCase() !== "pix")
+      || (order.paymentMethodType !== null && order.paymentMethodType.toLowerCase() !== "bank_transfer");
+    const approvedPaymentMismatch = approved && (
+      order.paymentAmountCents !== payment.amountCents
+      || order.paymentMethodId?.toLowerCase() !== "pix"
+      || order.paymentMethodType?.toLowerCase() !== "bank_transfer"
+    );
     if (order.externalReference !== expectedReference
       || order.currency !== "BRL"
       || order.amountCents !== payment.amountCents
       || order.amountCents !== payment.purchase.totalCents
-      || order.paymentAmountCents !== payment.amountCents
-      || order.paymentMethodId?.toLowerCase() !== "pix"
-      || order.paymentMethodType?.toLowerCase() !== "bank_transfer") {
+      || methodMismatch
+      || approvedPaymentMismatch) {
       return response({ error: "Provider payment does not match the recorded purchase." }, 422);
     }
 
@@ -117,7 +124,6 @@ export async function POST(request: NextRequest) {
     // An order-level terminal state (especially refunded) takes precedence over
     // an older transaction-level "approved" state. Confirmation requires both
     // the order and its Pix transaction to be in their successful states.
-    const { providerStatus, normalizedStatus, approved } = classifyPixOrderStatus(order);
     if (approved) {
       const confirmation = await confirmPixPayment(authPrisma, {
         paymentId: payment.id,
