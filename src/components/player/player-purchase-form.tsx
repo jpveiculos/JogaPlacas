@@ -94,11 +94,7 @@ export function PlayerPurchaseForm() {
         const items = body.rounds as AvailableRound[];
         if (!active) return;
         setRounds(items);
-        setSelectedRounds((current) => {
-          const availableIds = new Set(items.map((round) => round.id));
-          const next = current.filter((id) => availableIds.has(id));
-          return next.length === current.length ? current : next;
-        });
+        setSelectedRounds((current) => items.slice(0, current.length).map((round) => round.id));
         setError("");
       } catch (reason) {
         if (active) setError(reason instanceof Error ? reason.message : "Erro ao atualizar as rodadas.");
@@ -228,28 +224,6 @@ export function PlayerPurchaseForm() {
     setAddedPlates((current) => current.filter((item) => item !== plate));
   }
 
-  function toggleRound(id: string) {
-    const index = visibleRounds.findIndex((round) => round.id === id);
-    if (index < 0) return;
-    setSelectedRounds((current) => {
-      const selectedIndex = current.indexOf(id);
-      if (selectedIndex >= 0) {
-        // Removing one round also removes every later repetition so the sequence stays contiguous.
-        return current.slice(0, selectedIndex);
-      }
-      if (current.length >= 10 || index !== current.length) return current;
-      const round = visibleRounds[index]!;
-      if (current.length === 0 && round.status !== "OPEN") return current;
-      if (current.length > 0) {
-        const previous = visibleRounds.find((item) => item.id === current[current.length - 1]);
-        if (!previous || new Date(round.resultAt).getTime() - new Date(previous.resultAt).getTime() !== 30 * 60_000) {
-          return current;
-        }
-      }
-      return [...current, id];
-    });
-  }
-
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(""); setNotice(""); setPurchase(null); setPixCheckout(null);
@@ -258,13 +232,10 @@ export function PlayerPurchaseForm() {
       return;
     }
     if (stakeCents === null) { setError("O valor mínimo por placa e rodada é R$ 1,00. Use até duas casas decimais."); return; }
-    if (!selectedRounds.length) { setError("Selecione pelo menos uma rodada."); return; }
-    const activeRoundIds = new Set(visibleRounds.map((round) => round.id));
-    if (selectedRounds.some((id) => !activeRoundIds.has(id))) {
-      setSelectedRounds((current) => current.filter((id) => activeRoundIds.has(id)));
-      setError("Uma rodada encerrou enquanto você preparava a aposta. Selecione a rodada aberta atual e tente novamente.");
-      fetch("/api/player/rounds", { cache: "no-store" })
-        .then((response) => response.json()).then((body) => setRounds(body.rounds ?? [])).catch(() => undefined);
+    if (!selectedRounds.length) { setError("Escolha quantas rodadas deseja concorrer."); return; }
+    const provisionalRoundIds = visibleRounds.slice(0, selectedRounds.length).map((round) => round.id);
+    if (provisionalRoundIds.length !== selectedRounds.length) {
+      setError("Não há rodadas futuras suficientes no momento. Atualize a tela e tente novamente.");
       return;
     }
     if (paymentMethod === "WALLET" && !walletHasEnough) {
@@ -280,7 +251,7 @@ export function PlayerPurchaseForm() {
         method: "POST", headers: { "content-type": "application/json" },
         body: JSON.stringify({
           idempotencyKey: idempotencyKey.current ?? (idempotencyKey.current = crypto.randomUUID()),
-          roundIds: selectedRounds, lines: plateLines, paymentMethod,
+          roundIds: provisionalRoundIds, lines: plateLines, paymentMethod,
         }),
       });
       const body = await response.json();
@@ -334,16 +305,21 @@ export function PlayerPurchaseForm() {
           </div>}
         </div>
         <fieldset>
-          <legend>Rodadas</legend>
-          {loadingRounds ? <p>Carregando rodadas…</p> : visibleRounds.length === 0 ? <p>Não há rodadas disponíveis para compra no momento.</p> : (
-            <div className="round-options round-carousel">{visibleRounds.slice(0, 10).map((round, index) => (
-              <label key={round.id} className="round-option">
-                <input type="checkbox" checked={selectedRounds.includes(round.id)} disabled={index > selectedRounds.length || (index === 0 && (round.status !== "OPEN" || new Date(round.cutoffAt).getTime() <= clockNow)) || (index === selectedRounds.length && selectedRounds.length > 0 && new Date(round.resultAt).getTime() - new Date(visibleRounds[index - 1]!.resultAt).getTime() !== 30 * 60_000)} onChange={() => toggleRound(round.id)} />
-                <span><strong>{round.code}</strong><br />Início: {formatDate(round.startsAt)}<br />Encerra: {formatDate(round.cutoffAt)}</span>
-              </label>
-            ))}</div>
+          <legend>Quantidade de rodadas</legend>
+          {loadingRounds ? <p>Carregando disponibilidade…</p> : visibleRounds.length === 0 ? <p>Não há rodadas futuras disponíveis no momento.</p> : (
+            <>
+              <select value={selectedRounds.length || 1} onChange={(event) => {
+                const count = Number(event.target.value);
+                setSelectedRounds(visibleRounds.slice(0, count).map((round) => round.id));
+              }}>
+                {Array.from({ length: Math.min(10, visibleRounds.length) }, (_, index) => index + 1).map((count) => (
+                  <option key={count} value={count}>{count} {count === 1 ? "rodada" : "rodadas"}</option>
+                ))}
+              </select>
+              <small>A jogada será vinculada à próxima rodada válida quando o pagamento for confirmado. Nas compras com pagamento imediato, a vinculação ocorre no momento da confirmação.</small>
+            </>
           )}
-          {selectedRounds.length === 10 && <small>Limite de 10 rodadas por compra atingido.</small>}
+          {selectedRounds.length === 10 && <small>Limite de 10 rodadas por compra.</small>}
         </fieldset>
         <label>Valor total por placa e rodada (R$)
           <input inputMode="decimal" value={stake} onChange={(event) => setStake(event.target.value)} placeholder="1,00" required />
