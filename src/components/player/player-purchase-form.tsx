@@ -308,10 +308,11 @@ export function PlayerPurchaseForm() {
           <legend>Quantidade de rodadas</legend>
           {loadingRounds ? <p>Carregando disponibilidade…</p> : visibleRounds.length === 0 ? <p>Não há rodadas futuras disponíveis no momento.</p> : (
             <>
-              <select value={selectedRounds.length || 1} onChange={(event) => {
+              <select value={selectedRounds.length} onChange={(event) => {
                 const count = Number(event.target.value);
                 setSelectedRounds(visibleRounds.slice(0, count).map((round) => round.id));
               }}>
+                <option value={0}>Selecione a quantidade</option>
                 {Array.from({ length: Math.min(10, visibleRounds.length) }, (_, index) => index + 1).map((count) => (
                   <option key={count} value={count}>{count} {count === 1 ? "rodada" : "rodadas"}</option>
                 ))}
