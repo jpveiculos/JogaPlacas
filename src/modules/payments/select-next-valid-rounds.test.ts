@@ -21,10 +21,11 @@ describe("selectNextValidRounds", () => {
   });
 
   it("skips a round whose cutoff has arrived and continues to the next valid round", () => {
-    const rounds = [
-      round("cutoff-passed", "2026-10-30T15:30:00.000Z", "OPEN", "2026-10-30T15:00:00.000Z"),
-      round("next", "2026-10-30T16:00:00.000Z"),
-    ];
+    const cutoffPassed = {
+      ...round("cutoff-passed", "2026-10-30T15:30:00.000Z", "OPEN", "2026-10-30T15:00:00.000Z"),
+      startsAt: new Date("2026-10-30T14:31:00.000Z"),
+    };
+    const rounds = [cutoffPassed, round("next", "2026-10-30T16:00:00.000Z")];
     expect(selectNextValidRounds(rounds, 1, instant).map((item) => item.id)).toEqual(["next"]);
   });
 
