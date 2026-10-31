@@ -37,7 +37,7 @@ export async function confirmPixPayment(
 
         const participations = await tx.purchaseParticipation.findMany({
           where: { purchaseId: paymentRow.purchaseId, status: "PENDING" },
-          select: { id: true, roundId: true },
+          select: { id: true, roundId: true, totalCents: true },
           orderBy: { createdAt: "asc" },
         });
         if (!participations.length) throw new Error("Purchase has no pending participations");
