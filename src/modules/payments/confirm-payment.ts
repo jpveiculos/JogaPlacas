@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto";
-import { Prisma, type PrismaClient } from "../../generated/prisma/client";
+import { Prisma, RoundStatus, type PrismaClient } from "../../generated/prisma/client";
 import { calculateCommissionCents } from "../../domain/cashier-commission";
 
 export type ConfirmPaymentResult =
