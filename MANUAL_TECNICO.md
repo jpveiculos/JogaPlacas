@@ -184,7 +184,7 @@ Esta regra substitui qualquer instrução anterior que permita ao cambista pagar
 - Nos formulários de compra do jogador e de venda do cambista, consultar a lista de rodadas disponíveis a cada **2 segundos**, enquanto a página estiver visível. Ao voltar à página/aba, consultar imediatamente.
 - Manter o temporizador já existente no cliente para atualizar a exibição no horário de encerramento (cutoffAt). Não adicionar um segundo mecanismo de remoção ou de limpeza da seleção que duplique a regra existente.
 - A lista retornada pelas APIs de rodadas deve conter apenas rodadas elegíveis. A filtragem visual no cliente melhora a experiência, mas não substitui a validação autoritativa no servidor.
-- **Regra obrigatória para aposta e pagamento:** antes de registrar a compra/venda e antes de iniciar ou confirmar qualquer pagamento Pix, o servidor deve revalidar, no mesmo fluxo transacional, que a primeira rodada continua aberta e que todas as rodadas selecionadas ainda aceitam apostas. Se alguma rodada tiver encerrado, recusar a operação sem registrar aposta nem gerar cobrança válida e devolver erro claro em português; o cliente deve atualizar a lista e pedir que a pessoa selecione rodadas válidas novamente. Não confiar no relógio do dispositivo nem somente no estado do carrossel.
+- **Regra substituída em 30/10/2026:** o cliente escolhe apenas a quantidade de rodadas (1 a 10), não uma rodada específica. O servidor determina a próxima rodada válida no instante da confirmação do pagamento e emissão do recibo, usando o relógio do PostgreSQL após bloquear as rodadas elegíveis. Para Pix, a associação anterior à confirmação é provisória e pode ser remapeada; para dinheiro/carteira, a atribuição ocorre na confirmação imediata da venda. Não confiar no relógio do dispositivo nem em IDs/horários enviados pelo navegador.
 - A consulta a cada 2 segundos foi ajustada no código dos dois formulários. A validação ponta a ponta de concorrência entre encerramento e criação de cobrança precisa ser testada e confirmada antes de considerar o fluxo homologado.
 
 
@@ -353,8 +353,8 @@ Este procedimento é obrigatório para solicitações futuras, não apenas para 
 - Não considerar a arte nova implantada até verificar o arquivo versionado, a qualidade em zoom e o deploy.
 
 ### Recibo e verificação por QR
-- O cabeçalho geral deve ser **APOSTA PREMIADA** quando ao menos uma placa de alguma rodada vinculada à compra for premiada; **APOSTA NÃO PREMIADA** quando todas as rodadas estiverem resolvidas e todas as placas não forem premiadas.
-- Cada placa continua exibindo seu próprio estado: **Premiada**, **Prêmio pago**, **Não premiada**, ou estado de espera quando o resultado/apuração ainda não estiver concluído.
+- O cabeçalho da consulta QR é fixo e neutro: **RESULTADOS**, fundo marrom (`#92400e`) e texto branco. Não classificar o talão inteiro como premiado/não premiado nem alternar título/cor no cabeçalho.
+- Cada placa continua exibindo seu próprio estado: **Premiada** (verde), **Prêmio pago** quando houver confirmação financeira, **Não premiada** (vermelho), ou estado de espera quando o resultado/apuração ainda não estiver concluído.
 - Em 2026-10-29, a auditoria encontrou que `src/components/receipts/receipt-verification.tsx` ainda usava os rótulos antigos “BILHETE PREMIADO” e “BILHETE NÃO PREMIADO”, apesar da decisão anterior. A correção foi registrada nesta branch para usar “APOSTA PREMIADA” e “APOSTA NÃO PREMIADA”. Validar build e a tela real após deploy.
 - Não mostrar “Apuração pendente” como resultado final de uma rodada com resultado publicado e apuração concluída. O estado por placa deve vir da API oficial e respeitar o estado da rodada.
 
@@ -389,3 +389,37 @@ A revisão documental/código desta data não autoriza afirmar que todo o projet
 5. Validar o fluxo de compra, QR/recibo, apuração por formato, crédito idempotente e saques.
 6. Fazer revisão de segurança e de autorização por papel (ADMIN, CASHIER, PLAYER).
 7. Verificar visualmente as rotas principais em desktop e celular; então avaliar publicação, domínio e DNS separadamente.
+
+
+## Regra vigente — atribuição dinâmica da compra às próximas rodadas válidas (2026-10-30)
+
+### Regra funcional
+- A pessoa escolhe a quantidade de rodadas (de 1 a 10), não escolhe códigos/horários de rodadas específicas.
+- A compra representa uma jogada (placas e distribuição de valores) repetida exatamente pela quantidade contratada. Cada participação concorre uma vez em uma rodada; ao completar a quantidade, termina. Não há repetição automática além do contratado. Outra participação exige nova compra, novo pagamento e novo recibo.
+- O instante decisivo é o horário do banco de dados no qual o pagamento é confirmado e o recibo oficial é emitido, dentro da mesma transação. Não usar horário do celular, horário de criação do QR Pix ou horário informado pelo navegador.
+- Selecionar, em ordem cronológica, as próximas rodadas com status `OPEN` ou `SCHEDULED` e `cutoffAt > decisionTime`. Rodadas fechadas/canceladas ou com cutoff alcançado são ignoradas. Se faltar uma rodada no calendário, a seleção pode avançar para a próxima rodada válida; não criar participação retroativa.
+- Para pagamento em dinheiro ou carteira, atribuir as rodadas imediatamente na transação de confirmação da venda/débito.
+- Para Pix, as participações existentes antes do pagamento são provisórias. O webhook assinado ou a consulta direta ao Mercado Pago busca o estado canônico; ambos convergem para `confirmPixPayment`. No momento da confirmação, o serviço reavalia as rodadas e move as participações pendentes para as próximas válidas, antes de confirmar participações, compra e recibo.
+- A confirmação do Pix é idempotente. Webhook duplicado e consulta de status concorrente não podem criar recibos, participações ou comissões duplicadas.
+- Se não houver rodadas válidas suficientes para toda a quantidade comprada, não reduzir a quantidade, não confirmar parcialmente e não emitir recibo. Manter o pagamento aprovado sem participação/recibo, com auditoria e encaminhamento para reconciliação/reembolso manual.
+- A validade bancária do Pix não é limitada por esta regra. A possibilidade de pagamento no banco após o cutoff continua dependendo da expiração efetivamente suportada pelo produto/API Mercado Pago; não prometer bloqueio bancário no instante do fechamento.
+
+### Auditoria obrigatória
+- O evento `PIX_PAYMENT_CONFIRMED` deve registrar o instante de decisão/emissão do recibo, as rodadas provisórias originais (código, início, cutoff e resultado) e as rodadas efetivamente atribuídas (código, início, cutoff e resultado).
+- Quando não houver rodadas suficientes, registrar `PIX_PAYMENT_APPROVED_WITHOUT_AVAILABLE_ROUNDS` com o instante da decisão, quantidade solicitada/disponível e rodadas provisórias. Não duplicar esse evento em cada consulta repetida do status.
+- O recibo e o QR Code devem consultar as participações efetivamente confirmadas no banco. Assim, o recibo apresenta a rodada real atribuída, não a referência provisória enviada na criação do Pix.
+
+### Arquivos envolvidos nesta implementação
+- `src/components/player/player-purchase-form.tsx` e `src/components/cashier/cashier-sale-form.tsx`: selecionar quantidade de rodadas, sem escolher cards/IDs individuais.
+- `src/app/api/player/purchases/route.ts`, `src/app/api/cashier/purchases/create/route.ts` e `src/app/api/cashier/purchases/cash/route.ts`: recebem a quantidade e linhas da jogada; os IDs enviados pela interface são apenas referências provisórias para compatibilidade do contrato atual.
+- `src/modules/purchases/create-purchase.ts`: usa relógio do banco e determina a primeira sequência provisória; dinheiro/carteira confirma imediatamente.
+- `src/modules/payments/confirm-payment.ts`: reavalia as rodadas no instante real de confirmação do Pix, remapeia as participações pendentes e emite o recibo na mesma transação.
+- `src/modules/payments/reconcile-pix-payment.ts`: consulta diretamente a ordem Mercado Pago, valida referência, valor, moeda e método Pix e usa o mesmo serviço de confirmação.
+- `src/modules/payments/mercado-pago.ts` e `src/app/api/payments/mercadopago/webhook/route.ts`: expõem e validam método Pix/bank_transfer, valores e referência.
+- `src/app/api/player/purchases/[purchaseId]/status/route.ts` e `src/app/api/cashier/purchases/[purchaseId]/status/route.ts`: fazem consulta direta de fallback com intervalo mínimo de 10 segundos, sem substituir o webhook.
+- `src/app/api/player/purchases/[purchaseId]/receipt/route.ts` e `src/app/api/public/receipt-verification/[receiptCode]/route.ts`: leem as participações efetivamente atribuídas; não precisam escolher rodadas pelo navegador.
+
+### Estado desta branch
+- Implementação gravada na branch `feature/pix-next-valid-round`, derivada de `main`. Não foi feito merge, deploy ou alteração em produção.
+- Testes específicos, typecheck, lint, build, integração PostgreSQL, CI e homologação com credenciais de teste Mercado Pago ainda precisam ser executados antes de considerar o fluxo fechado.
+- A política operacional para um Pix aprovado quando não há rodadas suficientes continua sendo reconciliação/reembolso manual; não existe reembolso automático implementado nesta alteração.
