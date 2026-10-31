@@ -36,18 +36,24 @@ export async function reconcilePixPaymentFromProvider(
   if (payment.status !== "PENDING" || payment.purchase.status !== "PENDING_PAYMENT") return "not_pending";
 
   const order = await getVerifiedPixOrder(payment.providerPaymentId);
+  const { providerStatus, normalizedStatus, approved } = classifyPixOrderStatus(order);
+  const methodMismatch = (order.paymentMethodId !== null && order.paymentMethodId.toLowerCase() !== "pix")
+    || (order.paymentMethodType !== null && order.paymentMethodType.toLowerCase() !== "bank_transfer");
+  const approvedPaymentMismatch = approved && (
+    order.paymentAmountCents !== payment.amountCents
+    || order.paymentMethodId?.toLowerCase() !== "pix"
+    || order.paymentMethodType?.toLowerCase() !== "bank_transfer"
+  );
   if (order.orderId !== payment.providerPaymentId
-    || order.externalReference !== `jogaplacas_purchase_${payment.purchaseId}`
+    || order.externalReference !== "jogaplacas_purchase_" + payment.purchaseId
     || order.currency !== "BRL"
     || order.amountCents !== payment.amountCents
     || order.amountCents !== payment.purchase.totalCents
-    || order.paymentAmountCents !== payment.amountCents
-    || order.paymentMethodId?.toLowerCase() !== "pix"
-    || order.paymentMethodType?.toLowerCase() !== "bank_transfer") {
+    || methodMismatch
+    || approvedPaymentMismatch) {
     throw new Error("Mercado Pago order does not match the pending Pix purchase");
   }
 
-  const { providerStatus, normalizedStatus, approved } = classifyPixOrderStatus(order);
   await prisma.payment.update({
     where: { id: payment.id },
     data: { providerStatus, providerStatusDetail: order.statusDetail },
