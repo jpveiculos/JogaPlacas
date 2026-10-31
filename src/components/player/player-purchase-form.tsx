@@ -317,7 +317,7 @@ export function PlayerPurchaseForm() {
                   <option key={count} value={count}>{count} {count === 1 ? "rodada" : "rodadas"}</option>
                 ))}
               </select>
-              <small>A jogada será vinculada à próxima rodada válida quando o pagamento for confirmado. Nas compras com pagamento imediato, a vinculação ocorre no momento da confirmação.</small>
+              <small>No Pix, a jogada será vinculada à próxima rodada válida quando o pagamento for confirmado. Com saldo da conta, a vinculação ocorre no momento do débito.</small>
             </>
           )}
           {selectedRounds.length === 10 && <small>Limite de 10 rodadas por compra.</small>}
