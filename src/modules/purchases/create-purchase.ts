@@ -168,7 +168,7 @@ export async function createPurchase(
       ).sort();
       const sameRequest =
         existing.paymentMethod === paymentMethod &&
-        (paymentMethod === PaymentMethod.CASH ? Boolean(existing.receiptCode) : existing.receiptCode === (input.receiptCode ?? null)) &&
+        (paymentMethod === PaymentMethod.CASH ? Boolean(existing.receiptCode) : input.receiptCode == null || existing.receiptCode === input.receiptCode) &&
         existing.playerId === (input.playerId ?? null) &&
         existing.cashierId === (input.cashierId ?? null) &&
         existing.customerId === (input.customerId ?? null) &&
