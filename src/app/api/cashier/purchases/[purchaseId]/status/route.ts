@@ -71,9 +71,18 @@ export async function GET(request: NextRequest, context: RouteContext) {
     && purchase.payment?.status === "CONFIRMED"
     && Boolean(purchase.receiptCode && purchase.confirmedAt && purchase.payment.confirmedAt);
 
+  const reconciliationRequired = purchase.status === "PENDING_PAYMENT"
+    && purchase.payment?.status === "PENDING"
+    && purchase.payment.providerStatus === "processed"
+    && purchase.payment.providerStatusDetail === "accredited";
+
   return NextResponse.json({
     purchaseStatus: purchase.status,
     paymentStatus: purchase.payment?.status ?? "PENDING",
+    reconciliationRequired,
+    message: reconciliationRequired
+      ? "O Mercado Pago confirmou o Pix. O sistema está vinculando a compra às próximas rodadas válidas. Não faça outro pagamento."
+      : null,
     providerStatus: purchase.payment?.providerStatus ?? null,
     providerStatusDetail: purchase.payment?.providerStatusDetail ?? null,
     receiptReady: confirmed,
