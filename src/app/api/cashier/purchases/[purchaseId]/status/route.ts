@@ -38,10 +38,21 @@ export async function GET(request: NextRequest, context: RouteContext) {
     && purchase.payment.provider === "MERCADO_PAGO"
     && purchase.payment.providerPaymentId
     && Date.now() - purchase.payment.updatedAt.getTime() >= 10_000) {
-    try {
-      await reconcilePixPaymentFromProvider(authPrisma, purchase.payment.id);
-    } catch {
-      // Provider/API outages leave the purchase pending; the webhook can retry.
+    const checkClaim = await authPrisma.payment.updateMany({
+      where: {
+        id: purchase.payment.id,
+        status: "PENDING",
+        updatedAt: { lt: new Date(Date.now() - 10_000) },
+      },
+      data: { updatedAt: new Date() },
+    });
+    if (checkClaim.count === 1) {
+      try {
+        await reconcilePixPaymentFromProvider(authPrisma, purchase.payment.id);
+      } catch {
+        // Provider/API outages leave the purchase pending; the timestamp claim
+        // prevents every 3-second UI poll from immediately retrying the provider.
+      }
     }
     purchase = await authPrisma.purchase.findFirst({
       where: { id: purchaseId, cashierId: user.id },
