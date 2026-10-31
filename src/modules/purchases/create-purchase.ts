@@ -235,11 +235,11 @@ export async function createPurchase(
       }
       return round;
     });
-    if (selectedRounds[0]?.status !== RoundStatus.OPEN) {
-      throw new PurchaseServiceError(
-        "A repeated purchase must begin with the currently open round",
-        "ROUND_UNAVAILABLE",
-      );
+    // The client chooses only the number of repetitions. These round IDs are
+    // provisional placeholders; the definitive rounds are selected using the
+    // database clock when payment is confirmed (or immediately for cash/wallet).
+    if (!selectedRounds[0] || ![RoundStatus.OPEN, RoundStatus.SCHEDULED].includes(selectedRounds[0].status)) {
+      throw new PurchaseServiceError("There is no valid upcoming round for this purchase", "ROUND_UNAVAILABLE");
     }
     for (let index = 1; index < selectedRounds.length; index += 1) {
       const previous = selectedRounds[index - 1]!;
@@ -262,7 +262,8 @@ export async function createPurchase(
         }
         return {
           roundId: round.id,
-          startsAt: round.startsAt,
+          // Do not bind the purchase to the round's start time. A scheduled
+          // round can be the next valid target when the current cutoff has passed.
           cutoffAt: round.cutoffAt,
           lines: participation.lines.map((line) => ({
             plateDisplay: line.plateDisplay,
