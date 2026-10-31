@@ -15,6 +15,8 @@ type MercadoPagoOrder = {
       status?: string;
       status_detail?: string;
       payment_method?: {
+        id?: string;
+        type?: string;
         qr_code?: string;
         qr_code_base64?: string;
         ticket_url?: string;
