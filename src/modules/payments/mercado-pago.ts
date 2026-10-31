@@ -38,6 +38,8 @@ export type VerifiedPixOrder = PixCheckout & {
   amountCents: number | null;
   paymentStatus: string | null;
   paymentAmountCents: number | null;
+  paymentMethodId: string | null;
+  paymentMethodType: string | null;
 };
 
 export function parseVerifiedPixOrder(payload: MercadoPagoOrder): VerifiedPixOrder {
@@ -52,6 +54,8 @@ export function parseVerifiedPixOrder(payload: MercadoPagoOrder): VerifiedPixOrd
     amountCents: Number.isFinite(amount) ? Math.round(amount * 100) : null,
     paymentStatus: payment?.status ?? null,
     paymentAmountCents: Number.isFinite(paymentAmount) ? Math.round(paymentAmount * 100) : null,
+    paymentMethodId: payment?.payment_method?.id ?? null,
+    paymentMethodType: payment?.payment_method?.type ?? null,
   };
 }
 
