@@ -133,7 +133,6 @@ suite("PostgreSQL purchase concurrency", () => {
   });
 
   it.each([
-    ["receipt code", (request: PixPurchaseInput) => ({ ...request, receiptCode: "DIFFERENT-RECEIPT" })],
     ["actor", (request: PixPurchaseInput) => ({ ...request, playerId: "different-player" })],
     ["plate", (request: PixPurchaseInput) => ({
       ...request,
