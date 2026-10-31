@@ -100,10 +100,10 @@ describe("POST /api/player/purchases", () => {
         lines: [{
           plateDisplay: "ABC-1234",
           stakeCents: 100,
-          ruleVersion: "approved-v2",
+          ruleVersion: "approved-v4",
           ruleSnapshot: {
-            version: "approved-v2",
-            multipliers: { unit: 6, tens: 20, hundreds: 200, thousands: 2_000, letters: 2_000, fullPlate: 200_000 },
+            version: "approved-v4",
+            multipliers: { unit: 6, tens: 30, hundreds: 300, thousands: 3_000, letters: 3_000, fullPlate: 300_000 },
           },
         }],
       }],
