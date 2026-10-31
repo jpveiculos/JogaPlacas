@@ -31,8 +31,8 @@ suite("PostgreSQL purchase concurrency", () => {
       lines: [{
         plateDisplay: "ABC-1234",
         stakeCents: 100,
-        ruleVersion: "integration-v1",
-        ruleSnapshot: { version: "integration-v1", multipliers: { unit: 6, tens: 30, hundreds: 300, thousands: 3_000, letters: 3_000, fullPlate: 300_000 } },
+        ruleVersion: "approved-v4",
+        ruleSnapshot: { version: "approved-v4", multipliers: { unit: 6, tens: 30, hundreds: 300, thousands: 3_000, letters: 3_000, fullPlate: 300_000 } },
       }],
     }],
   });
@@ -155,7 +155,7 @@ suite("PostgreSQL purchase concurrency", () => {
         ...participation,
         lines: participation.lines.map((line) => ({
           ...line,
-          ruleSnapshot: { version: "integration-v2", multipliers: { unit: 6, tens: 30, hundreds: 300, thousands: 3_000, letters: 3_000, fullPlate: 300_000 } },
+          ruleSnapshot: { version: "approved-v4", multipliers: { unit: 6, tens: 30, hundreds: 300, thousands: 3_000, letters: 3_000, fullPlate: 300_000 } },
         })),
       })),
     })],
