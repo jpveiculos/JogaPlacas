@@ -81,15 +81,22 @@ describe("POST /api/internal/round-scheduler", () => {
     vi.useRealTimers();
   });
 
-  it("accepts a valid scheduler credential and reports an idempotent run", async () => {
+  it("accepts a valid scheduler credential and is idempotent after the schedule is populated", async () => {
+    const firstResponse = await POST(request("Bearer test-secret-long-enough"));
+    expect(firstResponse.status).toBe(200);
+    const scheduledCodes = mocks.createRound.mock.calls.map((call) => ({
+      code: (call[0] as { data: { code: string } }).data.code,
+    }));
+    expect(scheduledCodes.length).toBeGreaterThan(0);
+
+    mocks.findMany.mockResolvedValueOnce(scheduledCodes);
     const response = await POST(request("Bearer test-secret-long-enough"));
     expect(response.status).toBe(200);
     expect(await response.json()).toMatchObject({
       ok: true, created: 0, closed: 0, drawn: 0, failures: 0, timeZone: "Etc/GMT+3",
       pixChecked: 0, pixConfirmed: 0, pixNeedsReconciliation: 0,
     });
-    expect(mocks.findUnique).toHaveBeenCalled();
-    expect(mocks.findMany).toHaveBeenCalledTimes(3);
+    expect(mocks.findMany).toHaveBeenCalledTimes(8);
   });
 
   it("reconciles pending Pix payments even when no browser is polling", async () => {
