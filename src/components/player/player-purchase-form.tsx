@@ -58,6 +58,7 @@ export function PlayerPurchaseForm() {
   const [purchase, setPurchase] = useState<CreatedPurchase | null>(null);
   const [pixCheckout, setPixCheckout] = useState<PixCheckout | null>(null);
   const [pixModalOpen, setPixModalOpen] = useState(false);
+  const [pixReconciliationRequired, setPixReconciliationRequired] = useState(false);
   const [receiptPurchaseId, setReceiptPurchaseId] = useState<string | null>(null);
   const idempotencyKey = useRef<string | null>(null);
 
@@ -152,7 +153,7 @@ export function PlayerPurchaseForm() {
 
 
   useEffect(() => {
-    if (!pixModalOpen || !purchase?.id) return;
+    if (!purchase?.id) return;
     let active = true;
     const checkPayment = async () => {
       try {
@@ -163,6 +164,8 @@ export function PlayerPurchaseForm() {
           paymentStatus?: string;
           purchaseStatus?: string;
           providerStatus?: string | null;
+          reconciliationRequired?: boolean;
+          message?: string | null;
         };
         if (!active) return;
         if (body.receiptReady) {
@@ -170,14 +173,17 @@ export function PlayerPurchaseForm() {
           setPixModalOpen(false);
           setPurchase(null);
           setPixCheckout(null);
+          setPixReconciliationRequired(false);
           setNotice("Pagamento confirmado. Seu recibo oficial está na tela.");
           return;
         }
+        setPixReconciliationRequired(Boolean(body.reconciliationRequired));
         if (["FAILED", "CANCELLED", "EXPIRED", "REFUNDED"].includes(body.paymentStatus ?? "")
           || ["CANCELLED", "REFUNDED"].includes(body.purchaseStatus ?? "")) {
           setPixModalOpen(false);
           setPurchase(null);
           setPixCheckout(null);
+          setPixReconciliationRequired(false);
           setLegacyPlate(""); setMercosurPlate(""); setAddedPlates([]);
           setSelectedRounds([]);
           setStake("1,00");
@@ -190,7 +196,7 @@ export function PlayerPurchaseForm() {
     void checkPayment();
     const timer = window.setInterval(() => { void checkPayment(); }, 3000);
     return () => { active = false; window.clearInterval(timer); };
-  }, [pixModalOpen, purchase?.id]);
+  }, [purchase?.id]);
 
   const stakeCents = useMemo(() => parseStake(stake), [stake]);
   const normalizedLegacyPlate = legacyPlate.trim().toUpperCase();
@@ -333,7 +339,7 @@ export function PlayerPurchaseForm() {
         </fieldset>
 
         {stakeCents !== null && selectedRounds.length > 0 && <p>Total estimado: <strong>{formatMoney(stakeCents * selectedRounds.length * plateLines.length)}</strong> ({plateLines.length} placa(s), {selectedRounds.length} rodada(s)).</p>}
-        <button type="submit" disabled={submitting || loadingRounds || visibleRounds.length === 0}>{submitting ? "Registrando…" : paymentMethod === "WALLET" ? "Pagar com saldo da conta" : "Continuar para Pix"}</button>
+        <button type="submit" disabled={submitting || loadingRounds || visibleRounds.length === 0 || pixReconciliationRequired}>{submitting ? "Registrando…" : paymentMethod === "WALLET" ? "Pagar com saldo da conta" : "Continuar para Pix"}</button>
       </form>
       {error && <p role="alert" className="note-inline">{error}</p>}
       {notice && <p role="status" className="note-inline">{notice}</p>}
