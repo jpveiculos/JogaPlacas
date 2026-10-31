@@ -53,8 +53,8 @@ export async function confirmPixPayment(
              OR ("status" IN ('OPEN', 'SCHEDULED') AND "cutoffAt" > clock_timestamp())
           ORDER BY "id"
           FOR UPDATE
-
-        const lockedRoundIds = lockedRoundRows.map((round) => round.id);        `;
+        `;
+        const lockedRoundIds = lockedRoundRows.map((round) => round.id);
 
         const decisionTime = (await tx.$queryRaw<Array<{ decisionTime: Date }>>`
           SELECT clock_timestamp() AS "decisionTime"
