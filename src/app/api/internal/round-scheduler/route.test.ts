@@ -11,16 +11,21 @@ const mocks = vi.hoisted(() => ({
   closeRound: vi.fn(),
   openRound: vi.fn(),
   drawRoundResults: vi.fn(),
+  paymentFindMany: vi.fn(),
+  paymentUpdateMany: vi.fn(),
+  reconcilePixPaymentFromProvider: vi.fn(),
 }));
 vi.mock("@/lib/auth/session", () => ({
   authPrisma: {
     round: { findUnique: mocks.findUnique, findFirst: mocks.findFirst, findMany: mocks.findMany },
+    payment: { findMany: mocks.paymentFindMany, updateMany: mocks.paymentUpdateMany },
     $transaction: mocks.transaction,
   },
 }));
 vi.mock("@/modules/rounds/close-round", () => ({ closeRound: mocks.closeRound }));
 vi.mock("@/modules/rounds/open-round", () => ({ openRound: mocks.openRound }));
 vi.mock("@/modules/rounds/draw-round-results", () => ({ drawRoundResults: mocks.drawRoundResults }));
+vi.mock("@/modules/payments/reconcile-pix-payment", () => ({ reconcilePixPaymentFromProvider: mocks.reconcilePixPaymentFromProvider }));
 
 import { POST } from "./route";
 
@@ -39,6 +44,9 @@ describe("POST /api/internal/round-scheduler", () => {
     mocks.findMany.mockResolvedValue([]);
     mocks.createRound.mockResolvedValue({ id: "created-round" });
     mocks.createAuditEvent.mockResolvedValue({});
+    mocks.paymentFindMany.mockResolvedValue([]);
+    mocks.paymentUpdateMany.mockResolvedValue({ count: 1 });
+    mocks.reconcilePixPaymentFromProvider.mockResolvedValue("still_pending");
     mocks.transaction.mockImplementation(async (callback: (tx: unknown) => Promise<unknown>) =>
       callback({ round: { create: mocks.createRound }, auditEvent: { create: mocks.createAuditEvent } }),
     );
@@ -78,8 +86,23 @@ describe("POST /api/internal/round-scheduler", () => {
     expect(response.status).toBe(200);
     expect(await response.json()).toMatchObject({
       ok: true, created: 0, closed: 0, drawn: 0, failures: 0, timeZone: "Etc/GMT+3",
+      pixChecked: 0, pixConfirmed: 0, pixNeedsReconciliation: 0,
     });
     expect(mocks.findUnique).toHaveBeenCalled();
     expect(mocks.findMany).toHaveBeenCalledTimes(3);
   });
+
+  it("reconciles pending Pix payments even when no browser is polling", async () => {
+    mocks.paymentFindMany.mockResolvedValue([{ id: "payment-pending-1" }]);
+    mocks.reconcilePixPaymentFromProvider.mockResolvedValue("confirmed");
+    const response = await POST(request("Bearer test-secret-long-enough"));
+    const body = await response.json();
+    expect(response.status).toBe(200);
+    expect(mocks.paymentUpdateMany).toHaveBeenCalledWith(expect.objectContaining({
+      where: expect.objectContaining({ id: "payment-pending-1", status: "PENDING" }),
+    }));
+    expect(mocks.reconcilePixPaymentFromProvider).toHaveBeenCalledWith(expect.anything(), "payment-pending-1");
+    expect(body).toMatchObject({ pixChecked: 1, pixConfirmed: 1, pixNeedsReconciliation: 0 });
+  });
+
 });
