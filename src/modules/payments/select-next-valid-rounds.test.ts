@@ -5,6 +5,7 @@ const instant = new Date("2026-10-30T15:00:00.000Z");
 const round = (id: string, resultAt: string, status = "SCHEDULED", cutoffAt?: string) => ({
   id,
   status,
+  startsAt: new Date(new Date(resultAt).getTime() - 29 * 60_000),
   cutoffAt: new Date(cutoffAt ?? new Date(new Date(resultAt).getTime() - 60_000).toISOString()),
   resultAt: new Date(resultAt),
 });
