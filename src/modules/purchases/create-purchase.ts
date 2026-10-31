@@ -212,8 +212,8 @@ export async function createPurchase(
          OR ("status" IN ('OPEN', 'SCHEDULED') AND "cutoffAt" > clock_timestamp())
       ORDER BY "id"
       FOR UPDATE
-
-    const lockedRoundIds = lockedRoundRows.map((round) => round.id);    `;
+    `;
+    const lockedRoundIds = lockedRoundRows.map((round) => round.id);
 
     // The decision is made only after acquiring the locks, using PostgreSQL's
     // wall clock. For PIX this is provisional; confirmation re-evaluates it.
