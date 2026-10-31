@@ -47,13 +47,14 @@ export async function confirmPixPayment(
         // Lock the provisional rounds and every currently eligible future round
         // in one deterministic order. The target round is selected only after
         // these locks are acquired and PostgreSQL's wall clock is read.
-        await tx.$queryRaw`
+        const lockedRoundRows = await tx.$queryRaw<Array<{ id: string }>>`
           SELECT "id" FROM "Round"
           WHERE "id" IN (${Prisma.join(originalRoundIds)})
              OR ("status" IN ('OPEN', 'SCHEDULED') AND "cutoffAt" > clock_timestamp())
           ORDER BY "id"
           FOR UPDATE
-        `;
+
+        const lockedRoundIds = lockedRoundRows.map((round) => round.id);        `;
 
         const decisionTime = (await tx.$queryRaw<Array<{ decisionTime: Date }>>`
           SELECT clock_timestamp() AS "decisionTime"
@@ -62,6 +63,7 @@ export async function confirmPixPayment(
           tx.round.findMany({ where: { id: { in: originalRoundIds } } }),
           tx.round.findMany({
             where: {
+              id: { in: lockedRoundIds },
               status: { in: [RoundStatus.OPEN, RoundStatus.SCHEDULED] },
               cutoffAt: { gt: decisionTime },
             },
