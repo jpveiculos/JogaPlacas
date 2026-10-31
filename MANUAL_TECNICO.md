@@ -430,3 +430,11 @@ A revisão documental/código desta data não autoriza afirmar que todo o projet
 - A suíte unitária completa ainda falha em 19 testes de cinco áreas: autenticação (login, cadastro e troca de senha), resultados do jogador e saques. Essas falhas bloqueiam o passo de build no workflow. Não há evidência de que sejam causadas pela mudança de pagamento; precisam de investigação separada.
 - O build ainda não foi executado com sucesso neste commit. Também pendem homologação ponta a ponta com credenciais de teste Mercado Pago e inspeção visual. Não foi feito merge nem alteração em produção.
 - A política operacional para um Pix aprovado quando não há rodadas suficientes continua sendo reconciliação/reembolso manual; não existe reembolso automático implementado nesta alteração.
+
+
+### Diagnóstico adicional da CI — execução 1252
+- A execução 1252, no commit documental `3000e409`, repetiu a falha da suíte unitária; lint, typecheck, validação/geração Prisma, migrações PostgreSQL e teste real de concorrência permaneceram aprovados. O build foi ignorado pelo workflow porque a etapa de testes falhou.
+- Comparação entre `main` e `feature/pix-next-valid-round` confirmou que os arquivos de autenticação, resultados e saques apontados pela suíte estão idênticos nas duas referências; essas rotas e seus testes não fazem parte do diff desta implementação Pix.
+- Causas identificadas por inspeção dos contratos atuais: os testes de autenticação constroem `NextRequest` com `Origin`, mas sem o cabeçalho `Host` exigido pela proteção atual de origem; o teste de resultados ainda espera negar ADMIN/CASHIER, embora a API atual permita esses papéis para o menu de últimos resultados; os testes de saque ainda enviam `amountCents` e esperam saque parcial, enquanto o contrato atual recebe apenas a chave Pix e reserva o saldo disponível integral.
+- Não alterar as regras de segurança nem a lógica de saques para satisfazer expectativas antigas dos testes. A correção adequada é alinhar os testes/fixtures aos contratos vigentes, em trabalho separado do fluxo Pix.
+- Ainda não há execução bem-sucedida do build no commit atual. Nenhum merge ou deploy foi realizado.
