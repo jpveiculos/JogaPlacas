@@ -70,7 +70,9 @@ export async function POST(request: NextRequest) {
       || order.currency !== "BRL"
       || order.amountCents !== payment.amountCents
       || order.amountCents !== payment.purchase.totalCents
-      || (order.paymentAmountCents !== null && order.paymentAmountCents !== payment.amountCents)) {
+      || order.paymentAmountCents !== payment.amountCents
+      || order.paymentMethodId?.toLowerCase() !== "pix"
+      || order.paymentMethodType?.toLowerCase() !== "bank_transfer") {
       return response({ error: "Provider payment does not match the recorded purchase." }, 422);
     }
 
