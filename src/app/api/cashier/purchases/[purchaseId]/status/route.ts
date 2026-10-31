@@ -54,6 +54,8 @@ export async function GET(request: NextRequest, context: RouteContext) {
     });
   }
 
+  if (!purchase) return NextResponse.json({ error: "Compra não encontrada." }, { status: 404, headers });
+
   const confirmed = purchase.status === "CONFIRMED"
     && purchase.payment?.status === "CONFIRMED"
     && Boolean(purchase.receiptCode && purchase.confirmedAt && purchase.payment.confirmedAt);
